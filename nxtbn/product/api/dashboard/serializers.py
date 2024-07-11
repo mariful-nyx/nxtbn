@@ -80,13 +80,15 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         collection = validated_data.pop('collections', [])
-        isinstance = Product.objects.create(
+        images = validated_data.pop('images', [])
+        instance = Product.objects.create(
             **validated_data,
             **{'created_by': self.context['request'].user}
         )
 
-        isinstance.collections.set(collection)
-        return isinstance
+        instance.collections.set(collection)
+        instance.images.set(images)
+        return instance
     
 
 class ColorSerializer(serializers.ModelSerializer):

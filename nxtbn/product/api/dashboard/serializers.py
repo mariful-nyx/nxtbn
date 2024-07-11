@@ -56,9 +56,22 @@ class ProductSerializer(serializers.ModelSerializer):
             'variants',
         )
 
+class VariantCreatePayloadSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    compare_at_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    cost_per_unit = serializers.DecimalField(max_digits=10, decimal_places=2)
+    sku = serializers.CharField(max_length=255)
+    stock = serializers.IntegerField(required=False)
+    weight_unit = serializers.CharField(max_length=10, required=False)
+    weight_value = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    color_code = serializers.CharField(max_length=7, required=False)
+    is_default = serializers.BooleanField(default=False)
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
+    variants_payload = VariantCreatePayloadSerializer(many=True, write_only=True)
+    currency = serializers.CharField(max_length=3, required=False, write_only=True)
     class Meta:
         model = Product
         ref_name = 'product_dashboard_create'
@@ -76,11 +89,18 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'default_variant',
             'variants',
             'collections',
+
+            # write only fields
+            'variants_payload',
+            'currency',
         )
 
     def create(self, validated_data):
         collection = validated_data.pop('collections', [])
         images = validated_data.pop('images', [])
+        variants_payload = validated_data.pop('variants_payload', [])
+        currency = validated_data.pop('currency', 'USD')
+
         instance = Product.objects.create(
             **validated_data,
             **{'created_by': self.context['request'].user}
@@ -88,6 +108,13 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
         instance.collections.set(collection)
         instance.images.set(images)
+
+        for variant_payload in variants_payload:
+            ProductVariant.objects.create(
+                product=instance,
+                currency=currency,
+                **variant_payload
+            )
         return instance
     
 

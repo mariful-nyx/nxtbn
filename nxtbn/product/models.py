@@ -150,7 +150,7 @@ class ProductVariant(MonetaryMixin, AbstractMetadata, models.Model):
     variant_image = models.ForeignKey(Image, blank=True, null=True, on_delete=models.SET_NULL)
     name = models.CharField(max_length=255, blank=True, null=True)
 
-    compare_at_price = models.DecimalField(max_digits=12, decimal_places=3, validators=[MinValueValidator(Decimal('0.01'))])
+    compare_at_price = models.DecimalField(max_digits=12, decimal_places=3, validators=[MinValueValidator(Decimal('0.01'))], null=True, blank=True)
 
     currency = models.CharField(
         max_length=3,

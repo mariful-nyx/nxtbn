@@ -66,7 +66,6 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     weight_unit = serializers.CharField(max_length=10, required=False)
     weight_value = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     color_code = serializers.CharField(max_length=7, required=False)
-    is_default = serializers.BooleanField(default=False)
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)

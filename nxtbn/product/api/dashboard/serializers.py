@@ -108,12 +108,21 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         instance.collections.set(collection)
         instance.images.set(images)
 
-        for variant_payload in variants_payload:
-            ProductVariant.objects.create(
+        # Create variants and set the first one as the default variant
+        default_variant = None
+        for i, variant_payload in enumerate(variants_payload):
+            variant = ProductVariant.objects.create(
                 product=instance,
                 currency=currency,
                 **variant_payload
             )
+            if i == 0:
+                default_variant = variant
+
+        if default_variant:
+            instance.default_variant = default_variant
+            instance.save()
+        
         return instance
     
 

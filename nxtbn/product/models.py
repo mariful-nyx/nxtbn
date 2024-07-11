@@ -125,6 +125,16 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     class Meta:
         ordering = ('name',)
 
+    def product_thumbnail(self, request):
+        if self.images.exists():
+            image_url = self.images.first().image.url
+            full_url = request.build_absolute_uri(image_url)
+            return full_url
+        return None
+    
+    def colors(self):
+        return self.variants.values_list('color_code', flat=True).distinct()
+
     def __str__(self):
         return self.name
     

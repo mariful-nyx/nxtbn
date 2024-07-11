@@ -35,7 +35,8 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         fields = ('id', 'product', 'name', 'compare_at_price', 'price', 'cost_per_unit', 'sku',)
 
 class ProductSerializer(serializers.ModelSerializer):
-    variants = ProductVariantSerializer(many=True, read_only=True)
+    default_variant = ProductVariantSerializer(read_only=True)
+    product_thumbnail = serializers.SerializerMethodField()
 
     class Meta:
         model = Product 
@@ -53,15 +54,20 @@ class ProductSerializer(serializers.ModelSerializer):
             'related_to',
             'default_variant',
             'collections',
-            'variants',
+            'product_thumbnail',
+            'colors',
         )
+    
+    def get_product_thumbnail(self, obj):
+        return obj.product_thumbnail(self.context['request'])
+
 
 class VariantCreatePayloadSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=255)
+    name = serializers.CharField(max_length=255, required=False)
     compare_at_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
     cost_per_unit = serializers.DecimalField(max_digits=10, decimal_places=2)
-    sku = serializers.CharField(max_length=255)
+    sku = serializers.CharField(max_length=255, required=False)
     stock = serializers.IntegerField(required=False)
     weight_unit = serializers.CharField(max_length=10, required=False)
     weight_value = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)

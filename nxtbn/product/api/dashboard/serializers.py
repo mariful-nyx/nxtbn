@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from django.db import transaction
 
+from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
 from nxtbn.product.models import Color, Product, Category, Collection, ProductVariant
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -61,6 +62,29 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
 
+class ProductDetailsSerializer(serializers.ModelSerializer):
+    default_variant = ProductVariantSerializer(read_only=True)
+    images = ImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Product 
+        ref_name = 'product_dashboard_get'
+        fields =  (
+            'id',
+            'name',
+            'summary',
+            'description',
+            'images',
+            'category',
+            'supplier',
+            'brand',
+            'type',
+            'related_to',
+            'default_variant',
+            'collections',
+            'colors',
+        )
+    
 
 class VariantCreatePayloadSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255, required=False)

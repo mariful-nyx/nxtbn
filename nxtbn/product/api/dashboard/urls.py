@@ -17,12 +17,12 @@ router.register(r'colors', ColorViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('products/', ProductListView.as_view(), name='product-list'),
-    path('products/<uuid:id>/', ProductDetailView.as_view(), name='product-detail'),
+    path('products/<int:id>/', ProductDetailView.as_view(), name='product-detail'),
 
     path('categories/', CategoryListView.as_view(), name='category-list'),
-    path('categories/<uuid:id>/', CategoryDetailView.as_view(), name='category-detail'),
+    path('categories/<int:id>/', CategoryDetailView.as_view(), name='category-detail'),
 
     path('collections/', CollectionListView.as_view(), name='collection-list'),
-    path('collections/<uuid:id>/', CollectionDetailView.as_view(), name='collection-detail'),
+    path('collections/<int:id>/', CollectionDetailView.as_view(), name='collection-detail'),
 ]
 

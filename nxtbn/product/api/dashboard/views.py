@@ -11,6 +11,7 @@ from nxtbn.product.models import Color, Product, Category, Collection
 from nxtbn.product.api.dashboard.serializers import (
     ColorSerializer,
     ProductCreateSerializer,
+    ProductDetailsSerializer,
     ProductSerializer,
     CategorySerializer,
     CollectionSerializer,
@@ -35,7 +36,7 @@ class ProductListView(generics.ListCreateAPIView):
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (NxtbnAdminPermission,)
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+    serializer_class = ProductDetailsSerializer
     permission_classes = (NxtbnAdminPermission,)
     lookup_field = 'id'
 

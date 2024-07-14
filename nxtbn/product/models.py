@@ -100,7 +100,7 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     last_modified_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_modified', null=True, blank=True)
     name = models.CharField(max_length=255)
     summary = models.TextField(max_length=500)
-    description = models.TextField(max_length=500)
+    description = models.TextField(max_length=5000)
     images = models.ManyToManyField(Image, blank=True)
     category = models.ForeignKey(
         'Category', 

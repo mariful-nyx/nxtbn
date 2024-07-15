@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import generics, status
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
@@ -35,6 +36,7 @@ class LoginView(generics.GenericAPIView):
             return Response(
                 {
                     "user": user_data,
+                    'store_url': settings.STORE_URL,
                     "token": {
                         "access": access_token,
                         "refresh": refresh_token,

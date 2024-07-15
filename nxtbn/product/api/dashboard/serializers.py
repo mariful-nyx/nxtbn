@@ -71,6 +71,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
         ref_name = 'product_dashboard_get'
         fields =  (
             'id',
+            'slug',
             'name',
             'summary',
             'description',
@@ -83,6 +84,8 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'default_variant',
             'collections',
             'colors',
+            'meta_title',
+            'meta_description',
         )
     
 
@@ -106,6 +109,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         ref_name = 'product_dashboard_create'
         fields =  (
             'id',
+            'slug',
             'name',
             'summary',
             'description',
@@ -122,6 +126,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             # write only fields
             'variants_payload',
             'currency',
+            'meta_title',
+            'meta_description',
         )
 
     def create(self, validated_data):

@@ -40,4 +40,6 @@ class OrderSerializer(serializers.ModelSerializer):
             'promo_code',
             'gift_card',
             'line_items',
+            'last_modified',
+            'product'
         )

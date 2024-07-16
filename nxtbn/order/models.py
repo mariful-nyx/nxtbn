@@ -208,6 +208,12 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         """
         return format_currency(self.total_in_units(), self.currency, locale='en_US')
     
+    def product(self):
+        product = [item.variant.product.name for item in self.line_items.all()]
+        if product:
+            return product[0]
+        
+
     def __str__(self):
         return f"Order {self.id} - {self.status}"
 

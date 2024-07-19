@@ -47,6 +47,11 @@ class CategoryListView(generics.ListCreateAPIView):
     serializer_class = RecursiveCategorySerializer
     pagination_class = None
 
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return CategorySerializer
+        return self.serializer_class
+
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (NxtbnAdminPermission,)

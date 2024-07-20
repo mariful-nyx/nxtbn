@@ -95,6 +95,9 @@ class Collection(NameDescriptionAbstract, AbstractSEOModel):
     def __str__(self):
         return self.name
 
+class ProductTag(models.Model):
+    name = models.CharField(unique=True, max_length=50)
+
 class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_created')
     last_modified_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_modified', null=True, blank=True)
@@ -121,6 +124,7 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
         related_name='+'
     )
     collections = models.ManyToManyField(Collection, blank=True, related_name='products_in_collection')
+    tags = models.ManyToManyField(ProductTag, blank=True)
 
     class Meta:
         ordering = ('name',)

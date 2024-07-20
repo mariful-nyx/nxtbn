@@ -3,7 +3,7 @@ from rest_framework import serializers
 from django.db import transaction
 
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
-from nxtbn.product.models import Color, Product, Category, Collection, ProductVariant
+from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -168,3 +168,16 @@ class ColorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Color
         fields = '__all__'
+
+    
+class ProductTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductType
+        fields = '__all__'
+
+class ProductTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductTag
+        fields = '__all__'
+
+        

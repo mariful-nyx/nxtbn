@@ -10,11 +10,15 @@ from nxtbn.product.api.dashboard.views import (
     CollectionListView,
     CollectionDetailView,
     RecursiveCategoryListView,
-    ColorViewSet
+    ColorViewSet,
+    ProductTypeViewSet,
+    ProductTagViewSet
 )
 
 router = DefaultRouter()
 router.register(r'colors', ColorViewSet)
+router.register(r'product-types', ProductTypeViewSet)
+router.register(r'product-tags', ProductTagViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

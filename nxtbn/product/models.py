@@ -11,7 +11,7 @@ from nxtbn.core import CurrencyTypes, MoneyFieldTypes
 from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.core.models import AbstractMetadata, AbstractSEOModel, PublishableModel, AbstractBaseUUIDModel, AbstractBaseModel, NameDescriptionAbstract
 from nxtbn.filemanager.models import Document, Image
-from nxtbn.product import ProductType, StockStatus, WeightUnits
+from nxtbn.product import StockStatus, WeightUnits
 from nxtbn.users.admin import User
 
 class Supplier(NameDescriptionAbstract, AbstractSEOModel):
@@ -98,6 +98,15 @@ class Collection(NameDescriptionAbstract, AbstractSEOModel):
 class ProductTag(models.Model):
     name = models.CharField(unique=True, max_length=50)
 
+class ProductType(models.Model):
+    name = models.CharField(unique=True, max_length=50)
+    taxable = models.BooleanField(False)
+    physical_product = models.BooleanField(False)
+    track_stock = models.BooleanField(False)
+    has_variant = models.BooleanField(False)
+
+    # TO DO: class Meta: # Handle unique together with each field except name
+
 class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_created')
     last_modified_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_modified', null=True, blank=True)
@@ -114,7 +123,7 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     )
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name='+', null=True, blank=True)
     brand = models.CharField(max_length=100, blank=True, null=True)
-    type = models.CharField(max_length=25, default=ProductType.SIMPLE_PRODUCT, choices=ProductType.choices)
+    product_type = models.ForeignKey(ProductType, related_name='product', on_delete=models.PROTECT)
     related_to = models.ManyToManyField("self", blank=True)
     default_variant = models.OneToOneField(
         "ProductVariant",

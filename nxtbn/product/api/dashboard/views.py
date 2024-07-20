@@ -43,15 +43,22 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class CategoryListView(generics.ListCreateAPIView):
     permission_classes = (NxtbnAdminPermission,)
+    queryset = Category.objects.filter()
+    serializer_class = CategorySerializer
+
+
+class RecursiveCategoryListView(generics.ListCreateAPIView):
+    permission_classes = (NxtbnAdminPermission,)
     queryset = Category.objects.filter(parent=None) # Get only top-level categories
     serializer_class = RecursiveCategorySerializer
     pagination_class = None
 
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return CategorySerializer
-        return self.serializer_class
-
+class CategoryByParentView(generics.RetrieveAPIView):
+    permission_classes = (NxtbnAdminPermission,)
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (NxtbnAdminPermission,)
+    lookup_field = 'id'
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (NxtbnAdminPermission,)

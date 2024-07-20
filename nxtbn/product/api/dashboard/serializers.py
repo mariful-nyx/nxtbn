@@ -131,6 +131,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'meta_description',
         )
 
+
     def create(self, validated_data):
         collection = validated_data.pop('collections', [])
         images = validated_data.pop('images', [])

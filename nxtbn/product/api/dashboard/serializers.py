@@ -3,12 +3,13 @@ from rest_framework import serializers
 from django.db import transaction
 
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
-from nxtbn.product.models import Color, Product, Category, Collection, ProductVariant
+from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ('id', 'name', 'description', 'parent', 'subcategories',)
+        read_only_fields = ('subcategories',)
         ref_name = 'category_dashboard_get'
 
 
@@ -51,7 +52,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'category',
             'supplier',
             'brand',
-            'type',
+            'product_type',
             'related_to',
             'default_variant',
             'collections',
@@ -79,7 +80,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'category',
             'supplier',
             'brand',
-            'type',
+            'product_type',
             'related_to',
             'default_variant',
             'collections',
@@ -117,7 +118,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'category',
             'supplier',
             'brand',
-            'type',
+            'product_type',
             'related_to',
             'default_variant',
             'variants',
@@ -129,6 +130,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'meta_title',
             'meta_description',
         )
+
 
     def create(self, validated_data):
         collection = validated_data.pop('collections', [])
@@ -166,3 +168,16 @@ class ColorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Color
         fields = '__all__'
+
+    
+class ProductTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductType
+        fields = '__all__'
+
+class ProductTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductTag
+        fields = '__all__'
+
+        

@@ -5,14 +5,20 @@ from nxtbn.product.api.dashboard.views import (
     ProductListView,
     ProductDetailView,
     CategoryListView,
+    CategoryByParentView,
     CategoryDetailView,
     CollectionListView,
     CollectionDetailView,
-    ColorViewSet
+    RecursiveCategoryListView,
+    ColorViewSet,
+    ProductTypeViewSet,
+    ProductTagViewSet
 )
 
 router = DefaultRouter()
 router.register(r'colors', ColorViewSet)
+router.register(r'product-types', ProductTypeViewSet)
+router.register(r'product-tags', ProductTagViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -20,7 +26,9 @@ urlpatterns = [
     path('products/<int:id>/', ProductDetailView.as_view(), name='product-detail'),
 
     path('categories/', CategoryListView.as_view(), name='category-list'),
+    path('recursive-categories/', RecursiveCategoryListView.as_view(), name='recursive-category'),
     path('categories/<int:id>/', CategoryDetailView.as_view(), name='category-detail'),
+    path('categories-by-parent/<int:id>/', CategoryByParentView.as_view(), name='category-by-parent'),
 
     path('collections/', CollectionListView.as_view(), name='collection-list'),
     path('collections/<int:id>/', CollectionDetailView.as_view(), name='collection-detail'),

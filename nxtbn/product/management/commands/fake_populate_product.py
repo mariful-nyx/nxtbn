@@ -4,7 +4,7 @@ import requests
 from nxtbn.core.currency.utils import normalize_amount_currencywise
 from nxtbn.product.models import Category, Collection, Product, ProductVariant
 from django.contrib.auth import get_user_model
-from nxtbn.product import ProductType, StockStatus, WeightUnits
+from nxtbn.product import StockStatus, WeightUnits
 from faker import Faker
 from nxtbn.filemanager.models import Image
 from django.core.files.temp import NamedTemporaryFile
@@ -37,7 +37,7 @@ class Command(BaseCommand):
         for _ in tqdm(range(num_products)):
             category = random.choice(categories)
             collection = random.choice(collections)
-            product_type = random.choice(ProductType.choices)
+            # product_type = random.choice(ProductType.choices)
             weight_unit = random.choice(WeightUnits.choices)
 
             superuser = User.objects.filter(username='admin').first()

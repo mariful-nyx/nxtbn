@@ -37,6 +37,9 @@ class Category(NameDescriptionAbstract, AbstractSEOModel):
         related_name='subcategories'
     )
 
+    def has_sub(self):
+        return self.subcategories.exists()
+
     def get_family_tree(self):
         family_tree = []
         current = self

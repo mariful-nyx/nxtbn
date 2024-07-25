@@ -1,6 +1,7 @@
-from django.urls import path, include
+from django.urls import path, include, register_converter
 from rest_framework.routers import DefaultRouter
 
+from nxtbn.core.url_converters import IdOrNoneConverter
 from nxtbn.product.api.dashboard.views import (
     ProductListView,
     ProductDetailView,
@@ -15,6 +16,9 @@ from nxtbn.product.api.dashboard.views import (
     ProductTagViewSet
 )
 
+register_converter(IdOrNoneConverter, 'id_or_none')
+
+
 router = DefaultRouter()
 router.register(r'colors', ColorViewSet)
 router.register(r'product-types', ProductTypeViewSet)
@@ -28,7 +32,7 @@ urlpatterns = [
     path('categories/', CategoryListView.as_view(), name='category-list'),
     path('recursive-categories/', RecursiveCategoryListView.as_view(), name='recursive-category'),
     path('categories/<int:id>/', CategoryDetailView.as_view(), name='category-detail'),
-    path('categories-by-parent/<int:id>/', CategoryByParentView.as_view(), name='category-by-parent'),
+    path('categories-by-parent/<id_or_none:id>/', CategoryByParentView.as_view(), name='category-by-parent'),
 
     path('collections/', CollectionListView.as_view(), name='collection-list'),
     path('collections/<int:id>/', CollectionDetailView.as_view(), name='collection-detail'),

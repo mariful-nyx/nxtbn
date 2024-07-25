@@ -9,6 +9,7 @@ from rest_framework import viewsets
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType
 from nxtbn.product.api.dashboard.serializers import (
+    BasicCategorySerializer,
     ColorSerializer,
     ProductCreateSerializer,
     ProductDetailsSerializer,
@@ -55,12 +56,15 @@ class RecursiveCategoryListView(generics.ListCreateAPIView):
     serializer_class = RecursiveCategorySerializer
     pagination_class = None
 
-class CategoryByParentView(generics.RetrieveAPIView):
+class CategoryByParentView(generics.ListAPIView):
+    pagination_class = None
     permission_classes = (NxtbnAdminPermission,)
     queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+    serializer_class = BasicCategorySerializer
     permission_classes = (NxtbnAdminPermission,)
-    lookup_field = 'id'
+    
+    def get_queryset(self):
+        return super().get_queryset().filter(parent=self.kwargs.get('id'))
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (NxtbnAdminPermission,)

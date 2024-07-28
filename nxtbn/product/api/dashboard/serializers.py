@@ -12,7 +12,13 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ('subcategories',)
         ref_name = 'category_dashboard_get'
 
+class NameIDCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('id', 'name',)
+
 class BasicCategorySerializer(serializers.ModelSerializer):
+    parent = NameIDCategorySerializer(read_only=True)
     class Meta:
         model = Category
         fields = ('id', 'name', 'description', 'parent', 'has_sub')

@@ -89,7 +89,7 @@ class Collection(NameDescriptionAbstract, AbstractSEOModel):
         related_name='collections_modified'
     )
     is_active = models.BooleanField(default=True)
-    image = models.ImageField(upload_to='collection_images/', blank=True, null=True)
+    image = models.ForeignKey(Image, null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = _("Collection")

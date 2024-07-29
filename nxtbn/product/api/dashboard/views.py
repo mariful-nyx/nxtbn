@@ -73,23 +73,15 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (NxtbnAdminPermission,)
     lookup_field = 'id'
 
-
-class CollectionListView(generics.ListCreateAPIView):
+class CollectionViewSet(viewsets.ModelViewSet):
     permission_classes = (NxtbnAdminPermission,)
     queryset = Collection.objects.all()
     serializer_class = CollectionSerializer
-    permission_classes = (NxtbnAdminPermission,)
-    pagination_class = None
-
-
-class CollectionDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = (NxtbnAdminPermission,)
-    queryset = Collection.objects.all()
-    serializer_class = CollectionSerializer
-    permission_classes = (NxtbnAdminPermission,)
     lookup_field = 'id'
 
-
+    def get_queryset(self):
+        return Collection.objects.all()
+    
 class ColorViewSet(viewsets.ModelViewSet):
     pagination_class = None
     queryset = Color.objects.all()

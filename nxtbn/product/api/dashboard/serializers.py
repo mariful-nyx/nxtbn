@@ -37,10 +37,19 @@ class RecursiveCategorySerializer(serializers.ModelSerializer):
         return RecursiveCategorySerializer(children, many=True).data
 
 class CollectionSerializer(serializers.ModelSerializer):
+    images_details = ImageSerializer(read_only=True, source='image')
     class Meta:
         model = Collection
-        fields = ('id', 'name', 'description', 'is_active', 'image',)
+        fields = (
+            'id',
+            'name',
+            'description',
+            'is_active',
+            'image',
+            'images_details',
+        )
         ref_name = 'collection_dashboard_get'
+        write_only_fields = ('image',)
 
 class ProductVariantSerializer(serializers.ModelSerializer):
     class Meta:

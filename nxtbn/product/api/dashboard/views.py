@@ -74,6 +74,7 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'id'
 
 class CollectionViewSet(viewsets.ModelViewSet):
+    pagination_class = None
     permission_classes = (NxtbnAdminPermission,)
     queryset = Collection.objects.all()
     serializer_class = CollectionSerializer

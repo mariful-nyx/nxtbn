@@ -5,6 +5,10 @@ from django.db import transaction
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
 from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
 
+class ProductTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductType
+        fields = '__all__'
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -87,6 +91,8 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductDetailsSerializer(serializers.ModelSerializer):
     default_variant = ProductVariantSerializer(read_only=True)
     images = ImageSerializer(many=True, read_only=True)
+    category_details = CategorySerializer(read_only=True, source='category')
+    product_type_details = ProductTypeSerializer(read_only=True, source='product_type')
 
     class Meta:
         model = Product 
@@ -108,6 +114,8 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'colors',
             'meta_title',
             'meta_description',
+            'category_details',
+            'product_type_details',
         )
     
 
@@ -191,10 +199,7 @@ class ColorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     
-class ProductTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductType
-        fields = '__all__'
+
 
 class ProductTagSerializer(serializers.ModelSerializer):
     class Meta:

@@ -90,6 +90,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
     default_variant = ProductVariantSerializer(read_only=True)
+    variants = ProductVariantSerializer(many=True, read_only=True)
     images = ImageSerializer(many=True, read_only=True)
     category_details = CategorySerializer(read_only=True, source='category')
     product_type_details = ProductTypeSerializer(read_only=True, source='product_type')
@@ -116,6 +117,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'meta_description',
             'category_details',
             'product_type_details',
+            'variants',
         )
     
 

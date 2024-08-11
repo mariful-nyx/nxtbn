@@ -104,12 +104,26 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
 
+class VariantCreatePayloadSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    name = serializers.CharField(max_length=255, required=False)
+    compare_at_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    price = serializers.DecimalField(max_digits=10, decimal_places=3)
+    cost_per_unit = serializers.DecimalField(max_digits=10, decimal_places=3)
+    sku = serializers.CharField(max_length=255, required=False)
+    stock = serializers.IntegerField(required=False)
+    weight_unit = serializers.CharField(max_length=10, required=False, allow_null=True)
+    weight_value = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    color_code = serializers.CharField(max_length=7, required=False, allow_null=True)
+
+
 class ProductDetailsSerializer(serializers.ModelSerializer):
     default_variant = ProductVariantSerializer(read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
     images = ImageSerializer(many=True, read_only=True)
     category_details = CategorySerializer(read_only=True, source='category')
     product_type_details = ProductTypeSerializer(read_only=True, source='product_type')
+    variants_payload = VariantCreatePayloadSerializer(many=True, write_only=True)
 
     class Meta:
         model = Product 
@@ -134,19 +148,11 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'category_details',
             'product_type_details',
             'variants',
+            'variants_payload',
         )
     
 
-class VariantCreatePayloadSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=255, required=False)
-    compare_at_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
-    price = serializers.DecimalField(max_digits=10, decimal_places=2)
-    cost_per_unit = serializers.DecimalField(max_digits=10, decimal_places=2)
-    sku = serializers.CharField(max_length=255, required=False)
-    stock = serializers.IntegerField(required=False)
-    weight_unit = serializers.CharField(max_length=10, required=False)
-    weight_value = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
-    color_code = serializers.CharField(max_length=7, required=False)
+
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)

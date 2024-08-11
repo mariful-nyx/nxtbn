@@ -151,6 +151,32 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'variants_payload',
         )
     
+    def update(self, instance, validated_data):
+        collection = validated_data.pop('collections', [])
+        images = validated_data.pop('images', [])
+        variants_payload = validated_data.pop('variants_payload', [])
+        currency = validated_data.pop('currency', 'USD')
+
+        instance.collections.set(collection)
+        instance.images.set(images)
+
+
+        with transaction.atomic():
+            for variant_data in variants_payload:
+                variant_id = variant_data.pop('id', None)
+                if variant_id:
+                    # Update existing variant
+                    variant = ProductVariant.objects.get(id=variant_id, product=instance)
+                    for attr, value in variant_data.items():
+                        setattr(variant, attr, value)
+                    variant.save()
+                else:
+                    # Create new variant
+                    ProductVariant.objects.create(product=instance, **variant_data)
+
+        instance.save()
+        return instance
+    
 
 
 

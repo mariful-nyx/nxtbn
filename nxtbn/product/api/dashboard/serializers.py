@@ -59,7 +59,23 @@ class ProductVariantSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductVariant
         ref_name = 'product_variant_dashboard_get'
-        fields = ('id', 'product', 'name', 'compare_at_price', 'price', 'cost_per_unit', 'sku',)
+        fields = (
+            'id',
+            'product',
+            'name',
+            'compare_at_price',
+            'price',
+            'cost_per_unit',
+            'sku',
+            'weight_unit',
+            'weight_value',
+            'stock',
+            'color_code',
+            'track_inventory',
+            'stock_status',
+            'low_stock_threshold',
+            'variant_image',
+        )
 
 class ProductSerializer(serializers.ModelSerializer):
     default_variant = ProductVariantSerializer(read_only=True)

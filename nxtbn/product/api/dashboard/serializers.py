@@ -120,7 +120,7 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
 class ProductDetailsSerializer(serializers.ModelSerializer):
     default_variant = ProductVariantSerializer(read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
-    images = ImageSerializer(many=True, read_only=True)
+    images_details = ImageSerializer(many=True, read_only=True, source='images')
     category_details = CategorySerializer(read_only=True, source='category')
     product_type_details = ProductTypeSerializer(read_only=True, source='product_type')
     variants_payload = VariantCreatePayloadSerializer(many=True, write_only=True)
@@ -135,6 +135,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'summary',
             'description',
             'images',
+            'images_details',
             'category',
             'supplier',
             'brand',
@@ -156,9 +157,24 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
         images = validated_data.pop('images', [])
         variants_payload = validated_data.pop('variants_payload', [])
         currency = validated_data.pop('currency', 'USD')
+        category = validated_data.pop('category', None)
+        product_type = validated_data.pop('product_type', None)
+        related_to = validated_data.pop('related_to', None)
+        supplier = validated_data.pop('supplier', None)
 
         instance.collections.set(collection)
         instance.images.set(images)
+        if category:
+            instance.category = category
+        if product_type:
+            instance.product_type = product_type
+        if related_to:
+            instance.related_to = related_to
+        if supplier:    
+            instance.supplier = supplier
+
+        for pattr, pvalue in validated_data.items():
+            setattr(instance, pattr, pvalue)
 
 
         with transaction.atomic():

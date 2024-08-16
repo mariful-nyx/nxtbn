@@ -183,7 +183,10 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
 
         with transaction.atomic():
+            default_variant = None
+
             for variant_data in variants_payload:
+                is_default_variant = variant_data.pop('is_default_variant', False)
                 variant_id = variant_data.pop('id', None)
                 if variant_id:
                     # Update existing variant
@@ -194,6 +197,15 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
                 else:
                     # Create new variant
                     ProductVariant.objects.create(product=instance, **variant_data)
+
+                if is_default_variant:
+                    default_variant = variant
+
+            # Ensure a default variant is set
+            if default_variant:
+                instance.default_variant = default_variant
+            elif not instance.default_variant:
+                raise serializers.ValidationError({'default_variant': _('A default variant must be set.')})
 
         instance.save()
         return instance

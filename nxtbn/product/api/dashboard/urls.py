@@ -12,7 +12,8 @@ from nxtbn.product.api.dashboard.views import (
     RecursiveCategoryListView,
     ColorViewSet,
     ProductTypeViewSet,
-    ProductTagViewSet
+    ProductTagViewSet,
+    ProductVariantDeleteAPIView
 )
 
 register_converter(IdOrNoneConverter, 'id_or_none')
@@ -28,6 +29,7 @@ urlpatterns = [
     path('', include(router.urls)),
     path('products/', ProductListView.as_view(), name='product-list'),
     path('products/<int:id>/', ProductDetailView.as_view(), name='product-detail'),
+     path('variants/<int:pk>/', ProductVariantDeleteAPIView.as_view(), name='variant-delete'),
 
     path('categories/', CategoryListView.as_view(), name='category-list'),
     path('recursive-categories/', RecursiveCategoryListView.as_view(), name='recursive-category'),

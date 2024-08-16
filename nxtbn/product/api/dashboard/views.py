@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 from rest_framework import generics, status
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
@@ -7,7 +8,7 @@ from rest_framework import viewsets
 
 
 from nxtbn.core.paginator import NxtbnPagination
-from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType
+from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
 from nxtbn.product.api.dashboard.serializers import (
     BasicCategorySerializer,
     ColorSerializer,
@@ -109,3 +110,16 @@ class ProductTagViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return ProductTag.objects.all()
+    
+
+class ProductVariantDeleteAPIView(generics.DestroyAPIView):
+    queryset = ProductVariant.objects.all()
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Check if the variant is the default variant of any product
+        if instance.product.default_variant == instance:
+            raise ValidationError("This variant is set as the default variant for a product and cannot be deleted.")
+        
+        # If not the default variant, proceed with deletion
+        return super().destroy(request, *args, **kwargs)

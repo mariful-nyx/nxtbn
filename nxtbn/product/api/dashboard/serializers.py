@@ -56,6 +56,7 @@ class CollectionSerializer(serializers.ModelSerializer):
         write_only_fields = ('image',)
 
 class ProductVariantSerializer(serializers.ModelSerializer):
+    is_default_variant = serializers.SerializerMethodField()
     class Meta:
         model = ProductVariant
         ref_name = 'product_variant_dashboard_get'
@@ -75,7 +76,10 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             'stock_status',
             'low_stock_threshold',
             'variant_image',
+            'is_default_variant',
         )
+    def get_is_default_variant(self, obj):
+        return obj.product.default_variant_id == obj.id
 
 class ProductSerializer(serializers.ModelSerializer):
     default_variant = ProductVariantSerializer(read_only=True)

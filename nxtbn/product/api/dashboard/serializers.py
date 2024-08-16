@@ -1,6 +1,8 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from django.db import transaction
+from rest_framework.exceptions import ValidationError
+
 
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
 from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
@@ -9,6 +11,15 @@ class ProductTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductType
         fields = '__all__'
+
+    def create(self, validated_data):
+        # Check if the product is a physical product
+        if validated_data.get('physical_product') and not validated_data.get('weight_unit'):
+            raise ValidationError({'weight_unit': 'This field is required for physical products.'})
+
+        # Create the ProductType instance
+        return super().create(validated_data)
+    
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category

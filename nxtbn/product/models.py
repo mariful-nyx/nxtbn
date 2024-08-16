@@ -103,10 +103,16 @@ class ProductTag(models.Model):
 
 class ProductType(models.Model):
     name = models.CharField(unique=True, max_length=50)
-    taxable = models.BooleanField(False)
-    physical_product = models.BooleanField(False)
-    track_stock = models.BooleanField(False)
-    has_variant = models.BooleanField(False)
+    taxable = models.BooleanField(default=False)
+    physical_product = models.BooleanField(default=False)
+    track_stock = models.BooleanField(default=False)
+    has_variant = models.BooleanField(default=False)
+    weight_unit = models.CharField(
+        max_length=5,
+        choices=WeightUnits.choices,
+        blank=True,
+        null=True
+    )
 
     # TO DO: class Meta: # Handle unique together with each field except name
 

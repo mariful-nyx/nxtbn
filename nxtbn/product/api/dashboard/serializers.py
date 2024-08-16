@@ -119,6 +119,7 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     weight_unit = serializers.CharField(max_length=10, required=False, allow_null=True)
     weight_value = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     color_code = serializers.CharField(max_length=7, required=False, allow_null=True)
+    is_default_variant = serializers.BooleanField(default=False)
 
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
@@ -246,14 +247,16 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         instance.images.set(images)
 
         # Create variants and set the first one as the default variant
+        
         default_variant = None
         for i, variant_payload in enumerate(variants_payload):
+            is_default_variant = variant_payload.pop('is_default_variant', False)
             variant = ProductVariant.objects.create(
                 product=instance,
                 currency=currency,
                 **variant_payload
             )
-            if i == 0:
+            if is_default_variant:
                 default_variant = variant
 
         if default_variant:

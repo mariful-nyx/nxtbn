@@ -125,9 +125,7 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     images = models.ManyToManyField(Image, blank=True)
     category = models.ForeignKey(
         'Category', 
-        null=True, 
-        blank=True, 
-        on_delete=models.SET_NULL, 
+        on_delete=models.PROTECT, 
         related_name='products'
     )
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name='+', null=True, blank=True)

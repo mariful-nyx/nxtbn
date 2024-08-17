@@ -140,6 +140,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
     category_details = CategorySerializer(read_only=True, source='category')
     product_type_details = ProductTypeSerializer(read_only=True, source='product_type')
     variants_payload = VariantCreatePayloadSerializer(many=True, write_only=True)
+    variant_to_delete = serializers.ListField(child=serializers.IntegerField(), write_only=True)
 
     class Meta:
         model = Product 
@@ -166,6 +167,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'product_type_details',
             'variants',
             'variants_payload',
+            'variant_to_delete',
         )
     
     def update(self, instance, validated_data):
@@ -177,6 +179,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
         product_type = validated_data.pop('product_type', None)
         related_to = validated_data.pop('related_to', None)
         supplier = validated_data.pop('supplier', None)
+        variant_to_delete = validated_data.pop('variant_to_delete', [])
 
         instance.collections.set(collection)
         instance.images.set(images)
@@ -194,6 +197,13 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
 
         with transaction.atomic():
+            # Delete variants
+            for variant_id in variant_to_delete:
+                variant = ProductVariant.objects.get(id=variant_id)
+                if instance.default_variant == variant:
+                    raise serializers.ValidationError({'variant_to_delete': _('The default variant cannot be deleted.')})
+                variant.delete()
+
             default_variant = None
 
             for variant_data in variants_payload:

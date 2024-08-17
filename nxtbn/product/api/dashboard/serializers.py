@@ -181,22 +181,23 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
         supplier = validated_data.pop('supplier', None)
         variant_to_delete = validated_data.pop('variant_to_delete', [])
 
-        instance.collections.set(collection)
-        instance.images.set(images)
-        if category:
-            instance.category = category
-        if product_type:
-            instance.product_type = product_type
-        if related_to:
-            instance.related_to = related_to
-        if supplier:    
-            instance.supplier = supplier
-
-        for pattr, pvalue in validated_data.items():
-            setattr(instance, pattr, pvalue)
-
-
         with transaction.atomic():
+            instance.collections.set(collection)
+            instance.images.set(images)
+            if category:
+                instance.category = category
+            if product_type:
+                instance.product_type = product_type
+            if related_to:
+                instance.related_to = related_to
+            if supplier:    
+                instance.supplier = supplier
+
+            for pattr, pvalue in validated_data.items():
+                setattr(instance, pattr, pvalue)
+
+
+        
             # Delete variants
             for variant_id in variant_to_delete:
                 variant = ProductVariant.objects.get(id=variant_id)
@@ -271,31 +272,32 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         variants_payload = validated_data.pop('variants_payload', [])
         currency = validated_data.pop('currency', 'USD')
 
-        instance = Product.objects.create(
-            **validated_data,
-            **{'created_by': self.context['request'].user}
-        )
-
-        instance.collections.set(collection)
-        instance.images.set(images)
-
-        # Create variants and set the first one as the default variant
-        
-        default_variant = None
-        for i, variant_payload in enumerate(variants_payload):
-            is_default_variant = variant_payload.pop('is_default_variant', False)
-            variant = ProductVariant.objects.create(
-                product=instance,
-                currency=currency,
-                **variant_payload
+        with transaction.atomic():
+            instance = Product.objects.create(
+                **validated_data,
+                **{'created_by': self.context['request'].user}
             )
-            if is_default_variant:
-                default_variant = variant
 
-        if default_variant:
-            instance.default_variant = default_variant
-            instance.save()
-        
+            instance.collections.set(collection)
+            instance.images.set(images)
+
+            # Create variants and set the first one as the default variant
+            
+            default_variant = None
+            for i, variant_payload in enumerate(variants_payload):
+                is_default_variant = variant_payload.pop('is_default_variant', False)
+                variant = ProductVariant.objects.create(
+                    product=instance,
+                    currency=currency,
+                    **variant_payload
+                )
+                if is_default_variant:
+                    default_variant = variant
+
+            if default_variant:
+                instance.default_variant = default_variant
+                instance.save()
+            
         return instance
     
 

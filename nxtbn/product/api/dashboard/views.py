@@ -6,6 +6,8 @@ from rest_framework.permissions  import AllowAny
 from rest_framework.exceptions import APIException
 from rest_framework import viewsets
 
+from rest_framework.filters import SearchFilter
+
 
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
@@ -107,9 +109,13 @@ class ProductTagViewSet(viewsets.ModelViewSet):
     pagination_class = None
     queryset = ProductTag.objects.all()
     serializer_class = ProductTagSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['name']
 
-    def get_queryset(self):
-        return ProductTag.objects.all()
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        response.data = response.data[:5]
+        return response
     
 
 class ProductVariantDeleteAPIView(generics.DestroyAPIView):

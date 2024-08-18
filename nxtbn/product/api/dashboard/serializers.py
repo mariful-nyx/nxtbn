@@ -4,6 +4,7 @@ from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
 
+from nxtbn.core import PublishableStatus
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
 from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
 
@@ -183,6 +184,8 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'variant_to_delete',
             'tags',
             'tags_payload',
+            'status',
+            'is_live',
         )
     
     def update(self, instance, validated_data):
@@ -251,6 +254,11 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
                     tag, _ = ProductTag.objects.get_or_create(name=tag_payload['value'])
                     instance.tags.add(tag)
 
+            if instance.status == PublishableStatus.PUBLISHED:
+                instance.is_live = True
+            else:
+                instance.is_live = False
+
         instance.save()
         return instance
     
@@ -289,6 +297,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'meta_description',
             'tags',
             'tags_payload',
+            'status',
+            'is_live',
         )
 
 
@@ -328,6 +338,11 @@ class ProductCreateSerializer(serializers.ModelSerializer):
                 for tag_payload in tags_payload:
                     tag, _ = ProductTag.objects.get_or_create(name=tag_payload)
                     instance.tags.add(tag)
+
+            if instance.status == PublishableStatus.PUBLISHED:
+                instance.is_live = True
+            else:
+                instance.is_live = False
 
             instance.save()
             

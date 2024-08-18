@@ -7,6 +7,13 @@ from rest_framework.exceptions import ValidationError
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
 from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
 
+class ProductTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductTag
+        fields = '__all__'
+
+        
+
 class ProductTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductType
@@ -239,6 +246,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
     variants_payload = VariantCreatePayloadSerializer(many=True, write_only=True)
     currency = serializers.CharField(max_length=3, required=False, write_only=True)
+    tags = ProductTagSerializer(many=True, read_only=True)
+    tags_payload = serializers.ListField(child=serializers.CharField(max_length=255), write_only=True, required=False)
     class Meta:
         model = Product
         ref_name = 'product_dashboard_create'
@@ -263,6 +272,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'currency',
             'meta_title',
             'meta_description',
+            'tags',
+            'tags_payload',
         )
 
 
@@ -270,6 +281,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         collection = validated_data.pop('collections', [])
         images = validated_data.pop('images', [])
         variants_payload = validated_data.pop('variants_payload', [])
+        tags_payload = validated_data.pop('tags_payload', [])
         currency = validated_data.pop('currency', 'USD')
 
         with transaction.atomic():
@@ -296,7 +308,13 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
             if default_variant:
                 instance.default_variant = default_variant
-                instance.save()
+
+            if tags_payload:
+                for tag_payload in tags_payload:
+                    tag, _ = ProductTag.objects.get_or_create(name=tag_payload)
+                    instance.tags.add(tag)
+
+            instance.save()
             
         return instance
     
@@ -307,11 +325,3 @@ class ColorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     
-
-
-class ProductTagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductTag
-        fields = '__all__'
-
-        

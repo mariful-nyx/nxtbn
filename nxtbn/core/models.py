@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 from django_extensions.db.fields import AutoSlugField
-from nxtbn.core import CurrencyTypes, MoneyFieldTypes
+from nxtbn.core import CurrencyTypes, MoneyFieldTypes, PublishableStatus
 from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.users.admin import User
 
@@ -59,6 +59,7 @@ class NameDescriptionAbstract(models.Model):
         return self.name
 class PublishableModel(AbstractBaseModel):
     published_date = models.DateTimeField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=PublishableStatus.choices, default=PublishableStatus.DRAFT)
     is_live = models.BooleanField(default=False)
 
     def make_live(self):

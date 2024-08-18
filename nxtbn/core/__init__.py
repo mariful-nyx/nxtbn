@@ -6,6 +6,12 @@ class MoneyFieldTypes(models.TextChoices):
     UNIT = "unit", "Unit"
     SUBUNIT = "subunit", "Subunit"
 
+class PublishableStatus(models.TextChoices):
+    """Enumeration for specifying the status of a publishable object."""
+    DRAFT = "DRAFT", _("Draft")
+    PUBLISHED = "PUBLISHED", _("Published")
+    ARCHIVED = "ARCHIVED", _("Archived")
+
 class CurrencyTypes(models.TextChoices):
     USD = "USD", _("United States Dollar")
     EUR = "EUR", _("Euro")

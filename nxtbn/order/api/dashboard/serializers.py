@@ -41,3 +41,10 @@ class OrderSerializer(serializers.ModelSerializer):
             'gift_card',
             'line_items',
         )
+
+class OrderListSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = Order
+        fields = '__all__'

@@ -13,7 +13,7 @@ from nxtbn.core.admin_permissions import NxtbnAdminPermission
 from nxtbn.order import OrderStatus
 from nxtbn.order.models import Order, OrderLineItem
 from nxtbn.payment.models import Payment
-from .serializers import OrderSerializer
+from .serializers import OrderListSerializer, OrderSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 from babel.numbers import get_currency_precision
@@ -22,7 +22,7 @@ from babel.numbers import get_currency_precision
 class OrderListView(generics.ListAPIView):
     permission_classes = (NxtbnAdminPermission,)
     queryset = Order.objects.all()
-    serializer_class = OrderSerializer
+    serializer_class = OrderListSerializer
     pagination_class = NxtbnPagination
 
 

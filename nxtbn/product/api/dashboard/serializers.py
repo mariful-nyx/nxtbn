@@ -148,6 +148,12 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
     product_type_details = ProductTypeSerializer(read_only=True, source='product_type')
     variants_payload = VariantCreatePayloadSerializer(many=True, write_only=True)
     variant_to_delete = serializers.ListField(child=serializers.IntegerField(), write_only=True)
+    tags = ProductTagSerializer(many=True, read_only=True)
+    tags_payload = serializers.ListField(
+        child=serializers.DictField(child=serializers.CharField(max_length=255)),
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = Product 
@@ -175,6 +181,8 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'variants',
             'variants_payload',
             'variant_to_delete',
+            'tags',
+            'tags_payload',
         )
     
     def update(self, instance, validated_data):
@@ -187,6 +195,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
         related_to = validated_data.pop('related_to', None)
         supplier = validated_data.pop('supplier', None)
         variant_to_delete = validated_data.pop('variant_to_delete', [])
+        tags_payload = validated_data.pop('tags_payload', [])
 
         with transaction.atomic():
             instance.collections.set(collection)
@@ -235,6 +244,12 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
                 instance.default_variant = default_variant
             elif not instance.default_variant:
                 raise serializers.ValidationError({'default_variant': _('A default variant must be set.')})
+            
+            if tags_payload:
+                instance.tags.clear()
+                for tag_payload in tags_payload:
+                    tag, _ = ProductTag.objects.get_or_create(name=tag_payload['value'])
+                    instance.tags.add(tag)
 
         instance.save()
         return instance

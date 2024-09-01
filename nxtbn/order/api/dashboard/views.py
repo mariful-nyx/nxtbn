@@ -13,10 +13,14 @@ from datetime import timedelta
 
 from decimal import Decimal
 
+from rest_framework import filters as drf_filters
+import django_filters
+from django_filters import rest_framework as filters
 
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
-from nxtbn.order import OrderStatus
+from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
 from nxtbn.order.models import Order, OrderLineItem
+from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 from nxtbn.product.models import ProductVariant
 from .serializers import OrderListSerializer, OrderSerializer
@@ -25,11 +29,39 @@ from nxtbn.core.paginator import NxtbnPagination
 from babel.numbers import get_currency_precision
 
 
+
+class OrderFilter(filters.FilterSet):
+    status = filters.ChoiceFilter(choices=OrderStatus.choices)
+    charge_status = filters.ChoiceFilter(choices=OrderChargeStatus.choices)
+    authorize_status = filters.ChoiceFilter(choices=OrderAuthorizationStatus.choices)
+    currency = filters.CharFilter(field_name='currency', lookup_expr='iexact')
+    payment_method = filters.ChoiceFilter(choices=PaymentMethod.choices)
+
+    class Meta:
+        model = Order
+        fields = [
+            'status',
+            'charge_status',
+            'authorize_status',
+            'currency',
+            'payment_method'
+        ]
+
+
 class OrderListView(generics.ListAPIView):
     permission_classes = (NxtbnAdminPermission,)
     queryset = Order.objects.all()
     serializer_class = OrderListSerializer
     pagination_class = NxtbnPagination
+
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+        drf_filters.OrderingFilter
+    ]
+    filterset_class = OrderFilter
+    search_fields = ['order_number', 'user__username', 'supplier__name']
+    ordering_fields = ['created_at']
 
 
 class OrderDetailView(generics.RetrieveAPIView):

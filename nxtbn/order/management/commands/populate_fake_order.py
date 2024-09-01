@@ -3,15 +3,14 @@ from django.core.management.base import BaseCommand
 from faker import Faker
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from nxtbn.order import OrderStatus
+from nxtbn.payment import PaymentStatus
 from nxtbn.product.models import Product, ProductVariant
 from nxtbn.order.models import Order, OrderLineItem, Address
 from nxtbn.payment.models import Payment, PaymentMethod
 
 fake = Faker()
 
-class PaymentStatus:
-    SUCCESS = 'Success'
-    FAILED = 'Failed'
 
 class Command(BaseCommand):
     help = 'Generate fake orders for selected products'
@@ -48,17 +47,17 @@ class Command(BaseCommand):
             random_user = User.objects.order_by('?').first()
 
         
-            payment_status = random.choice([PaymentStatus.SUCCESS, PaymentStatus.FAILED])
-            paid_at = timezone.now() if payment_status == PaymentStatus.SUCCESS else None
+            payment_status = random.choice(PaymentStatus.values) 
+            paid_at = timezone.now() if payment_status == PaymentStatus.CAPTURED else None
 
             order = Order.objects.create(
                 user=random_user, 
                 supplier=product.supplier,
-                payment_method=random.choice(['Credit Card', 'PayPal', 'Cash on Delivery']),  
+                payment_method=random.choice(PaymentMethod.values),  
                 shipping_address=shipping_address,
                 billing_address=billing_address,
                 total_price=default_variant.price,
-                status=random.choice(['Pending', 'Confirmed', 'Shipped']) 
+                status=random.choice(OrderStatus.values) 
             )
 
             OrderLineItem.objects.create(
@@ -69,8 +68,8 @@ class Command(BaseCommand):
                 total_price=default_variant.price  
             )
 
-            payment_status = random.choice([PaymentStatus.SUCCESS, PaymentStatus.FAILED]) 
-            paid_at = timezone.now() if payment_status == PaymentStatus.SUCCESS else None
+            payment_status = random.choice(PaymentStatus.values) 
+            paid_at = timezone.now() if payment_status == PaymentStatus.CAPTURED else None
 
             payment = Payment.objects.create(
                 order=order,
@@ -80,6 +79,6 @@ class Command(BaseCommand):
                 paid_at=paid_at,
             )
 
-            self.stdout.write(self.style.SUCCESS(f"Fake order created for product '{product.name}'. Payment {'successful' if payment_status == PaymentStatus.SUCCESS else 'failed'}"))
+            self.stdout.write(self.style.SUCCESS(f"Fake order created for product '{product.name}'. Payment {'successful' if payment_status == PaymentStatus.CAPTURED else 'failed'}"))
 
         self.stdout.write(self.style.SUCCESS('Fake orders generation completed'))

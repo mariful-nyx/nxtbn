@@ -4,7 +4,10 @@ from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
-from nxtbn.users.api.dashboard.serializers import DashboardLoginSerializer
+from nxtbn.core.paginator import NxtbnPagination
+from nxtbn.users import UserRole
+from nxtbn.users.models import User
+from nxtbn.users.api.dashboard.serializers import CustomerSerializer, DashboardLoginSerializer, UserSerializer
 from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
 from nxtbn.users.api.storefront.views import TokenRefreshView
 from nxtbn.users.utils.jwt_utils import JWTManager
@@ -50,3 +53,30 @@ class LoginView(generics.GenericAPIView):
 
 class DashboardTokenRefreshView(TokenRefreshView):
     pass
+
+
+
+#=========================================
+# Authentication related views end here
+#=========================================
+
+class CustomerListAPIView(generics.ListAPIView):
+    """
+    API view to retrieve the list of customers (users with role 'CUSTOMER').
+    """
+    serializer_class = CustomerSerializer
+    pagination_class = NxtbnPagination
+
+    def get_queryset(self):
+        return User.objects.filter(role=UserRole.CUSTOMER)
+
+
+class UserListAPIView(generics.ListAPIView):
+    """
+    API view to retrieve the list of all users.
+    """
+    serializer_class = UserSerializer
+    pagination_class = NxtbnPagination
+
+    def get_queryset(self):
+        return User.objects.all()

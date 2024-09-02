@@ -4,4 +4,6 @@ from nxtbn.users.api.dashboard import views as users_views
 urlpatterns = [
     path('login/', users_views.LoginView.as_view(), name='login'),
     path('token/refresh/', users_views.DashboardTokenRefreshView.as_view(), name='token_refresh'),
+    path('customers/', users_views.CustomerListAPIView.as_view(), name='customer-list'),
+    path('users/', users_views.UserListAPIView.as_view(), name='user-list'),
 ]

@@ -3,5 +3,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
+from nxtbn.users import UserRole
+
 class User(AbstractUser):
+    role = models.CharField(max_length=255, choices=UserRole.choices, default=UserRole.CUSTOMER)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)

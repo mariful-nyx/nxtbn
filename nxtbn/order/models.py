@@ -13,6 +13,7 @@ from nxtbn.gift_card.models import GiftCard
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
 from nxtbn.payment import PaymentMethod
 from nxtbn.product.models import ProductVariant
+from nxtbn.users import UserRole
 from nxtbn.users.admin import User
 from nxtbn.product.models import Supplier
 
@@ -77,7 +78,14 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
 
 
 
-    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="orders", null=True, blank=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="orders",
+        null=True,
+        blank=True,
+        limit_choices_to={'role': UserRole.CUSTOMER}
+    )
     supplier = models.ForeignKey(Supplier, null=True, blank=True, on_delete=models.SET_NULL)
     payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices)
     shipping_address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL, related_name="shipping_orders")

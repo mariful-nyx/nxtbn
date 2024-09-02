@@ -104,10 +104,6 @@ nxtbn is licensed under the [BSD-3 License](https://github.com/nxtbn-com/nxtbn?t
 ## Commercial Support
 We offer commercial support to help with any missing functionality or project assistance. For inquiries, please reach out to us at [info@nxtbn.com](mailto:info@nxtbn.com).
 
-### 💖 Sponsor
-
-If you adore this project and are eager to lend your support, consider sponsoring it! Dive deeper into how you can make a meaningful impact by [reading on](https://github.com/nxtbn-com/.github/blob/main/sponsor.md).
-
 
 ---
 

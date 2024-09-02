@@ -38,10 +38,6 @@
   </table>
 </div>
 
-
-## Other Repository:
-- nxtbn dashboard [https://github.com/nxtbn-com/nxtbn-dashboard](https://github.com/nxtbn-com/nxtbn-dashboard)
-
 ## Documentation
 - nxtbn documentation [https://docs.nxtbn.com/](https://docs.nxtbn.com/)
 

@@ -1,5 +1,3 @@
-🚧 **The project is under development, please check back after one month for a stable version.** ⏳
-
 <div align="center" width="100px">
  <picture>
    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nxtbn-com/nxtbn/main/static/images/nxtbn_white.png">

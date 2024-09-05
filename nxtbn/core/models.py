@@ -8,6 +8,7 @@ from django_extensions.db.fields import AutoSlugField
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes, PublishableStatus
 from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.users.admin import User
+from django.contrib.sites.models import Site
 
 
 from money.money import Currency, Money
@@ -133,9 +134,9 @@ class AbstractMetadata(models.Model):
 
 
 class SiteSettings(models.Model):
-    # default_language = models.CharField(max_length=10, default='en', help_text="Default language for the site.") # TODO: Put this in .env
-    # base_currency = models.CharField(max_length=10, default='usd', help_text="Default currency for the site.") # TODO: Put this in .env
+    site = models.OneToOneField(Site, on_delete=models.CASCADE, null=True, blank=True, help_text="The site this configuration applies to.")
     site_name = models.CharField(max_length=100, blank=True, null=True, help_text="Name of the site.")
+    company_name = models.CharField(max_length=100, blank=True, null=True, help_text="Name of the company.")
     contact_email = models.EmailField(blank=True, null=True, help_text="Contact email for site administrators.")
     contact_phone = models.CharField(max_length=20, blank=True, null=True, help_text="Contact phone number for site administrators.")
     address = models.TextField(blank=True, null=True, help_text="Physical address of the site.")

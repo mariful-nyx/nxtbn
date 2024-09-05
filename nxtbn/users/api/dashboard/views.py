@@ -8,9 +8,12 @@ from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.users import UserRole
 from nxtbn.users.models import User
 from nxtbn.users.api.dashboard.serializers import CustomerSerializer, DashboardLoginSerializer, UserSerializer
+from nxtbn.users.api.dashboard.serializers import DashboardLoginSerializer, PasswordChangeSerializer
 from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
 from nxtbn.users.api.storefront.views import TokenRefreshView
 from nxtbn.users.utils.jwt_utils import JWTManager
+from nxtbn.users.models import User
+from nxtbn.core.admin_permissions import NxtbnAdminPermission
 
 class LoginView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
@@ -55,7 +58,6 @@ class DashboardTokenRefreshView(TokenRefreshView):
     pass
 
 
-
 #=========================================
 # Authentication related views end here
 #=========================================
@@ -80,3 +82,23 @@ class UserListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return User.objects.all()
+
+class PasswordChangeView(generics.UpdateAPIView):
+    serializer_class = PasswordChangeSerializer
+    model = User
+    permission_classes = [NxtbnAdminPermission]
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            # Set the new password
+            serializer.save()
+            return Response('Password changed successfully', status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

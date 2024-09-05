@@ -6,4 +6,5 @@ urlpatterns = [
     path('token/refresh/', users_views.DashboardTokenRefreshView.as_view(), name='token_refresh'),
     path('customers/', users_views.CustomerListAPIView.as_view(), name='customer-list'),
     path('users/', users_views.UserListAPIView.as_view(), name='user-list'),
+    path('change-password/', users_views.PasswordChangeView.as_view(), name='change_password'),
 ]

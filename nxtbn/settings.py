@@ -121,6 +121,11 @@ HELPING_HAND_APPS = [
 
 INSTALLED_APPS += LOCAL_APPS + HELPING_HAND_APPS
 
+SITE_ID = 1  # Default site ID (not used in headless API setup).
+# In a headless API setup, a custom middleware will dynamically
+# determine the site ID based on the request's domain.
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', # TODO: Do we need this?

@@ -46,9 +46,11 @@ class Command(BaseCommand):
 
             random_user = User.objects.order_by('?').first()
 
-        
             payment_status = random.choice(PaymentStatus.values) 
             paid_at = timezone.now() if payment_status == PaymentStatus.CAPTURED else None
+
+            # Convert price to sub-units (e.g., cents)
+            variant_price_subunit = int(default_variant.price * 100)
 
             order = Order.objects.create(
                 user=random_user, 
@@ -56,7 +58,7 @@ class Command(BaseCommand):
                 payment_method=random.choice(PaymentMethod.values),  
                 shipping_address=shipping_address,
                 billing_address=billing_address,
-                total_price=default_variant.price,
+                total_price=variant_price_subunit,  # Save price in sub-units
                 status=random.choice(OrderStatus.values) 
             )
 
@@ -64,8 +66,8 @@ class Command(BaseCommand):
                 order=order,
                 variant=default_variant,
                 quantity=random.randint(1, 5),  
-                price_per_unit=default_variant.price,
-                total_price=default_variant.price  
+                price_per_unit=variant_price_subunit,  # Price per unit in sub-units
+                total_price=variant_price_subunit  # Total price in sub-units
             )
 
             payment_status = random.choice(PaymentStatus.values) 
@@ -74,7 +76,7 @@ class Command(BaseCommand):
             payment = Payment.objects.create(
                 order=order,
                 payment_method=random.choice([PaymentMethod.CREDIT_CARD, PaymentMethod.PAYPAL]),  
-                payment_amount=order.total_price,
+                payment_amount=order.total_price,  # Payment amount in sub-units
                 payment_status=payment_status,
                 paid_at=paid_at,
             )

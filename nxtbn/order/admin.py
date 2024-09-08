@@ -13,9 +13,10 @@ admin.site.register(Address, AddressAdmin)
 
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'humanize_total_price', 'payment_method', 'shipping_address', 'billing_address', 'total_price', 'status')
+    list_display = ('id', 'alias', 'user', 'humanize_total_price', 'payment_method', 'shipping_address', 'billing_address', 'total_price', 'status')
     list_filter = ('status', 'payment_method', 'supplier')
-    search_fields = ('user', 'supplier', 'payment_method', 'shipping_address', 'billing_address', 'total_price')
+    search_fields = ('user', 'alias', 'supplier', 'payment_method', 'shipping_address', 'billing_address', 'total_price')
+    readonly_fields = ('alias',)
 
 admin.site.register(Order, OrderAdmin)
 

@@ -23,7 +23,7 @@ from babel.numbers import get_currency_precision, format_currency
 
 class Address(AbstractAddressModels):
 
-    # Customizable Receiver Information / may redundent with user
+    # Customizable Receiver Information / may redundent with user model. if no user/auth, fill first_name and last_name
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
 

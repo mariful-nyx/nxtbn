@@ -6,10 +6,11 @@ from django.db import transaction
 from nxtbn.order import OrderStatus
 from nxtbn.order.models import Order, OrderLineItem
 from nxtbn.payment.models import Payment
-
+from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
 
 
 class OrderLineItemSerializer(serializers.ModelSerializer):
+    variant = ProductVariantSerializer(read_only=True)
     class Meta:
         model = OrderLineItem
         fields = ('id', 'variant', 'quantity', 'price_per_unit', 'total_price',)

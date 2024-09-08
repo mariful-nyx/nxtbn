@@ -28,6 +28,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = (
             'id',
+            'alias',
             'user',
             'supplier',
             'payment_method',

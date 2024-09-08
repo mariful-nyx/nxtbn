@@ -30,7 +30,8 @@ class OrderInvoiceSerializer(serializers.ModelSerializer):
             'total_price',
             'total_price_in_customer_currency',
             'currency',
-            'customer_currency'
+            'customer_currency',
+            'payment_method',
         ]
 
     def get_company_info(self, obj):

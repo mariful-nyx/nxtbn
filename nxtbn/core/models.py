@@ -109,8 +109,6 @@ class AbstractAddressModels(AbstractBaseModel):
     class Meta:
         abstract = True
 
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}, {self.street_address}, {self.city}, {self.country}"
     
 
 class AbstractMetadata(models.Model):

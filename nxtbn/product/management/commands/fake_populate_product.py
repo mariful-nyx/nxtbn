@@ -1,4 +1,6 @@
 import json
+import os
+import shutil
 from django.conf import settings
 from django.core.management.base import BaseCommand
 import requests
@@ -21,16 +23,16 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--num_products', type=int, default=10, help='Number of fake products to create')
 
-    def fetch_random_image_url(self, width=300, height=200):
-        response = requests.get(f'https://source.unsplash.com/random/{width}x{height}')
-        if response.status_code == 200:
-            return response.content
-        else:
-            return None
-
     def handle(self, *args, **options):
         fake = Faker()
 
+        static_image_path = os.path.join(settings.STATICFILES_DIRS[0], 'images/nxtbn_black.png')
+        media_image_path = os.path.join(settings.MEDIA_ROOT, 'nxtbn_black.png')
+
+        if not os.path.exists(media_image_path):
+            shutil.copy(static_image_path, media_image_path)
+
+        
         num_products = options['num_products']
         categories = Category.objects.all()
         collections = Collection.objects.all()
@@ -47,23 +49,15 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.NOTICE('Creating superuser with username "admin" and password "admin"...'))
                 superuser = User.objects.create_superuser('admin', 'admin@example.com', 'admin')
 
-
-            image_object = self.fetch_random_image_url()
-            img_temp = NamedTemporaryFile(delete=True)
-            img_temp.write(image_object)
-            img_temp.flush()
-            image_file = File(
-                img_temp,
-                name=f'{fake.word()}.jpg'
-            )
          
             name = fake.word() 
-            image = Image.objects.create(
-                created_by=superuser,
-                name=name,
-                image=image_file,  
-                image_alt_text=fake.sentence()
-            )
+            with open(media_image_path, 'rb') as image_file:
+                image = Image.objects.create(
+                    created_by=superuser,
+                    name=name,
+                    image=File(image_file, name='nxtbn_black.png'),
+                    image_alt_text=fake.sentence()
+                )
 
             # Dummy Editor.js one-line content for description
             description_json = json.dumps({
@@ -87,11 +81,12 @@ class Command(BaseCommand):
                 category=category,
                 created_by=superuser,
                 last_modified_by=None,
-                type=product_type,
+                product_type=product_type,
                 
             )
 
             product.collections.set([collection])
+            product.images.set([image])
 
             default_variant = ProductVariant.objects.create(
                 product=product,
@@ -103,9 +98,9 @@ class Command(BaseCommand):
                 sku=fake.uuid4(),
                 weight_unit=weight_unit[0],
                 weight_value=random.uniform(1, 1000),
+                variant_image=image
             )
 
-            default_variant.variant_image.add(image)
 
             product.default_variant = default_variant
 
@@ -126,3 +121,4 @@ class Command(BaseCommand):
             product.save()
 
         self.stdout.write(self.style.SUCCESS(f'Created {num_products} fake products with multiple variants'))
+        

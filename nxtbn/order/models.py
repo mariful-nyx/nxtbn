@@ -247,6 +247,7 @@ class OrderLineItem(MonetaryMixin, models.Model):
         decimal_places=4,
         max_digits=12,
     )
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text=_("Tax rate at the time of the order"))
 
 
     def __str__(self):

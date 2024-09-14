@@ -146,11 +146,17 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
         ordering = ('name',)
 
     def product_thumbnail(self, request):
-        if self.images.exists():
-            image_url = self.images.first().image.url
+        """
+        Returns the URL of the first image associated with the product. 
+        If no image is available, returns None.
+        """
+        first_image = self.images.first()  # Get the first image if it exists
+        if first_image and hasattr(first_image, 'image') and first_image.image:
+            image_url = first_image.image.url
             full_url = request.build_absolute_uri(image_url)
             return full_url
         return None
+
     
     def colors(self):
         return self.variants.values_list('color_code', flat=True).distinct()

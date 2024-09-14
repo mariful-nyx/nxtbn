@@ -1,8 +1,9 @@
+import json
 from django.conf import settings
 from django.core.management.base import BaseCommand
 import requests
 from nxtbn.core.currency.utils import normalize_amount_currencywise
-from nxtbn.product.models import Category, Collection, Product, ProductVariant
+from nxtbn.product.models import Category, Collection, Product, ProductType, ProductVariant
 from django.contrib.auth import get_user_model
 from nxtbn.product import StockStatus, WeightUnits
 from faker import Faker
@@ -34,10 +35,11 @@ class Command(BaseCommand):
         categories = Category.objects.all()
         collections = Collection.objects.all()
 
+
         for _ in tqdm(range(num_products)):
             category = random.choice(categories)
             collection = random.choice(collections)
-            # product_type = random.choice(ProductType.choices)
+            product_type, created  = ProductType.objects.get_or_create(name='Automatic Product Type')
             weight_unit = random.choice(WeightUnits.choices)
 
             superuser = User.objects.filter(username='admin').first()
@@ -63,15 +65,29 @@ class Command(BaseCommand):
                 image_alt_text=fake.sentence()
             )
 
+            # Dummy Editor.js one-line content for description
+            description_json = json.dumps({
+                "time": fake.unix_time(),
+                "blocks": [
+                    {
+                        "type": "paragraph",
+                        "data": {
+                            "text": fake.sentence()  # Generating a fake one-liner content
+                        }
+                    }
+                ],
+                "version": "2.22.0"  # Editor.js version (example)
+            })
+
             product = Product.objects.create(
                 name=fake.word(),
                 summary=fake.sentence(),
-                description=fake.paragraph(),
+                description=description_json,
                 brand=fake.company(),
                 category=category,
                 created_by=superuser,
                 last_modified_by=None,
-                type=product_type[0],
+                type=product_type,
                 
             )
 

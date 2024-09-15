@@ -50,3 +50,43 @@ class OrderListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = '__all__'
+
+
+
+
+class OrderLineItemCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderLineItem
+        fields = ['variant', 'quantity', 'price_per_unit', 'currency', 'total_price_in_customer_currency']
+
+class OrderCreateSerializer(serializers.ModelSerializer):
+    line_items = OrderLineItemCreateSerializer(many=True)  # To handle multiple line items
+    
+    class Meta:
+        model = Order
+        fields = [
+            'user',
+            'supplier',
+            'shipping_address',
+            'billing_address', 
+            'total_price_in_customer_currency',
+            'status',
+            'authorize_status', 
+            'charge_status',
+            'promo_code',
+            'gift_card',
+            'is_due',
+            'line_items'
+        ]
+
+    def create(self, validated_data):
+        line_items_data = validated_data.pop('line_items')
+        order = Order.objects.create(
+            **validated_data,
+        )
+        
+        # Create line items for the order
+        for line_item_data in line_items_data:
+            OrderLineItem.objects.create(order=order, **line_item_data)
+        
+        return order

@@ -28,8 +28,12 @@ class Payment(MonetaryMixin, AbstractBaseUUIDModel):
     }
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="+")
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payment")
-    payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices)
+    order = models.ForeignKey( # Foreign key because one order might be paid partially cash or card or outstanding order
+        Order,
+        on_delete=models.CASCADE,
+        related_name="payment",
+    ) 
+    payment_method = models.CharField(max_length=25, choices=PaymentMethod.choices)
 
     # For storing payment gateway references
     transaction_id = models.CharField(max_length=100, blank=True, null=True, unique=True)  

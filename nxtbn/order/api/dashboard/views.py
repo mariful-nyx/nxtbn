@@ -23,7 +23,7 @@ from nxtbn.order.models import Order, OrderLineItem
 from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 from nxtbn.product.models import ProductVariant
-from .serializers import OrderListSerializer, OrderSerializer
+from .serializers import OrderCreateSerializer, OrderListSerializer, OrderSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 from babel.numbers import get_currency_precision
@@ -144,3 +144,8 @@ class BasicStatsView(APIView):
         }
         
         return Response(data)
+    
+
+class OrderCreateView(generics.CreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderCreateSerializer

@@ -20,15 +20,43 @@ class PaymentStatus(models.TextChoices):
 
 
 class PaymentMethod(models.TextChoices):
-    """Defines different methods for processing payments.
+    """
+    Defines different methods for processing payments. Each method represents
+    a specific way for a customer to complete a transaction.
 
+    Available options:
+    
     - 'CREDIT_CARD': Payment via credit card.
     - 'PAYPAL': Payment through PayPal.
     - 'BANK_TRANSFER': Payment via bank transfer.
-    - 'CASH_ON_DELIVERY': Payment upon delivery; if not used, the order must have a linked payment instance.
+    - 'CASH_ON_DELIVERY': Payment upon delivery.
+    - 'GIFT_CARD': Payment via a gift card.
+    - 'DIRECT_DEBIT': Payment through direct debit from a bank account.
+    - 'CASH_IN_STORE': Payment made in-store.
+    - 'MFS': Payment through Mobile Financial Services (MFS) like mobile wallets or mobile banking.
+    - 'CARRIER_BILLING': Payment through carrier billing, where charges are added to the customer's mobile phone bill.
+    - 'CRYPTOCURRENCY': Payment using digital currencies such as Bitcoin or Ethereum.
+    - 'BUY_NOW_PAY_LATER': Payment through services that allow purchases with deferred payments.
+    - 'E_WALLET': Payment using electronic wallets like Skrill or Neteller.
+    - 'BANK_TRANSFER_INSTANT': Instant bank transfer through networks like SEPA Instant Credit Transfer or Faster Payments.
+    - 'POSTAL_MONEY_ORDER': Payment using postal money orders.
+    - 'CHEQUE': Payment made with a cheque.
+    - 'OTHER': Any other form of payment that doesn't fall into the predefined categories.
     """
 
     CREDIT_CARD = "CREDIT_CARD", _("Credit Card")
     PAYPAL = "PAYPAL", _("PayPal")
     BANK_TRANSFER = "BANK_TRANSFER", _("Bank Transfer")
-    CASH_ON_DELIVERY = "CASH_ON_DELIVERY", _("Cash on Delivery")  # If not used, the order must have a linked payment instance.
+    CASH_ON_DELIVERY = "CASH_ON_DELIVERY", _("Cash on Delivery")
+    GIFT_CARD = "GIFT_CARD", _("Gift Card")
+    DIRECT_DEBIT = "DIRECT_DEBIT", _("Direct Debit")
+    CASH_IN_STORE = "CASH_IN_STORE", _("Cash in Store")
+    MFS = "MFS", _("Mobile Financial Services")
+    CARRIER_BILLING = "CARRIER_BILLING", _("Carrier Billing")
+    CRYPTOCURRENCY = "CRYPTOCURRENCY", _("Cryptocurrency")
+    BUY_NOW_PAY_LATER = "BUY_NOW_PAY_LATER", _("Buy Now, Pay Later")
+    E_WALLET = "E_WALLET", _("E-Wallet")
+    BANK_TRANSFER_INSTANT = "BANK_TRANSFER_INSTANT", _("Instant Bank Transfer")
+    POSTAL_MONEY_ORDER = "POSTAL_MONEY_ORDER", _("Postal Money Order")
+    CHEQUE = "CHEQUE", _("Cheque")
+    OTHER = "OTHER", _("Other")

@@ -33,7 +33,7 @@ class Payment(MonetaryMixin, AbstractBaseUUIDModel):
         on_delete=models.CASCADE,
         related_name="payment",
     ) 
-    payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices)
+    payment_method = models.CharField(max_length=25, choices=PaymentMethod.choices)
 
     # For storing payment gateway references
     transaction_id = models.CharField(max_length=100, blank=True, null=True, unique=True)  

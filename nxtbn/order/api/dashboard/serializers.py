@@ -69,7 +69,6 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'supplier',
             'shipping_address',
             'billing_address', 
-            'currency',
             'total_price_in_customer_currency',
             'status',
             'authorize_status', 

@@ -141,6 +141,7 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         help_text="Represents the charge status of the order based on transaction charges.",
         verbose_name="Charge Status",
     )
+    due_amount = models.IntegerField(default=0)
 
     promo_code = models.ForeignKey(PromoCode, on_delete=models.SET_NULL, null=True, blank=True)
     gift_card = models.ForeignKey(GiftCard, on_delete=models.SET_NULL, null=True, blank=True)

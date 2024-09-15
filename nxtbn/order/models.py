@@ -87,7 +87,6 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         limit_choices_to={'role': UserRole.CUSTOMER}
     )
     supplier = models.ForeignKey(Supplier, null=True, blank=True, on_delete=models.SET_NULL)
-    payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices)
     shipping_address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL, related_name="shipping_orders")
     billing_address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL, related_name="billing_orders")
 

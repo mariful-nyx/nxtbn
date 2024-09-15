@@ -67,7 +67,6 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         fields = [
             'user',
             'supplier',
-            'payment_method',
             'shipping_address',
             'billing_address', 
             'currency',

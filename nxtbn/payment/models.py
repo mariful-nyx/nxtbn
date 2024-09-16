@@ -31,7 +31,7 @@ class Payment(MonetaryMixin, AbstractBaseUUIDModel):
     order = models.ForeignKey( # Foreign key because one order might be paid partially cash or card or outstanding order
         Order,
         on_delete=models.CASCADE,
-        related_name="payment",
+        related_name="payments",
     ) 
     payment_method = models.CharField(max_length=25, choices=PaymentMethod.choices)
 

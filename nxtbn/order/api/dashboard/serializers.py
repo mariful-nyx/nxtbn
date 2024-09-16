@@ -24,6 +24,7 @@ class OrderSerializer(serializers.ModelSerializer):
     billing_address = serializers.StringRelatedField(allow_null=True)
     promo_code = serializers.StringRelatedField(allow_null=True)
     gift_card = serializers.StringRelatedField(allow_null=True)
+    payment_method = serializers.CharField(source='get_payment_method')
 
     class Meta:
         model = Order

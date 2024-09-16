@@ -20,6 +20,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     line_item = OrderItemSerializer(many=True)
+    payment_method = serializers.CharField(source='get_payment_method')
     class Meta:
         model = Order
         fields = '__all__'

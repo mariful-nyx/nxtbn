@@ -46,6 +46,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class OrderListSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
+    payment_method = serializers.CharField(source='get_payment_method')
 
     class Meta:
         model = Order

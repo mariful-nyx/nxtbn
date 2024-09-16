@@ -145,6 +145,11 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
     gift_card = models.ForeignKey(GiftCard, on_delete=models.SET_NULL, null=True, blank=True)
     is_due = models.BooleanField(default=True)
 
+    def get_payment_method(self):
+        if self.payments.exists():
+            return self.payments.first().payment_method
+        return 'PAYMENT_METHOD_NOT_FOUND'
+
     class Meta:
         ordering = ('-created_at',) # # Most recent orders first
 

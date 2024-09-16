@@ -4,11 +4,14 @@ from django.utils.translation import gettext_lazy as _
 class PaymentStatus(models.TextChoices):
     """Defines the different statuses of a payment process.
 
-    - 'AUTHORIZED': Payment has been initiated but not yet completed. authorized means it is still pending
-    - 'CAPTURED': Captured has been successfully completed. captured means the payment has be completed
-    - 'FAILED': Payment attempt has failed or was unsuccessful.
-    - 'REFUNDED': Payment has been refunded to the customer.
-    - 'CANCELED': Payment has been canceled before completion.
+    - 'AUTHORIZED': Payment has been initiated but not yet completed (e.g., pending confirmation for cash on delivery or bank transfer).
+    - 'CAPTURED': Payment has been successfully completed (e.g., funds have been received and confirmed).
+    - 'FAILED': Payment attempt has failed or was unsuccessful (e.g., insufficient funds or a declined card).
+    - 'REFUNDED': Full payment has been refunded to the customer.
+    - 'CANCELED': Payment has been canceled before completion (e.g., order canceled before payment confirmation).
+    - 'PARTIALLY_REFUNDED': A portion of the payment has been refunded.
+    - 'UNDER_REVIEW': Payment is under review by the payment gateway or the business (e.g., in case of suspected fraud).
+    - 'PENDING': Payment is pending, often for bank transfers or other methods that take time to process.
     """
 
     AUTHORIZED = "AUTHORIZED", _("Authorized")
@@ -16,6 +19,10 @@ class PaymentStatus(models.TextChoices):
     FAILED = "FAILED", _("Failed")
     REFUNDED = "REFUNDED", _("Refunded")
     CANCELED = "CANCELED", _("Canceled")
+    PARTIALLY_REFUNDED = "PARTIALLY_REFUNDED", _("Partially Refunded")
+    UNDER_REVIEW = "UNDER_REVIEW", _("Under Review")
+    PENDING = "PENDING", _("Pending")
+
 
 
 

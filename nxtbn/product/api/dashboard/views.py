@@ -33,6 +33,8 @@ class ProductListView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     pagination_class = NxtbnPagination
+    filter_backends = [SearchFilter]
+    search_fields = ['name', 'brand']
 
     def get_serializer_class(self):
         if self.request.method == 'POST':

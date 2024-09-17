@@ -146,7 +146,7 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     is_default_variant = serializers.BooleanField(default=False)
 
 
-class ProductDetailsSerializer(serializers.ModelSerializer):
+class ProductMutationSerializer(serializers.ModelSerializer):
     default_variant = ProductVariantSerializer(read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
     images_details = ImageSerializer(many=True, read_only=True, source='images')
@@ -360,3 +360,21 @@ class ColorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     
+
+class ProductWithVariantSerializer(serializers.ModelSerializer):
+    variants = ProductVariantSerializer(many=True, read_only=True)
+    class Meta:
+        model = Product 
+        ref_name = 'product_dashboard_variant_get'
+        fields =  (
+            'id',
+            'slug',
+            'name',
+            'summary',
+            'description',
+            'images',
+            'variants',
+            'status',
+            'is_live',
+        )
+

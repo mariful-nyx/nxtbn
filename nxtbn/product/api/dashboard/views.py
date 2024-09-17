@@ -15,12 +15,13 @@ from nxtbn.product.api.dashboard.serializers import (
     BasicCategorySerializer,
     ColorSerializer,
     ProductCreateSerializer,
-    ProductDetailsSerializer,
+    ProductMutationSerializer,
     ProductSerializer,
     CategorySerializer,
     CollectionSerializer,
     ProductTagSerializer,
     ProductTypeSerializer,
+    ProductWithVariantSerializer,
     RecursiveCategorySerializer
 )
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
@@ -42,8 +43,13 @@ class ProductListView(generics.ListCreateAPIView):
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (NxtbnAdminPermission,)
     queryset = Product.objects.all()
-    serializer_class = ProductDetailsSerializer
+    serializer_class = ProductMutationSerializer
+    lookup_field = 'id'
+
+class ProductWithVariantView(generics.RetrieveAPIView):
     permission_classes = (NxtbnAdminPermission,)
+    queryset = Product.objects.all()
+    serializer_class = ProductWithVariantSerializer
     lookup_field = 'id'
 
 

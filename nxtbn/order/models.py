@@ -10,7 +10,7 @@ from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.core.models import AbstractAddressModels, AbstractBaseModel, AbstractBaseUUIDModel
 from nxtbn.discount.models import PromoCode
 from nxtbn.gift_card.models import GiftCard
-from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
+from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, PaymentTerms
 from nxtbn.payment import PaymentMethod
 from nxtbn.product.models import ProductVariant
 from nxtbn.users import UserRole
@@ -143,7 +143,14 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
 
     promo_code = models.ForeignKey(PromoCode, on_delete=models.SET_NULL, null=True, blank=True)
     gift_card = models.ForeignKey(GiftCard, on_delete=models.SET_NULL, null=True, blank=True)
-    is_due = models.BooleanField(default=True)
+    payment_terms = models.CharField(
+        max_length=32,
+        default=PaymentTerms.DUE_ON_RECEIPT,
+        choices=PaymentTerms.choices,
+        help_text="Represents the payment terms for the order."
+    )
+    due_date = models.DateTimeField(null=True, blank=True) # if payment_terms is FIXED_DATE
+
 
     def get_payment_method(self):
         if self.payments.exists():

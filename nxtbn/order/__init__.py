@@ -45,3 +45,34 @@ class OrderStatus(models.TextChoices):
     DELIVERED = "DELIVERED", _("Delivered")
     CANCELLED = "CANCELLED", _("Cancelled")
     RETURNED = "RETURNED", _("Returned")
+
+
+
+class PaymentTerms(models.TextChoices): # incase of due payment
+    """Defines the payment terms for an order based on when payment is due.
+
+    - 'DUE_ON_RECEIPT': Payment is due upon receipt of the invoice.
+    - 'DUE_ON_FULFILLMENT': Payment is due upon fulfillment of the order.
+    - 'WITHIN_7_DAYS': Payment is due within 7 days.
+    - 'WITHIN_15_DAYS': Payment is due within 15 days.
+    - 'WITHIN_30_DAYS': Payment is due within 30 days.
+    - 'WITHIN_45_DAYS': Payment is due within 45 days.
+    - 'WITHIN_60_DAYS': Payment is due within 60 days.
+    - 'WITHIN_90_DAYS': Payment is due within 90 days.
+    - 'FIXED_DATE': Payment is due on a specific fixed date.
+    """
+
+    DUE_ON_RECEIPT = "DUE_ON_RECEIPT", "Due on receipt"
+    DUE_ON_FULFILLMENT = "DUE_ON_FULFILLMENT", "Due on fulfillment"
+    DUE_ON_INSTALLMENT = "DUE_ON_INSTALLMENT", "Due on installment"
+    FIXED_DATE = "FIXED_DATE", "Fixed date"
+
+    # below field will be used only in frontend to select payment terms
+    """ 
+    WITHIN_7_DAYS = "WITHIN_7_DAYS", "Within 7 days"
+    WITHIN_15_DAYS = "WITHIN_15_DAYS", "Within 15 days"
+    WITHIN_30_DAYS = "WITHIN_30_DAYS", "Within 30 days"
+    WITHIN_45_DAYS = "WITHIN_45_DAYS", "Within 45 days"
+    WITHIN_60_DAYS = "WITHIN_60_DAYS", "Within 60 days"
+    WITHIN_90_DAYS = "WITHIN_90_DAYS", "Within 90 days"
+    """

@@ -35,8 +35,10 @@ class OrderFilter(filters.FilterSet):
     charge_status = filters.ChoiceFilter(choices=OrderChargeStatus.choices)
     authorize_status = filters.ChoiceFilter(choices=OrderAuthorizationStatus.choices)
     currency = filters.CharFilter(field_name='currency', lookup_expr='iexact')
-    payment_method = filters.ChoiceFilter(choices=PaymentMethod.choices)
+    payment_method = django_filters.ChoiceFilter(choices=PaymentMethod.choices, method='filter_by_payment_method')
     created_at = filters.DateFromToRangeFilter(field_name='created_at') # eg. ?created_at_after=2023-09-01&created_at_before=2023-09-12
+    min_order_value = django_filters.NumberFilter(field_name='total_price', lookup_expr='gte', method='filter_min_order_value')
+    max_order_value = django_filters.NumberFilter(field_name='total_price', lookup_expr='lte', method='filter_max_order_value')
 
     class Meta:
         model = Order
@@ -47,7 +49,32 @@ class OrderFilter(filters.FilterSet):
             'currency',
             'payment_method',
             'created_at',
+            'min_order_value',
+            'max_order_value',
         ]
+
+    def filter_by_payment_method(self, queryset, name, value):
+        return queryset.filter(payments__payment_method=value).distinct()
+    
+    def filter_min_order_value(self, queryset, name, value):
+        """
+        Filter orders with total_price greater than or equal to the specified min_order_value in units.
+        """
+        if value is not None:
+            precision = get_currency_precision(settings.BASE_CURRENCY)
+            min_value_in_subunits = int(value * (10 ** precision))
+            return queryset.filter(total_price__gte=min_value_in_subunits)
+        return queryset
+
+    def filter_max_order_value(self, queryset, name, value):
+        """
+        Filter orders with total_price less than or equal to the specified max_order_value in units.
+        """
+        if value is not None:
+            precision = get_currency_precision(settings.BASE_CURRENCY)
+            max_value_in_subunits = int(value * (10 ** precision))
+            return queryset.filter(total_price__lte=max_value_in_subunits)
+        return queryset
 
 
 class OrderListView(generics.ListAPIView):
@@ -62,7 +89,7 @@ class OrderListView(generics.ListAPIView):
         drf_filters.OrderingFilter
     ]
     filterset_class = OrderFilter
-    search_fields = ['order_number', 'user__username', 'supplier__name']
+    search_fields = ['alias', 'id', 'user__username', 'supplier__name']
     ordering_fields = ['created_at']
 
 

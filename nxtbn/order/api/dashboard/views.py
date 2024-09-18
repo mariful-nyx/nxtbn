@@ -35,7 +35,7 @@ class OrderFilter(filters.FilterSet):
     charge_status = filters.ChoiceFilter(choices=OrderChargeStatus.choices)
     authorize_status = filters.ChoiceFilter(choices=OrderAuthorizationStatus.choices)
     currency = filters.CharFilter(field_name='currency', lookup_expr='iexact')
-    payment_method = filters.ChoiceFilter(choices=PaymentMethod.choices)
+    payment_method = django_filters.ChoiceFilter(choices=PaymentMethod.choices, method='filter_by_payment_method')
     created_at = filters.DateFromToRangeFilter(field_name='created_at') # eg. ?created_at_after=2023-09-01&created_at_before=2023-09-12
 
     class Meta:
@@ -48,6 +48,9 @@ class OrderFilter(filters.FilterSet):
             'payment_method',
             'created_at',
         ]
+
+    def filter_by_payment_method(self, queryset, name, value):
+        return queryset.filter(payments__payment_method=value).distinct()
 
 
 class OrderListView(generics.ListAPIView):
@@ -62,7 +65,7 @@ class OrderListView(generics.ListAPIView):
         drf_filters.OrderingFilter
     ]
     filterset_class = OrderFilter
-    search_fields = ['order_number', 'user__username', 'supplier__name']
+    search_fields = ['alias', 'id', 'user__username', 'supplier__name']
     ordering_fields = ['created_at']
 
 

@@ -16,16 +16,16 @@ class OrderAuthorizationStatus(models.TextChoices):
 class OrderChargeStatus(models.TextChoices):
     """Defines the charge status of an order based on transaction charges.
 
-    - 'NONE': No funds are charged.
+    - 'DUE': Payment is due; no funds have been charged yet.
     - 'PARTIAL': Partially charged; charged funds don't fully cover the order's total after accounting for granted refunds.
     - 'FULL': Fully charged; charged funds fully cover the order's total after accounting for granted refunds.
     - 'OVERCHARGED': Overcharged; charged funds exceed the order's total after accounting for granted refunds.
     """
 
-    NONE = "NONE", "No funds are charged"
-    PARTIAL = "PARTIAL", "Partially charged; funds don't fully cover the order's total"
-    FULL = "FULL", "Fully charged; funds cover the order's total"
-    OVERCHARGED = "OVERCHARGED", "Overcharged; funds exceed the order's total"
+    DUE = "DUE", _("Due")
+    PARTIAL = "PARTIAL", _("Partially charged")
+    FULL = "FULL", _("Fully charged")
+    OVERCHARGED = "OVERCHARGED", _("Overcharged")
 
 
 class OrderStatus(models.TextChoices):

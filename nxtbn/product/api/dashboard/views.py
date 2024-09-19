@@ -15,6 +15,7 @@ from nxtbn.product.api.dashboard.serializers import (
     BasicCategorySerializer,
     ColorSerializer,
     ProductCreateSerializer,
+    ProductMinimalSerializer,
     ProductMutationSerializer,
     ProductSerializer,
     CategorySerializer,
@@ -41,6 +42,13 @@ class ProductListView(generics.ListCreateAPIView):
             return ProductCreateSerializer
         return ProductSerializer
 
+class ProductMinimalListView(generics.ListAPIView):
+    permission_classes = (NxtbnAdminPermission,)
+    queryset = Product.objects.all()
+    serializer_class = ProductMinimalSerializer
+    pagination_class = NxtbnPagination
+    filter_backends = [SearchFilter]
+    search_fields = ['name', 'brand']
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (NxtbnAdminPermission,)

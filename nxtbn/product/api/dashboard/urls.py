@@ -14,7 +14,8 @@ from nxtbn.product.api.dashboard.views import (
     ProductTypeViewSet,
     ProductTagViewSet,
     ProductVariantDeleteAPIView,
-    ProductWithVariantView
+    ProductWithVariantView,
+    ProductMinimalListView
 
 )
 
@@ -30,6 +31,7 @@ router.register(r'collections', CollectionViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('products/', ProductListView.as_view(), name='product-list'),
+    path('products/minimal/', ProductMinimalListView.as_view(), name='product-minimal-list'),
     path('products/<int:id>/', ProductDetailView.as_view(), name='product-detail'),
     path('product-with-variants/<int:id>/', ProductWithVariantView.as_view(), name='product-with-variant'),
     path('variants/<int:pk>/', ProductVariantDeleteAPIView.as_view(), name='variant-delete'),

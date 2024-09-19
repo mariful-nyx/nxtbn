@@ -131,6 +131,17 @@ class ProductSerializer(serializers.ModelSerializer):
     
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
+    
+
+class ProductMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product 
+        ref_name = 'product_dashboard_minimal_get'
+        fields =  (
+            'id',
+            'name',
+        )
+    
 
 class VariantCreatePayloadSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)

@@ -2,6 +2,7 @@ from django.db import models
 
 from django.db import models
 from django.conf import settings
+from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
 from decimal import Decimal
@@ -135,7 +136,7 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
     )
     charge_status = models.CharField(
         max_length=32,
-        default=OrderChargeStatus.NONE,
+        default=OrderChargeStatus.DUE,
         choices=OrderChargeStatus.choices,
         help_text="Represents the charge status of the order based on transaction charges.",
         verbose_name="Charge Status",
@@ -163,6 +164,12 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
     def save(self, *args, **kwargs):
         self.validate_amount()
         super(Order, self).save(*args, **kwargs)
+
+    def clean(self):
+        if self.payment_terms == PaymentTerms.FIXED_DATE and not self.due_date:
+            raise ValidationError(_('Due date is required when payment terms are FIXED_DATE.'))
+        super().clean()
+
 
     def apply_promo_code(self): # TODO: Do we still need this?
         """

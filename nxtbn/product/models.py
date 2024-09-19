@@ -113,7 +113,6 @@ class ProductType(models.Model):
         blank=True,
         null=True
     )
-
     # TO DO: class Meta: # Handle unique together with each field except name
 
 class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):

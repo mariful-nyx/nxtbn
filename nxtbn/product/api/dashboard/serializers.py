@@ -146,7 +146,7 @@ class ProductMinimalSerializer(serializers.ModelSerializer):
 class VariantCreatePayloadSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
     name = serializers.CharField(max_length=255, required=False)
-    compare_at_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    # compare_at_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     price = serializers.DecimalField(max_digits=10, decimal_places=3)
     cost_per_unit = serializers.DecimalField(max_digits=10, decimal_places=3)
     sku = serializers.CharField(max_length=255, required=False)

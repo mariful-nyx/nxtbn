@@ -46,9 +46,21 @@ class ProductMinimalListView(generics.ListAPIView):
     permission_classes = (NxtbnAdminPermission,)
     queryset = Product.objects.all()
     serializer_class = ProductMinimalSerializer
-    pagination_class = NxtbnPagination
+    pagination_class = None
     filter_backends = [SearchFilter]
     search_fields = ['name', 'brand']
+
+    def get(self, request, *args, **kwargs):
+        # Get the filtered queryset first
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Limit the results to a maximum of 10
+        limited_queryset = queryset[:10]
+        serializer = self.get_serializer(limited_queryset, many=True)
+        return Response(serializer.data)
+
+    
+
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (NxtbnAdminPermission,)

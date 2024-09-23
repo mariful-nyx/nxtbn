@@ -27,28 +27,28 @@ from nxtbn.product.api.dashboard.serializers import (
 )
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
 
+class ProductFilterMixin:
+    queryset = Product.objects.all()
+    filter_backends = [SearchFilter] 
+    search_fields = ['name', 'brand']
 
 
-class ProductListView(generics.ListCreateAPIView):
+class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
     permission_classes = (NxtbnAdminPermission,)
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     pagination_class = NxtbnPagination
-    filter_backends = [SearchFilter]
-    search_fields = ['name', 'brand']
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return ProductCreateSerializer
         return ProductSerializer
 
-class ProductMinimalListView(generics.ListAPIView):
+class ProductMinimalListView(ProductFilterMixin, generics.ListAPIView):
     permission_classes = (NxtbnAdminPermission,)
     queryset = Product.objects.all()
     serializer_class = ProductMinimalSerializer
     pagination_class = None
-    filter_backends = [SearchFilter]
-    search_fields = ['name', 'brand']
 
     def get(self, request, *args, **kwargs):
         # Get the filtered queryset first
@@ -60,7 +60,13 @@ class ProductMinimalListView(generics.ListAPIView):
         return Response(serializer.data)
 
     
+class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
+    permission_classes = (NxtbnAdminPermission,)
+    queryset = Product.objects.all()
+    serializer_class = ProductWithVariantSerializer
+    pagination_class = NxtbnPagination
 
+    
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (NxtbnAdminPermission,)

@@ -374,6 +374,8 @@ class ColorSerializer(serializers.ModelSerializer):
 
 class ProductWithVariantSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
+    default_variant = ProductVariantSerializer(read_only=True)
+    product_thumbnail = serializers.SerializerMethodField()
     class Meta:
         model = Product 
         ref_name = 'product_dashboard_variant_get'
@@ -385,7 +387,14 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
             'description',
             'images',
             'variants',
+            'default_variant',
             'status',
             'is_live',
+            'product_thumbnail',
         )
+
+    def get_product_thumbnail(self, obj):
+        # Access the request from the context, if available
+        request = self.context.get('request')
+        return obj.product_thumbnail(request) if request else None
 

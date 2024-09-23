@@ -6,8 +6,9 @@ from rest_framework.permissions  import AllowAny
 from rest_framework.exceptions import APIException
 from rest_framework import viewsets
 
-from rest_framework.filters import SearchFilter
-
+from rest_framework import filters as drf_filters
+import django_filters
+from django_filters import rest_framework as filters
 
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
@@ -29,7 +30,11 @@ from nxtbn.core.admin_permissions import NxtbnAdminPermission
 
 class ProductFilterMixin:
     queryset = Product.objects.all()
-    filter_backends = [SearchFilter] 
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+        drf_filters.OrderingFilter
+    ] 
     search_fields = ['name', 'brand']
 
 
@@ -143,7 +148,9 @@ class ProductTagViewSet(viewsets.ModelViewSet):
     pagination_class = None
     queryset = ProductTag.objects.all()
     serializer_class = ProductTagSerializer
-    filter_backends = [SearchFilter]
+    filter_backends = [
+        drf_filters.SearchFilter,
+    ]
     search_fields = ['name']
 
     def list(self, request, *args, **kwargs):

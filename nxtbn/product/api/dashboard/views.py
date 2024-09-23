@@ -28,6 +28,29 @@ from nxtbn.product.api.dashboard.serializers import (
 )
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
 
+
+class ProductFilter(filters.FilterSet):
+    currency = filters.CharFilter(field_name='currency', lookup_expr='iexact')
+    created_at = filters.DateFromToRangeFilter(field_name='created_at') # eg. ?created_at_after=2023-09-01&created_at_before=2023-09-12
+
+    class Meta:
+        model = Product
+        fields = [
+            'id',
+            'alias',
+            'name',
+            'currency',
+            'category',
+            'supplier',
+            'brand',
+            'product_type',
+            'collections',
+            'tags',
+            'created_at',
+        ]
+
+
+
 class ProductFilterMixin:
     queryset = Product.objects.all()
     filter_backends = [
@@ -36,6 +59,7 @@ class ProductFilterMixin:
         drf_filters.OrderingFilter
     ] 
     search_fields = ['name', 'brand']
+    filterset_class = ProductFilter
 
 
 class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):

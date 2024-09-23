@@ -241,7 +241,7 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
 
 class OrderLineItem(MonetaryMixin, models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="line_items")
-    variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT, related_name="+")
+    variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT, related_name="orderlineitems")
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     price_per_unit = models.DecimalField(max_digits=12, decimal_places=3, validators=[MinValueValidator(Decimal("0.01"))])
     

@@ -82,6 +82,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         ref_name = 'product_variant_dashboard_get'
         fields = (
             'id',
+            'alias',
             'product',
             'product_name',
             'name',
@@ -381,6 +382,7 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
         ref_name = 'product_dashboard_variant_get'
         fields =  (
             'id',
+            'alias',
             'slug',
             'name',
             'summary',

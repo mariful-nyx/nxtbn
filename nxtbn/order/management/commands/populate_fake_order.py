@@ -55,7 +55,7 @@ class Command(BaseCommand):
             order = Order.objects.create(
                 user=random_user, 
                 supplier=product.supplier,
-                payment_method=random.choice(PaymentMethod.values),  
+                # payment_method=random.choice(PaymentMethod.values),  
                 shipping_address=shipping_address,
                 billing_address=billing_address,
                 total_price=variant_price_subunit,  # Save price in sub-units

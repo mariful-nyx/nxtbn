@@ -123,7 +123,7 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     description = models.TextField(max_length=5000)
     images = models.ManyToManyField(Image, blank=True)
     category = models.ForeignKey(
-        'Category', 
+        'Category',
         on_delete=models.PROTECT, 
         related_name='products'
     )

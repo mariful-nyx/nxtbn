@@ -1,4 +1,6 @@
 from django.forms import ValidationError
+from django.db.models import Sum, F
+
 from rest_framework import generics, status
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
@@ -31,6 +33,8 @@ from nxtbn.core.admin_permissions import NxtbnAdminPermission
 
 class ProductFilter(filters.FilterSet):
     currency = filters.CharFilter(field_name='currency', lookup_expr='iexact')
+    variant_alias = filters.CharFilter(field_name='variants__alias', lookup_expr='iexact')
+    variant_sku = filters.CharFilter(field_name='variants__sku', lookup_expr='iexact')
     created_at = filters.DateFromToRangeFilter(field_name='created_at') # eg. ?created_at_after=2023-09-01&created_at_before=2023-09-12
 
     class Meta:
@@ -38,6 +42,8 @@ class ProductFilter(filters.FilterSet):
         fields = [
             'id',
             'alias',
+            'variant_alias',
+            'variant_sku',
             'name',
             'currency',
             'category',
@@ -52,19 +58,30 @@ class ProductFilter(filters.FilterSet):
 
 
 class ProductFilterMixin:
-    queryset = Product.objects.all()
     filter_backends = [
         django_filters.rest_framework.DjangoFilterBackend,
         drf_filters.SearchFilter,
         drf_filters.OrderingFilter
     ] 
     search_fields = ['name', 'brand']
+    ordering_fields = [
+        'name',
+        'created_at',
+        'status',
+        'default_variant__price',
+        'total_sales'
+    ]
     filterset_class = ProductFilter
 
+    def get_queryset(self):
+        if self.request.query_params.get('ordering', '') in ['total_sales', '-total_sales']:
+            return Product.objects.all().annotate(
+                total_sales=Sum(F('variants__orderlineitems__quantity'))
+            )
+        return Product.objects.all()
 
 class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
     permission_classes = (NxtbnAdminPermission,)
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
     pagination_class = NxtbnPagination
 
@@ -75,7 +92,6 @@ class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
 
 class ProductMinimalListView(ProductFilterMixin, generics.ListAPIView):
     permission_classes = (NxtbnAdminPermission,)
-    queryset = Product.objects.all()
     serializer_class = ProductMinimalSerializer
     pagination_class = None
 
@@ -91,9 +107,9 @@ class ProductMinimalListView(ProductFilterMixin, generics.ListAPIView):
     
 class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
     permission_classes = (NxtbnAdminPermission,)
-    queryset = Product.objects.all()
     serializer_class = ProductWithVariantSerializer
     pagination_class = NxtbnPagination
+
 
     
 

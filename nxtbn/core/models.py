@@ -58,7 +58,7 @@ class NameDescriptionAbstract(models.Model):
 
     def __str__(self):
         return self.name
-class PublishableModel(AbstractBaseModel):
+class PublishableModel(AbstractBaseUUIDModel):
     published_date = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=PublishableStatus.choices, default=PublishableStatus.DRAFT)
     is_live = models.BooleanField(default=False)

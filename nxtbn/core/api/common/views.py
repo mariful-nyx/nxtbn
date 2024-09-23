@@ -16,7 +16,7 @@ class OrderEstimateAPIView(APIView):
             discount = Decimal('0.00')  # Adjust this if you have discount logic
             shipping_fee = Decimal('10.00')  # Example static shipping fee
             estimated_tax = Decimal('0.00')  # Adjust this based on tax calculation logic
-            tax_type = "Standard"  # Change as needed
+            tax_type = "VAT 15%"  # Change as needed
             
             for item in serializer.validated_data['variants']:
                 try:
@@ -33,8 +33,11 @@ class OrderEstimateAPIView(APIView):
                 "subtotal": str(total_subtotal),
                 "total_items": total_items,
                 "discount": str(discount),
+                "total_after_discount": str(discount),
                 "shipping_fee": str(shipping_fee),
                 "estimated_tax": str(estimated_tax),
+                "total_after_tax": str(estimated_tax),
+                "total_after_shipping_fee": str(estimated_tax),
                 "tax_type": tax_type,
                 "total": str(total),
             }

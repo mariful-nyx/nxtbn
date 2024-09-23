@@ -5,13 +5,12 @@ from django_countries.fields import CountryField
 
 class ShippingMethod(AbstractBaseModel):
     """
-    The ShippingMethod model represents different shipping methods offered by a carrier. 
-    Each method might have different rates based on country, weight, and other factors.
-    
+    Represents different shipping methods offered by a carrier, such as Standard or Express Shipping.
+
     Fields:
         - name: The name of the shipping method (e.g., "Express Shipping").
-        - description: An optional text field to describe the method.
-        - carrier: The shipping carrier's name (e.g., "FedEx", "DHL"). Helps distinguish between methods from different carriers.
+        - description: An optional text field to provide a detailed description of the method.
+        - carrier: The name of the shipping carrier offering the method (e.g., "FedEx", "DHL").
     
     Examples:
         - FedEx - Standard Shipping
@@ -23,7 +22,7 @@ class ShippingMethod(AbstractBaseModel):
 
     def __str__(self):
         """
-        This method returns a user-friendly string representation of the ShippingMethod instance.
+        Returns a human-readable representation of the ShippingMethod instance.
         Example: "FedEx - Express Shipping"
         """
         return f"{self.carrier} - {self.name}"
@@ -31,16 +30,17 @@ class ShippingMethod(AbstractBaseModel):
 
 class ShippingRate(AbstractBaseModel):
     """
-    The ShippingRate model stores the shipping cost for a specific method, based on the weight, country, and region.
-    Each ShippingMethod can have multiple rates, depending on country, region, and weight ranges.
+    Stores the shipping cost for a specific method, based on weight, country, and region.
+    Each ShippingMethod can have multiple rates depending on these factors.
     
     Fields:
         - shipping_method: A foreign key linking the rate to a specific ShippingMethod.
-        - country: Optional field specifying the country this rate applies to. Leave blank for global rates.
-        - region: Optional field specifying a region within a country (e.g., "California"). Used for more localized rates.
+        - country: Optional field specifying the country this rate applies to. Blank means global rates.
+        - region: Optional field for specifying a region within a country (e.g., "California").
+        - city: Optional field for more localized rates within a city (e.g., "San Francisco").
         - weight_min: Minimum weight (in kilograms) for the rate to be applicable.
         - weight_max: Maximum weight (in kilograms) for the rate to be applicable.
-        - rate: The cost of shipping for packages that meet the criteria (weight, region, etc.).
+        - rate: The shipping cost for packages that meet the weight and location criteria.
         - currency: The currency in which the rate is expressed (linked to the Currency model).
 
     Examples:
@@ -52,7 +52,8 @@ class ShippingRate(AbstractBaseModel):
         help_text="The shipping method this rate applies to."
     )
     country = CountryField(blank=True, null=True, help_text="If blank, the rate applies globally.")
-    region = models.CharField(max_length=200, blank=True, null=True, help_text="Specific region within a country, e.g., 'California'.")
+    region = models.CharField(max_length=200, blank=True, null=True, help_text="Region within the country, e.g., 'California'. If blank, applies nationwide.")
+    city = models.CharField(max_length=200, blank=True, null=True, help_text="Specific city within the region, e.g., 'San Francisco'.")
     weight_min = models.DecimalField(max_digits=10, decimal_places=2, help_text="Minimum weight (in kg) for this rate.")
     weight_max = models.DecimalField(max_digits=10, decimal_places=2, help_text="Maximum weight (in kg) for this rate.")
     rate = models.DecimalField(max_digits=10, decimal_places=2, help_text="Shipping cost for this rate.")
@@ -64,7 +65,8 @@ class ShippingRate(AbstractBaseModel):
 
     def __str__(self):
         """
-        Returns a user-friendly string representation of the ShippingRate instance.
-        Example: "FedEx - Standard Shipping - US (0kg to 5kg)"
+        Returns a human-readable representation of the ShippingRate instance.
+        Example: "FedEx - Standard Shipping - US (California, San Francisco) (0kg to 5kg)"
         """
-        return f"{self.shipping_method} - {self.country or 'Global'} ({self.weight_min}kg to {self.weight_max}kg)"
+        location = ", ".join(filter(None, [self.city, self.region, self.country.name if self.country else "Global"]))
+        return f"{self.shipping_method} - {location} ({self.weight_min}kg to {self.weight_max}kg)"

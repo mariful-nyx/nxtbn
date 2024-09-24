@@ -99,7 +99,6 @@ class AbstractSEOModel(models.Model):
         verbose_name_plural = "SEO Information"
 
 class AbstractAddressModels(AbstractBaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="+")
     street_address = models.CharField(max_length=255)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)

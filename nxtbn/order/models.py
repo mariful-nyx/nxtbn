@@ -41,6 +41,35 @@ class Address(AbstractAddressModels):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}, {self.street_address}, {self.city}, {self.country}"
+    
+    def clean(self):
+        """ 
+        Validates that a user cannot have more than one DSA and DBA.
+        If the user has DSA_DBA, they cannot have separate DSA or DBA.
+        Unlimited SA and BA are allowed.
+        """
+        if self.user:
+            user_addresses = Address.objects.filter(user=self.user)
+            dsa_dba = user_addresses.filter(address_type=AddressType.DSA_DBA).exists()
+            dsa_count = user_addresses.filter(address_type=AddressType.DSA).count()
+            dba_count = user_addresses.filter(address_type=AddressType.DBA).count()
+
+            if dsa_dba and self.address_type in [AddressType.DSA, AddressType.DBA]:
+                raise ValidationError("User already has a DSA_DBA. Cannot create separate DSA or DBA.")
+
+            if self.address_type == AddressType.DSA_DBA and (dsa_count > 0 or dba_count > 0):
+                raise ValidationError("User has separate DSA or DBA. Cannot create DSA_DBA.")
+
+            if self.address_type == AddressType.DSA and dsa_count > 0:
+                raise ValidationError("User already has a Default Shipping Address (DSA).")
+
+            if self.address_type == AddressType.DBA and dba_count > 0:
+                raise ValidationError("User already has a Default Billing Address (DBA).")
+
+    def save(self, *args, **kwargs):
+        # Ensure that validation is called before saving
+        self.clean()
+        super().save(*args, **kwargs)
 
 class Order(MonetaryMixin, AbstractBaseUUIDModel):
     """

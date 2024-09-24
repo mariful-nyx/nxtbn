@@ -15,6 +15,10 @@ from nxtbn.users.utils.jwt_utils import JWTManager
 from nxtbn.users.models import User
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
 
+from rest_framework import filters as drf_filters
+import django_filters
+from django_filters import rest_framework as filters
+
 class LoginView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = DashboardLoginSerializer
@@ -66,8 +70,14 @@ class CustomerListAPIView(generics.ListAPIView):
     """
     API view to retrieve the list of customers (users with role 'CUSTOMER').
     """
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+        drf_filters.OrderingFilter
+    ] 
     serializer_class = CustomerSerializer
     pagination_class = NxtbnPagination
+    search_fields = ['id', 'username', 'email']
 
     def get_queryset(self):
         return User.objects.filter(role=UserRole.CUSTOMER)

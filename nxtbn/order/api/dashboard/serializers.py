@@ -7,7 +7,7 @@ from nxtbn.order import OrderStatus
 from nxtbn.order.models import Address, Order, OrderLineItem
 from nxtbn.payment.models import Payment
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
-from nxtbn.users.admin import User
+from nxtbn.users.models import User
 
 
 class OrderLineItemSerializer(serializers.ModelSerializer):
@@ -107,7 +107,8 @@ class CustomerCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'phone_number', 'email', 'address']
+        fields = ['id','full_name', 'first_name', 'last_name', 'phone_number', 'email', 'address']
+        read_only_fields = ['id', 'full_name',]
 
     @transaction.atomic
     def create(self, validated_data):

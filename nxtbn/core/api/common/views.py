@@ -21,10 +21,9 @@ class OrderEstimateAPIView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         # Extract data from validated serializer
-        shipping_address = serializer.validated_data.get('shipping_address')
-        customer_id = serializer.validated_data.get('customer_id')
         fixed_shipping_amount = serializer.validated_data.get('fixed_shipping_amount')
         variants_data = serializer.validated_data.get('variants')
+        fixed_discount_amount = serializer.validated_data.get('fixed_discount_amount')
 
         # Retrieve variants from the database
         variants = []
@@ -35,8 +34,8 @@ class OrderEstimateAPIView(generics.GenericAPIView):
                 variants.append({
                     'variant': variant,
                     'quantity': quantity,
-                    'weight': variant.weight_value,  # Assuming weight_value is in the ProductVariant model
-                    'price': variant.price  # Assuming price is in the ProductVariant model
+                    'weight': variant.weight_value,
+                    'price': variant.price
                 })
             except ProductVariant.DoesNotExist:
                 return Response({"error": "Variant not found."}, status=404)
@@ -49,11 +48,12 @@ class OrderEstimateAPIView(generics.GenericAPIView):
         total_subtotal = sum(variant['quantity'] * variant['price'] for variant in variants)
 
         # Calculate discount
-        discount = self.calculate_discount(total_subtotal)
-        discount_percentage = (discount / total_subtotal) * 100 if total_subtotal > 0 else 0
+        discount = self.calculate_discount(total_subtotal, fixed_discount_amount)
+        discount_percentage = (discount / total_subtotal * 100) if total_subtotal > 0 else 0
 
         # Calculate shipping fee and name
-        shipping_fee, shipping_name = self.calculate_shipping_fee(shipping_address, customer_id, fixed_shipping_amount, total_weight)
+        shipping_fee, shipping_name = self.calculate_shipping_fee(fixed_shipping_amount, total_weight)
+
         # Convert shipping_fee to Decimal
         shipping_fee = Decimal(shipping_fee)
 
@@ -63,76 +63,44 @@ class OrderEstimateAPIView(generics.GenericAPIView):
         # Calculate total
         total = total_subtotal - discount + shipping_fee + estimated_tax
 
-        print(total_subtotal, discount, shipping_fee, estimated_tax)
-
         response_data = {
-            "subtotal": str(total_subtotal),                  # Total price of items
-            "total_items": total_items,                        # Total quantity of items
-            "discount": str(discount),                         # Amount of discount
-            "discount_percentage": discount_percentage,        # Percentage discount if applicable
-            "shipping_fee": str(shipping_fee),                # Amount of shipping fee
-            "shipping_name": shipping_name,                    # Shipping name (if provided)
-            "estimated_tax": str(estimated_tax),              # Tax amount
-            "tax_type": tax_type,                              # Tax type (e.g., VAT 15%)
-            "tax_percentage": str(tax_percentage * 100),      # Tax percentage in string format
-            "total": str(total),                               # Final total amount
+            "subtotal": str(total_subtotal),
+            "total_items": total_items,
+            "discount": str(discount),
+            "discount_percentage": discount_percentage,
+            'discount_name': fixed_shipping_amount.get('name', '') if fixed_shipping_amount else '',
+            "shipping_fee": str(shipping_fee),
+            "shipping_name": shipping_name,
+            "estimated_tax": str(estimated_tax),
+            "tax_type": tax_type,
+            "tax_percentage": str(tax_percentage * 100),
+            "total": str(total),
         }
 
         return Response(response_data)
 
-    def calculate_shipping_fee(self, shipping_address, customer_id, fixed_shipping_amount, weight):
-        """
-        Calculate the shipping fee based on the address and weight.
-        """
+    def calculate_shipping_fee(self, fixed_shipping_amount, weight):
         shipping_fee = 0
         shipping_name = None
 
-        if shipping_address:
-            # Use the shipping address to find applicable rates
-            shipping_fee, shipping_name = self.get_shipping_rate(shipping_address, weight)
-        elif customer_id:
-            # Retrieve the customer's default shipping address
-            customer_address = Address.objects.filter(user__id=customer_id, address_type=AddressType.DSA).first()
-            if customer_address:
-                shipping_fee, shipping_name = self.get_shipping_rate(customer_address, weight)
-        elif fixed_shipping_amount:
-            # Use the fixed shipping amount if applicable
-            shipping_fee = float(fixed_shipping_amount['price'])  # Assuming price is a string that needs conversion
+        if fixed_shipping_amount:
+            shipping_fee = float(fixed_shipping_amount['price'])
             shipping_name = fixed_shipping_amount['name']
 
-        print(shipping_fee, shipping_name)
         return shipping_fee, shipping_name
 
-    def get_shipping_rate(self, address, weight):
+    def calculate_discount(self, subtotal, fixed_discount_amount):
         """
-        Retrieve shipping rates based on address and weight.
+        Calculate discount based on the fixed discount amount if provided.
         """
-        shipping_rates = ShippingRate.objects.filter(
-            country=address.country,
-            weight_min__lte=weight,
-            weight_max__gte=weight
-        )
-
-        if shipping_rates.exists():
-            lowest_rate = shipping_rates.order_by('rate').first()
-            return lowest_rate.rate, lowest_rate.shipping_method.name
-
-        return 0, None  # Default to zero if no rates found
-
-    def calculate_discount(self, subtotal):
-        """
-        Placeholder function to calculate discount.
-        """
-        # Implement your discount logic here
-        discount = 0  # Assume no discount for now
+        discount = Decimal('0.00')  # Default no discount
+        if fixed_discount_amount:
+            discount = Decimal(fixed_discount_amount['price'])
         return discount
 
     def calculate_tax(self, subtotal, discount):
-        """
-        Calculate estimated tax based on subtotal and discount.
-        """
-        tax_rate = Decimal('0.15')  # Use Decimal for the tax rate
+        tax_rate = Decimal('0.15')
         taxable_amount = subtotal - discount
         estimated_tax = taxable_amount * tax_rate
-        tax_type = "VAT 15%"  # Example tax type
+        tax_type = "VAT 15%"
         return estimated_tax, tax_type, tax_rate

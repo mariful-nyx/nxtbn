@@ -23,7 +23,8 @@ from nxtbn.order.models import Order, OrderLineItem
 from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 from nxtbn.product.models import ProductVariant
-from .serializers import OrderCreateSerializer, OrderListSerializer, OrderSerializer
+from nxtbn.users.admin import User
+from .serializers import CustomerCreateSerializer, OrderCreateSerializer, OrderListSerializer, OrderSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 from babel.numbers import get_currency_precision
@@ -99,32 +100,6 @@ class OrderDetailView(generics.RetrieveAPIView):
     serializer_class = OrderSerializer
     lookup_field = 'id'
 
-
-
-# class OrderStatsView(APIView):
-#     permission_classes = (NxtbnAdminPermission,)
-
-#     def get(self, request, *args, **kwargs):
-#         order_stats = Order.objects.aggregate(
-#             total_order_value=Sum('total_price'),
-#             total_orders=Count('id')
-#         )
-        
-#         total_variant_orders = OrderLineItem.objects.aggregate(
-#             total=Count('variant', distinct=True)
-#         )['total'] or 0
-
-#         total_order_value_subunits = order_stats['total_order_value'] or 0
-#         precision = get_currency_precision(settings.BASE_CURRENCY)
-#         total_order_value_units = total_order_value_subunits / (10 ** precision)
-
-#         data = {
-#             'total_order_value': total_order_value_units,
-#             'total_orders': order_stats['total_orders'] or 0,
-#             'total_variant_orders': total_variant_orders
-#         }
-
-#         return Response(data)
     
 
 class BasicStatsView(APIView):
@@ -176,3 +151,7 @@ class BasicStatsView(APIView):
 class OrderCreateView(generics.CreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderCreateSerializer
+
+class CreateCustomAPIView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = CustomerCreateSerializer

@@ -11,7 +11,7 @@ from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.core.models import AbstractAddressModels, AbstractBaseModel, AbstractBaseUUIDModel
 from nxtbn.discount.models import PromoCode
 from nxtbn.gift_card.models import GiftCard
-from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, PaymentTerms
+from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, PaymentTerms
 from nxtbn.payment import PaymentMethod
 from nxtbn.product.models import ProductVariant
 from nxtbn.users import UserRole
@@ -30,10 +30,14 @@ class Address(AbstractAddressModels):
 
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     email_address = models.EmailField(blank=True, null=True)
-    is_default_delivery_address = models.BooleanField(default=False)
+    address_type = models.CharField(
+        max_length=7,
+        choices=AddressType.choices,
+        default=AddressType.DSA_DBA
+    )
 
     class Meta:
-        ordering = ('-is_default_delivery_address', 'last_name', 'first_name')
+        ordering = ('last_name', 'first_name')
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}, {self.street_address}, {self.city}, {self.country}"

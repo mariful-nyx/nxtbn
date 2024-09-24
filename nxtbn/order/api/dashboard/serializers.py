@@ -3,7 +3,7 @@ from rest_framework import serializers
 from django.db import transaction
 
 
-from nxtbn.order import OrderStatus
+from nxtbn.order import AddressType, OrderStatus
 from nxtbn.order.models import Address, Order, OrderLineItem
 from nxtbn.payment.models import Payment
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
@@ -123,7 +123,7 @@ class CustomerCreateSerializer(serializers.ModelSerializer):
         user = User.objects.create(**validated_data)
         Address.objects.create(
             user=user, 
-            is_default_delivery_address=True,
+            address_type=AddressType.DSA_DBA,
             **address_data
         )
         return user

@@ -9,5 +9,6 @@ class PriceAndNameSerializer(serializers.Serializer):
     price = serializers.CharField()
 
 class OrderEstimateSerializer(serializers.Serializer):
+    customer_id = serializers.CharField(required=False)
     fixed_shipping_amount = PriceAndNameSerializer(required=False)
     variants = serializers.ListSerializer(child=VariantQuantitySerializer())

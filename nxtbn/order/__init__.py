@@ -76,3 +76,11 @@ class PaymentTerms(models.TextChoices): # incase of due payment
     WITHIN_60_DAYS = "WITHIN_60_DAYS", "Within 60 days"
     WITHIN_90_DAYS = "WITHIN_90_DAYS", "Within 90 days"
     """
+
+
+class AddressType(models.TextChoices):
+        DSA = 'DSA', 'Default Shipping Address'
+        DBA = 'DBA', 'Default Billing Address'
+        SA = 'SA', 'Shipping Address'
+        BA = 'BA', 'Billing Address'
+        DSA_DBA = 'DSA_DBA', 'Default Shipping and Billing Address'

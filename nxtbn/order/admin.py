@@ -6,7 +6,7 @@ from nxtbn.order.models import Address,Order,OrderLineItem
 
 class AddressAdmin(admin.ModelAdmin):
     list_display = ('id','first_name', 'last_name', 'street_address', 'city', 'country')
-    list_filter = ('is_default_delivery_address',)
+    list_filter = ('address_type',)
     search_fields = ('first_name', 'last_name', 'street_address', 'city', 'country')
 
 admin.site.register(Address, AddressAdmin)

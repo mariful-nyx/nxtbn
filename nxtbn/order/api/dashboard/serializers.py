@@ -4,9 +4,10 @@ from django.db import transaction
 
 
 from nxtbn.order import OrderStatus
-from nxtbn.order.models import Order, OrderLineItem
+from nxtbn.order.models import Address, Order, OrderLineItem
 from nxtbn.payment.models import Payment
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
+from nxtbn.users.admin import User
 
 
 class OrderLineItemSerializer(serializers.ModelSerializer):
@@ -78,7 +79,6 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'charge_status',
             'promo_code',
             'gift_card',
-            'is_due',
             'line_items'
         ]
 
@@ -93,3 +93,41 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             OrderLineItem.objects.create(order=order, **line_item_data)
         
         return order
+
+
+
+
+class AddressCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ['street_address', 'city', 'state', 'postal_code', 'country', 'phone_number', 'first_name', 'last_name']
+
+class CustomerCreateSerializer(serializers.ModelSerializer):
+    address = AddressCreateSerializer(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'phone_number', 'email', 'address']
+
+    @transaction.atomic
+    def create(self, validated_data):
+        address_data = validated_data.pop('address')
+        email = validated_data.get('email')
+        username = email.split('@')[0]
+        if User.objects.filter(username=username).exists():
+            username = f"{username}_{User.objects.count()}"
+        
+        validated_data['username'] = username
+        
+        user = User.objects.create(**validated_data)
+        Address.objects.create(
+            user=user, 
+            is_default_delivery_address=True,
+            **address_data
+        )
+        return user
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A customer with this email already exists.")
+        return value

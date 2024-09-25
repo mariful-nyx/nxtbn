@@ -8,8 +8,10 @@ from nxtbn.order import AddressType
 from nxtbn.order.models import Address
 from nxtbn.product.models import ProductVariant
 from decimal import Decimal
+from django.db.models import Q
 
 from nxtbn.shipping.models import ShippingRate
+from nxtbn.tax.models import TaxRate
 
 
 class OrderEstimateAPIView(generics.GenericAPIView):
@@ -28,19 +30,7 @@ class OrderEstimateAPIView(generics.GenericAPIView):
         shipping_address = self.validated_data.get('shipping_address', {})
 
         # Retrieve variants from the database
-        variants = []
-        for variant_data in variants_data:
-            try:
-                variant = ProductVariant.objects.get(alias=variant_data['alias'])
-                quantity = variant_data['quantity']
-                variants.append({
-                    'variant': variant,
-                    'quantity': quantity,
-                    'weight': variant.weight_value,
-                    'price': variant.price
-                })
-            except ProductVariant.DoesNotExist:
-                return Response({"error": "Variant not found."}, status=404)
+        variants = self.get_variants()
 
         # Calculate total weight and total items based on variants
         total_weight = sum(variant['quantity'] * variant['weight'] for variant in variants)
@@ -82,6 +72,23 @@ class OrderEstimateAPIView(generics.GenericAPIView):
 
         return Response(response_data)
 
+    def get_variants(self):
+        variants_data = self.validated_data.get('variants')
+        variants = []
+        for variant_data in variants_data:
+            try:
+                variant = ProductVariant.objects.get(alias=variant_data['alias'])
+                quantity = variant_data['quantity']
+                variants.append({
+                    'variant': variant,
+                    'quantity': quantity,
+                    'weight': variant.weight_value,
+                    'price': variant.price,
+                    'tax_class': variant.product.tax_class,
+                })
+            except ProductVariant.DoesNotExist:
+                return Response({"error": "Variant not found."}, status=404)
+        return variants
 
     def calculate_discount(self, subtotal, custom_discount_amount):
         """
@@ -93,11 +100,15 @@ class OrderEstimateAPIView(generics.GenericAPIView):
         return discount
 
     def calculate_tax(self, subtotal, discount):
-        tax_rate = Decimal('0.15')
+        shipping_address = self.validated_data.get('shipping_address', {})
+        tax_rate_instance = TaxRate.objects.filter(
+            Q(country=shipping_address.get('country', '')) | Q(state=shipping_address.get('state', ''))
+        ).first()
+
+        tax_rate = tax_rate_instance.rate if tax_rate_instance else Decimal('0.00')
         taxable_amount = subtotal - discount
         estimated_tax = taxable_amount * tax_rate
-        tax_type = "VAT 15%"
-        return estimated_tax, tax_type, tax_rate
+        return estimated_tax, tax_rate
     
     def get_shipping_rate_instance(self, shipping_method_id, address):
         if not shipping_method_id:

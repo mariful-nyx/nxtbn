@@ -2,7 +2,10 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from django.db import transaction
 from django.contrib.auth.password_validation import validate_password
+from django.db.models import Q
 
+from nxtbn.order import AddressType
+from nxtbn.order.api.storefront.serializers import AddressSerializer
 from nxtbn.users.admin import User
 
 
@@ -18,9 +21,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
+    default_shipping_address = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'role']
+        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'role', 'default_shipping_address']
+
+    def get_default_shipping_address(self, obj):
+        address = obj.addresses.filter(
+            Q(address_type=AddressType.DSA) | Q(address_type=AddressType.DSA_DBA)
+        ).first()
+        return AddressSerializer(address).data if address else None
 
 
 class PasswordChangeSerializer(serializers.Serializer):

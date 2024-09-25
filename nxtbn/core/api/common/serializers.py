@@ -8,9 +8,15 @@ class PriceAndNameSerializer(serializers.Serializer):
     name = serializers.CharField()
     price = serializers.CharField()
 
+class ShippingAddressSerializer(serializers.Serializer):
+    city = serializers.CharField(required=False)
+    postal_code = serializers.CharField(required=False)
+    country = serializers.CharField(required=False)
+    region = serializers.CharField(required=False)
 
 class OrderEstimateSerializer(serializers.Serializer):
-    fixed_discount_amount = PriceAndNameSerializer(required=False)
-    shipping_rate_id = serializers.IntegerField(required=False)
+    shipping_address = ShippingAddressSerializer(required=False)
+    shipping_method_id = serializers.IntegerField(required=False)
     fixed_shipping_amount = PriceAndNameSerializer(required=False)
+    fixed_discount_amount = PriceAndNameSerializer(required=False)
     variants = serializers.ListSerializer(child=VariantQuantitySerializer(), required=True)

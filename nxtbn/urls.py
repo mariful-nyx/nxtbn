@@ -87,6 +87,8 @@ urlpatterns = [
     path('core/dashboard/api/', include('nxtbn.core.api.dashboard.urls')),
     path('core/common/api/', include('nxtbn.core.api.common.urls')),
 
+    path('shipping/dashboard/api/', include('nxtbn.shipping.api.dashboard.urls')),
+
     path('plugins/dashboard/api/', include('nxtbn.plugins.api.dashboard.urls')),
 ]
 

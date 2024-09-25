@@ -12,6 +12,7 @@ from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.core.models import AbstractMetadata, AbstractSEOModel, AbstractUUIDModel, PublishableModel, AbstractBaseUUIDModel, AbstractBaseModel, NameDescriptionAbstract
 from nxtbn.filemanager.models import Document, Image
 from nxtbn.product import StockStatus, WeightUnits
+from nxtbn.tax.models import TaxClass
 from nxtbn.users.admin import User
 
 class Supplier(NameDescriptionAbstract, AbstractSEOModel):
@@ -140,6 +141,7 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     )
     collections = models.ManyToManyField(Collection, blank=True, related_name='products_in_collection')
     tags = models.ManyToManyField(ProductTag, blank=True)
+    tax_class = models.ForeignKey(TaxClass, on_delete=models.PROTECT, related_name='products', null=True, blank=True) # null for tax exempt products
 
     class Meta:
         ordering = ('name',)

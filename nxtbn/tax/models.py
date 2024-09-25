@@ -1,7 +1,6 @@
 from django.db import models
 from django_countries.fields import CountryField
 from nxtbn.core.models import AbstractBaseModel
-from nxtbn.product.models import Product
 
 class TaxClass(models.Model):
     """
@@ -33,28 +32,12 @@ class TaxRate(AbstractBaseModel):
         rate (Decimal): The tax rate as a percentage.
         tax_class (ForeignKey): The tax class to which this rate belongs.
         is_active (bool): Indicates if the tax rate is currently active.
-        exempt_products (ManyToManyField): Products that are exempt from this tax rate.
     """
     country = CountryField()
     state = models.CharField(max_length=2, blank=True, null=True)
     rate = models.DecimalField(max_digits=5, decimal_places=2)
     tax_class = models.ForeignKey(TaxClass, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
-    exempt_products = models.ManyToManyField(Product, blank=True)
-
-    def is_applicable(self, product=None):
-        """
-        Determines if the tax rate is applicable based on product exemptions and activation status.
-        
-        Args:
-            product (Product): The product to check for exemptions (optional).
-        
-        Returns:
-            bool: True if the tax rate is applicable, False otherwise.
-        """
-        if product and product in self.exempt_products.all():
-            return False
-        return self.is_active
 
     def __str__(self):
         return f"{self.country} - {self.state if self.state else 'N/A'}: {self.tax_class.name} {self.rate}%"

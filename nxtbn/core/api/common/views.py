@@ -108,7 +108,7 @@ class OrderEstimateAPIView(generics.GenericAPIView):
         tax_rate = tax_rate_instance.rate if tax_rate_instance else Decimal('0.00')
         taxable_amount = subtotal - discount
         estimated_tax = taxable_amount * tax_rate
-        return estimated_tax, tax_rate
+        return estimated_tax, 'tax name', tax_rate
     
     def get_shipping_rate_instance(self, shipping_method_id, address):
         if not shipping_method_id:

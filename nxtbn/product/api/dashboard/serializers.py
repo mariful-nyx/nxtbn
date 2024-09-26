@@ -7,6 +7,14 @@ from rest_framework.exceptions import ValidationError
 from nxtbn.core import PublishableStatus
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
 from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
+from nxtbn.tax.models import TaxClass
+
+
+class TaxClassSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaxClass
+        fields = '__all__'
+
 
 class ProductTagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -128,6 +136,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'collections',
             'product_thumbnail',
             'colors',
+            'tax_class'
         )
     
     def get_product_thumbnail(self, obj):
@@ -192,6 +201,7 @@ class ProductMutationSerializer(serializers.ModelSerializer):
             'default_variant',
             'collections',
             'colors',
+            'tax_class',
             'meta_title',
             'meta_description',
             'category_details',
@@ -216,6 +226,7 @@ class ProductMutationSerializer(serializers.ModelSerializer):
         supplier = validated_data.pop('supplier', None)
         variant_to_delete = validated_data.pop('variant_to_delete', [])
         tags_payload = validated_data.pop('tags_payload', [])
+        tax_class = validated_data.pop('tax_class', None)
 
         with transaction.atomic():
             instance.collections.set(collection)
@@ -228,6 +239,8 @@ class ProductMutationSerializer(serializers.ModelSerializer):
                 instance.related_to = related_to
             if supplier:    
                 instance.supplier = supplier
+            if tax_class:
+                instance.tax_class = tax_class
 
             for pattr, pvalue in validated_data.items():
                 setattr(instance, pattr, pvalue)
@@ -275,6 +288,11 @@ class ProductMutationSerializer(serializers.ModelSerializer):
                 instance.is_live = True
             else:
                 instance.is_live = False
+            
+            if tax_class:
+                tax_class_instance = TaxClass.objects.get(id=tax_class.id)
+                if tax_class_instance:
+                    instance.tax_class = tax_class_instance
 
         instance.save()
         return instance
@@ -306,6 +324,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'default_variant',
             'variants',
             'collections',
+            'tax_class',
 
             # write only fields
             'variants_payload',
@@ -325,6 +344,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         variants_payload = validated_data.pop('variants_payload', [])
         tags_payload = validated_data.pop('tags_payload', [])
         currency = validated_data.pop('currency', 'USD')
+        tax_class = validated_data.pop('tax_class', None)
 
         with transaction.atomic():
             instance = Product.objects.create(
@@ -360,6 +380,9 @@ class ProductCreateSerializer(serializers.ModelSerializer):
                 instance.is_live = True
             else:
                 instance.is_live = False
+
+            if tax_class:
+                instance.tax_class = TaxClass.objects.get(id=tax_class.id)
 
             instance.save()
             

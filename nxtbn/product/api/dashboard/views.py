@@ -26,9 +26,11 @@ from nxtbn.product.api.dashboard.serializers import (
     ProductTagSerializer,
     ProductTypeSerializer,
     ProductWithVariantSerializer,
-    RecursiveCategorySerializer
+    RecursiveCategorySerializer,
+    TaxClassSerializer
 )
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
+from nxtbn.tax.models import TaxClass
 
 
 class ProductFilter(filters.FilterSet):
@@ -210,3 +212,10 @@ class ProductVariantDeleteAPIView(generics.DestroyAPIView):
         
         # If not the default variant, proceed with deletion
         return super().destroy(request, *args, **kwargs)
+
+
+class TaxClassView(generics.ListCreateAPIView):
+    queryset = TaxClass.objects.all()
+    serializer_class = TaxClassSerializer
+    permission_classes = (NxtbnAdminPermission,)
+    pagination_class = None

@@ -176,17 +176,49 @@ class OrderEstimateAPIView(generics.GenericAPIView):
 
         shipping_rate_qs = ShippingRate.objects.filter(shipping_method__id=shipping_method_id)
 
-        # Check for a rate defined at the state level
-        if address.get('state'):
-            rate = shipping_rate_qs.filter(state=address['state']).first()
+        # Check for a rate defined at the city level
+        if address.get('city'):
+            rate = shipping_rate_qs.filter(
+                city=address['city'].lower(),
+                country=address['country'].upper(),
+                region=address['state'].lower() if address.get('state') else None,
+            ).first()
             if rate:
                 return rate
 
-        # Check for a rate at the country level if no state rate is found
+        # Check for a rate defined at the state level
+        if address.get('state'):
+            if rate:
+                rate = shipping_rate_qs.filter(
+                    region=address['state'].lower(),
+                    city__isnull=True,
+                    country=address['country'].upper(),
+                ).first()
+                return rate
+
+        # Check for a rate at the country level if no state rate is found, nationwide
         if address.get('country'):
             rate = shipping_rate_qs.filter(country=address['country']).first()
             if rate:
+                rate = shipping_rate_qs.filter(
+                    country=address['country'].upper(),
+                    region__isnull=True,
+                    city__isnull=True
+                ).first()
                 return rate
+            
+        # Global
+        if not address.get('country'):
+            rate = shipping_rate_qs.filter(country=address['country']).first()
+            if rate:
+                rate = shipping_rate_qs.filter(
+                    country__isnull=True,
+                    region__isnull=True,
+                    city__isnull=True
+                ).first()
+                return rate
+        else:
+            raise serializers.ValidationError({"details": "We don't ship to this location."})
 
         # If no rate is found for the address, raise an exception
         raise ValueError("No shipping rate available for the provided location.")

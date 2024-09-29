@@ -36,7 +36,7 @@ class TaxRate(AbstractBaseModel):
     country = CountryField()
     state = models.CharField(max_length=2, blank=True, null=True)
     rate = models.DecimalField(max_digits=5, decimal_places=2)
-    tax_class = models.ForeignKey(TaxClass, on_delete=models.CASCADE)
+    tax_class = models.ForeignKey(TaxClass, on_delete=models.CASCADE, related_name='tax_rates')
     is_active = models.BooleanField(default=True)
 
     def __str__(self):

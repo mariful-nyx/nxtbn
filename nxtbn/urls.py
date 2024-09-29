@@ -92,6 +92,8 @@ urlpatterns = [
     path('plugins/dashboard/api/', include('nxtbn.plugins.api.dashboard.urls')),
 
     path('discount/dashboard/api/', include('nxtbn.discount.api.dashboard.urls')),
+
+    path('tax/dashboard/api/', include('nxtbn.tax.api.dashboard.urls'))
 ]
 
 urlpatterns += [

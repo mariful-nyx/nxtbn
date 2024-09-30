@@ -10,8 +10,6 @@ from nxtbn.core.admin_permissions import NxtbnAdminPermission
 from nxtbn.tax.models import TaxClass, TaxRate
 from nxtbn.tax.api.dashboard.serializers import (
     TaxClassSerializer, 
-    TaxClassCreateSerializer, 
-    TaxClassUpdateSerializer,
     TaxClassDetailSerializer, 
     TaxRateSerializer
     
@@ -24,11 +22,6 @@ class TaxClassView(generics.ListCreateAPIView):
     serializer_class = TaxClassSerializer
     pagination_class = NxtbnPagination
 
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return TaxClassCreateSerializer
-        return TaxClassSerializer
-
 
 class TaxClassRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (NxtbnAdminPermission,)
@@ -36,8 +29,25 @@ class TaxClassRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaxClassDetailSerializer
     lookup_field = 'id'
 
-    def get_serializer_class(self):
-        if self.request.method == 'PUT':
-            return TaxClassUpdateSerializer
-        return TaxClassDetailSerializer
 
+class TaxRateListByTaxClass(generics.ListCreateAPIView):
+    serializer_class = TaxRateSerializer
+
+    def get_queryset(self):
+        tax_class_id = self.kwargs['tax_class_id']
+        return TaxRate.objects.filter(tax_class_id=tax_class_id)
+    
+    def perform_create(self, serializer):
+        tax_class = TaxClass.objects.get(id=self.kwargs['tax_class_id'])
+        serializer.save(tax_class=tax_class)
+    
+
+class TaxRateRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TaxRateSerializer
+    queryset = TaxRate.objects.all()
+    lookup_field = 'id'
+
+
+
+
+        

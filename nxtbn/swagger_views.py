@@ -22,6 +22,7 @@ DASHBOARD_PATTERNS = [
     path('seo/dashboard/api/', include('nxtbn.seo.api.dashboard.urls')),
     path('plugins/dashboard/api/', include('nxtbn.plugins.api.dashboard.urls')),
     path('shipping/dashboard/api/', include('nxtbn.shipping.api.dashboard.urls')),
+    path('tax/dashboard/api/', include('nxtbn.tax.api.dashboard.urls'))
 
 ]
 

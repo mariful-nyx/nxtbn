@@ -34,24 +34,21 @@ class CustomerEligibleShippingMethodstAPI(generics.ListCreateAPIView):
             ).distinct()
 
         return queryset
+    
+class ShippingMethodstListAPI(generics.ListCreateAPIView):
+    serializer_class = ShippingMethodSerializer
+    queryset = ShippingMethod.objects.all()
 
 
-class CustomerEligibleShippingMethodDetail(generics.RetrieveUpdateDestroyAPIView):
+class ShippingMethodDetails(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ShppingMethodDetailSeralizer
     queryset = ShippingMethod.objects.all()
     lookup_field = 'id'
 
 
-class ShippingRateView(generics.ListCreateAPIView):
+class ShippingRateListCreateView(generics.ListCreateAPIView):
     serializer_class = ShippingRateSerializer
-
-    def get_queryset(self):
-        shipping_method_id = self.kwargs['shipping_method_id']
-        return ShippingRate.objects.filter(shipping_method_id=shipping_method_id)
-    
-    def perform_create(self, serializer):
-        shipping_method = ShippingMethod.objects.get(id=self.kwargs['shipping_method_id'])
-        serializer.save(shipping_method=shipping_method)
+    queryset = ShippingRate.objects.all()
 
 
 class ShippingRateDetailView(generics.RetrieveUpdateDestroyAPIView):

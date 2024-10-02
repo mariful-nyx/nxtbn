@@ -12,9 +12,11 @@ from nxtbn.tax.api.dashboard.serializers import (
     TaxClassSerializer, 
     TaxClassDetailSerializer, 
     TaxRateSerializer
-    
-    )
+)
 
+from rest_framework import filters as drf_filters
+import django_filters
+from django_filters import rest_framework as filters
 
 class TaxClassView(generics.ListCreateAPIView):
     permission_classes = (NxtbnAdminPermission,)
@@ -23,23 +25,23 @@ class TaxClassView(generics.ListCreateAPIView):
     pagination_class = NxtbnPagination
 
 
-class TaxClassRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
+class TaxClassDetailsView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (NxtbnAdminPermission,)
     queryset = TaxClass.objects.all()
     serializer_class = TaxClassDetailSerializer
     lookup_field = 'id'
 
 
-class TaxRateListByTaxClass(generics.ListCreateAPIView):
+class TaxRateListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TaxRateSerializer
-
-    def get_queryset(self):
-        tax_class_id = self.kwargs['tax_class_id']
-        return TaxRate.objects.filter(tax_class_id=tax_class_id)
-    
-    def perform_create(self, serializer):
-        tax_class = TaxClass.objects.get(id=self.kwargs['tax_class_id'])
-        serializer.save(tax_class=tax_class)
+    queryset = TaxRate.objects.all()
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+        drf_filters.OrderingFilter
+    ]
+    filterset_fields = ['tax_class', 'country', 'state', 'is_active']
+    search_fields = ['country', 'state', 'rate']
     
 
 class TaxRateRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):

@@ -7,3 +7,9 @@ class PromoCodeListCreateAPIView(generics.ListCreateAPIView):
     pagination_class = NxtbnPagination
     queryset = PromoCode.objects.all()
     serializer_class = PromoCodeSerializer
+
+
+class PromoCodeUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = PromoCode.objects.all()
+    serializer_class = PromoCodeSerializer
+    lookup_field = 'id'

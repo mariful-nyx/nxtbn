@@ -119,8 +119,8 @@ class ProductType(models.Model):
 class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_created')
     last_modified_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_modified', null=True, blank=True)
-    name = models.CharField(max_length=255)
-    summary = models.TextField(max_length=500)
+    name = models.CharField(max_length=255, help_text="The name of the product.")
+    summary = models.TextField(max_length=500, help_text="A brief summary of the product.")
     description = models.TextField(max_length=5000)
     images = models.ManyToManyField(Image, blank=True)
     category = models.ForeignKey(
@@ -130,7 +130,7 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     )
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name='+', null=True, blank=True)
     brand = models.CharField(max_length=100, blank=True, null=True)
-    product_type = models.ForeignKey(ProductType, related_name='product', on_delete=models.PROTECT)
+    product_type = models.ForeignKey(ProductType, related_name='product', on_delete=models.PROTECT, help_text="The type of product.")
     related_to = models.ManyToManyField("self", blank=True)
     default_variant = models.OneToOneField(
         "ProductVariant",

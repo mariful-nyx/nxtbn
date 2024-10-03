@@ -1,5 +1,6 @@
 from django.conf import settings
 from rest_framework import generics, status
+from rest_framework import viewsets
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from rest_framework.permissions import AllowAny
@@ -7,7 +8,7 @@ from django.contrib.auth import authenticate
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.users import UserRole
 from nxtbn.users.models import User
-from nxtbn.users.api.dashboard.serializers import CustomerSerializer, DashboardLoginSerializer, UserSerializer
+from nxtbn.users.api.dashboard.serializers import CustomerSerializer, DashboardLoginSerializer, UserMututionalSerializer, UserSerializer
 from nxtbn.users.api.dashboard.serializers import DashboardLoginSerializer, PasswordChangeSerializer
 from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
 from nxtbn.users.api.storefront.views import TokenRefreshView
@@ -112,3 +113,15 @@ class PasswordChangeView(generics.UpdateAPIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+# ==========================
+# User related views end here
+# ==========================
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserMututionalSerializer
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()

@@ -1,10 +1,15 @@
-from django.urls import path
+from django.urls import include, path
 from nxtbn.users.api.dashboard import views as users_views
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'users', users_views.UserViewSet, basename='user')
 
 urlpatterns = [
+    path('', include(router.urls)),
     path('login/', users_views.LoginView.as_view(), name='login'),
     path('token/refresh/', users_views.DashboardTokenRefreshView.as_view(), name='token_refresh'),
     path('customers/', users_views.CustomerListAPIView.as_view(), name='customer-list'),
-    path('users/', users_views.UserListAPIView.as_view(), name='user-list'),
+    path('users-list/', users_views.UserListAPIView.as_view(), name='user-list'),
     path('change-password/', users_views.PasswordChangeView.as_view(), name='change_password'),
 ]

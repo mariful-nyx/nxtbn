@@ -6,7 +6,9 @@ from django.db.models import Q
 
 from nxtbn.order import AddressType
 from nxtbn.order.api.storefront.serializers import AddressSerializer
+from nxtbn.users import UserRole
 from nxtbn.users.admin import User
+from django.utils.crypto import get_random_string
 
 
 class DashboardLoginSerializer(serializers.Serializer):
@@ -58,3 +60,44 @@ class PasswordChangeSerializer(serializers.Serializer):
         user.save()
         return user
 
+
+
+class UserMututionalSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+    password = serializers.CharField(write_only=True, required=False)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'role', 'avatar', 'phone_number', 'is_active', 'is_staff', 'is_superuser', 'full_name', 'password']
+        extra_kwargs = {
+            'is_staff': {'read_only': True},
+            'is_superuser': {'read_only': True},
+            'role': {'read_only': True},
+        }
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        
+        # Set role to STAFF and is_superuser to False
+        validated_data['role'] = UserRole.STAFF
+        validated_data['is_superuser'] = False
+
+        # Create user instance
+        user = User(**validated_data)
+        
+        # If no password is provided, set a dummy password
+        if password:
+            user.set_password(password)
+        else:
+            user.set_password(get_random_string())
+        
+        user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            if attr != 'password':
+                setattr(instance, attr, value)
+        
+        instance.save()
+        return instance

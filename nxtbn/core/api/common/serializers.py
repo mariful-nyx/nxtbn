@@ -18,5 +18,7 @@ class OrderEstimateSerializer(serializers.Serializer):
     shipping_address = ShippingAddressSerializer(required=False)
     shipping_method_id = serializers.IntegerField(required=False)
     custom_shipping_amount = PriceAndNameSerializer(required=False)
+
     custom_discount_amount = PriceAndNameSerializer(required=False)
+    promocode = serializers.CharField(required=False)
     variants = serializers.ListSerializer(child=VariantQuantitySerializer(), required=True)

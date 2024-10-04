@@ -76,3 +76,23 @@ class PromoCodeProductSerializer(serializers.ModelSerializer):
             'id': obj.product.id,
             'name': obj.product.name,
         }
+
+class PromoCodeCustomerSerializer(serializers.ModelSerializer):
+    promo_code = serializers.SerializerMethodField()
+    customer = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PromoCodeCustomer
+        fields = ['promo_code', 'customer']
+
+    def get_promo_code(self, obj):
+        return {
+            'id': obj.promo_code.id,
+            'code': obj.promo_code.code,
+        }
+
+    def get_customer(self, obj):
+        return {
+            'id': obj.customer.id,
+            'name': obj.customer.full_name() if obj.customer.first_name else obj.customer.username,
+        }

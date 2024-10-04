@@ -2,8 +2,8 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from nxtbn.core.paginator import NxtbnPagination
-from nxtbn.discount.models import PromoCode, PromoCodeProduct
-from nxtbn.discount.api.dashboard.serializers import AttachPromoCodeEntitiesSerializer, PromoCodeProductSerializer, PromoCodeSerializer
+from nxtbn.discount.models import PromoCode, PromoCodeCustomer, PromoCodeProduct
+from nxtbn.discount.api.dashboard.serializers import AttachPromoCodeEntitiesSerializer, PromoCodeCustomerSerializer, PromoCodeProductSerializer, PromoCodeSerializer
 
 from rest_framework import filters as drf_filters
 import django_filters
@@ -48,3 +48,20 @@ class PromoCodeProductListAPIView(generics.ListAPIView):
         # drf_filters.OrderingFilter
     ]
     filterset_class = PromoCodeProductFilter
+
+
+class PromoCodeCustomerFilter(filters.FilterSet):
+    promo_code = filters.CharFilter(field_name='promo_code__code', lookup_expr='exact')
+
+    class Meta:
+        model = PromoCodeCustomer
+        fields = ['promo_code']
+class PromoCodeCustomertListAPIView(generics.ListAPIView):
+    queryset = PromoCodeCustomer.objects.all()
+    serializer_class = PromoCodeCustomerSerializer
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        # drf_filters.SearchFilter,
+        # drf_filters.OrderingFilter
+    ]
+    filterset_class = PromoCodeCustomerFilter

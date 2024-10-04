@@ -24,7 +24,6 @@ class OrderEstimateAPIView(generics.GenericAPIView):
 
         try:
             # Extract data from validated serializer
-            variants_data = self.validated_data.get('variants')
             custom_discount_amount = self.validated_data.get('custom_discount_amount')
             shipping_method_id = self.validated_data.get('shipping_method_id', '')
             shipping_address = self.validated_data.get('shipping_address', {})

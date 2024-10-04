@@ -161,6 +161,9 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     
     def colors(self):
         return self.variants.values_list('color_code', flat=True).distinct()
+    
+    def get_redemption_count(self, promo_code):
+        return self.promo_codes.filter(code=promo_code).count()
 
     def __str__(self):
         return self.name

@@ -25,6 +25,7 @@ from nxtbn.product.api.dashboard.serializers import (
     CollectionSerializer,
     ProductTagSerializer,
     ProductTypeSerializer,
+    ProductWithPromoCountSerializer,
     ProductWithVariantSerializer,
     RecursiveCategorySerializer,
     TaxClassSerializer
@@ -38,6 +39,7 @@ class ProductFilter(filters.FilterSet):
     variant_alias = filters.CharFilter(field_name='variants__alias', lookup_expr='iexact')
     variant_sku = filters.CharFilter(field_name='variants__sku', lookup_expr='iexact')
     created_at = filters.DateFromToRangeFilter(field_name='created_at') # eg. ?created_at_after=2023-09-01&created_at_before=2023-09-12
+    promo_code = filters.CharFilter(field_name='promo_codes__code', lookup_expr='iexact')
 
     class Meta:
         model = Product
@@ -55,6 +57,7 @@ class ProductFilter(filters.FilterSet):
             'collections',
             'tags',
             'created_at',
+            'promo_code',
         ]
 
 
@@ -113,6 +116,18 @@ class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
     pagination_class = NxtbnPagination
 
 
+class ProductListWithPromoCountView(ProductFilterMixin, generics.ListAPIView):
+    permission_classes = (NxtbnAdminPermission,)
+    serializer_class = ProductWithPromoCountSerializer
+    pagination_class = NxtbnPagination
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        promo_code = self.request.query_params.get('promo_code', None)
+        if not promo_code:
+            raise APIException(_("A promo code must be provided in the query parameters."))
+        context['promo_code'] = promo_code
+        return context
     
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):

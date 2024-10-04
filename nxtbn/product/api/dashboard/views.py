@@ -25,7 +25,6 @@ from nxtbn.product.api.dashboard.serializers import (
     CollectionSerializer,
     ProductTagSerializer,
     ProductTypeSerializer,
-    ProductWithPromoCountSerializer,
     ProductWithVariantSerializer,
     RecursiveCategorySerializer,
     TaxClassSerializer
@@ -115,19 +114,6 @@ class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
     serializer_class = ProductWithVariantSerializer
     pagination_class = NxtbnPagination
 
-
-class ProductListWithPromoCountView(ProductFilterMixin, generics.ListAPIView):
-    permission_classes = (NxtbnAdminPermission,)
-    serializer_class = ProductWithPromoCountSerializer
-    pagination_class = NxtbnPagination
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        promo_code = self.request.query_params.get('promo_code', None)
-        if not promo_code:
-            raise APIException(_("A promo code must be provided in the query parameters."))
-        context['promo_code'] = promo_code
-        return context
     
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):

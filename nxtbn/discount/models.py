@@ -95,6 +95,12 @@ class PromoCode(AbstractBaseModel):
     def get_total_redemptions(self):
         return PromoCodeUsage.objects.filter(promo_code=self).count()
     
+    def get_total_applicable_products(self):
+        return self.applicable_products.count()
+    
+    def get_total_specific_customers(self):
+        return self.specific_customers.count()
+    
     def get_user_redemptions(self, user):
         return PromoCodeUsage.objects.filter(promo_code=self, user=user).count()
     

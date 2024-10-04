@@ -18,6 +18,7 @@ from nxtbn.product.api.dashboard.views import (
     ProductWithVariantView,
     ProductMinimalListView,
     ProductListDetailVariantView,
+    ProductListWithPromoCountView,
     TaxClassView
 
 )
@@ -36,6 +37,7 @@ urlpatterns = [
     path('products/', ProductListView.as_view(), name='product-list'),
     path('products/minimal/', ProductMinimalListView.as_view(), name='product-minimal-list'),
     path('products/with-detailed-variants/', ProductListDetailVariantView.as_view(), name='product-list-with-detailed-variants'),
+    path('products/with-promo-count/', ProductListWithPromoCountView.as_view(), name='product-list-with-promo-count'),
     path('products/<int:id>/', ProductDetailView.as_view(), name='product-detail'),
     path('product-with-variants/<int:id>/', ProductWithVariantView.as_view(), name='product-with-variant'),
     path('variants/<int:pk>/', ProductVariantDeleteAPIView.as_view(), name='variant-delete'),

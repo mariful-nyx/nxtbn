@@ -6,4 +6,5 @@ urlpatterns = [
     path('promocodes/<int:id>/', discount_views.PromoCodeUpdateRetrieveDeleteView.as_view(), name='promo-code-update-delete'),
     path('promocodes/attach-entities/', discount_views.AttachPromoCodeEntitiesAPIView.as_view(), name='attach-promo-code-entities'),
     path('promocodes/products/', discount_views.PromoCodeProductListAPIView.as_view(), name='promo-code-product-list'),
+    path('promocodes/customers/', discount_views.PromoCodeCustomertListAPIView.as_view(), name='promo-code-customer-list'),
 ]

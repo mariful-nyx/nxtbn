@@ -422,20 +422,3 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
         # Access the request from the context, if available
         request = self.context.get('request')
         return obj.product_thumbnail(request) if request else None
-
-class ProductWithPromoCountSerializer(serializers.ModelSerializer):
-    redemption_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Product 
-        ref_name = 'product_dashboard_promo_count_get'
-        fields =  (
-            'id',
-            'alias',
-            'name',
-            'redemption_count',
-        )
-
-    def get_redemption_count(self, obj):
-        return obj.get_redemption_count(self.context['promo_code'])
-       

@@ -20,7 +20,7 @@ class PromoCode(AbstractBaseModel):
     )
     value = models.DecimalField(max_digits=10, decimal_places=2)  # e.g., 10 for 10%, or 10 for $10
     expiration_date = models.DateTimeField(null=True, blank=True)
-    active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
     
     # New Fields
     specific_customers = models.ManyToManyField(
@@ -67,30 +67,51 @@ class PromoCode(AbstractBaseModel):
         # Ensure the code is in uppercase
         self.code = self.code.upper()
         super().save(*args, **kwargs)
+
     
-    def is_valid(self, user=None):
-        """
-        Check if the promo code is valid for use.
-        Optionally, pass the user to perform user-specific validations.
-        """
-        if not self.active:
+    def is_valid(self, user=None, payload_products=None):
+        return all([
+            self.is_active,
+            self.is_valid_customer(user),
+            self.is_valid_product(payload_products),
+            self.is_valid_min_purchase(user),
+            self.is_valid_redemption_limit(user),
+            self.is_valid_usage_limit_per_customer(user),
+        ])
+    
+
+    def is_valid_customer(self, user=None):
+        if not self.specific_customers.exists():
+            return True
+        if user is None:
             return False
-        if self.expiration_date and self.expiration_date < timezone.now():
-            return False
-        if self.redemption_limit is not None and self.get_total_redemptions() >= self.redemption_limit:
-            return False
-        if user:
-            if self.specific_customers.exists() and not self.specific_customers.filter(id=user.id).exists():
-                return False
-            if self.new_customers_only and not self.is_new_customer(user):
-                return False
-            if self.get_user_redemptions(user) >= self.usage_limit_per_customer:
-                return False
-            if self.min_purchase_amount and not self.has_min_purchase(user):
-                return False
-            if self.applicable_products.exists() and not self.has_applicable_products(user):
-                return False
+        return self.specific_customers.filter(id=user.id).exists()
+
+    def is_valid_new_customer(self, user=None):
+        if self.new_customers_only:
+            return self.is_new_customer(user)
         return True
+    
+    
+
+    def is_valid_product(self, payload_products):
+        if not self.applicable_products.exists():
+            return True
+        return any(p in self.applicable_products.all().values_list('id') for p in payload_products)
+    
+    def is_valid_min_purchase(self, user=None):
+        return self.has_min_purchase(user)
+    
+    def is_valid_redemption_limit(self, user=None):
+        if self.redemption_limit is None:
+            return True
+        return self.get_total_redemptions() < self.redemption_limit
+    
+    def is_valid_usage_limit_per_customer(self, user=None):
+        if self.usage_limit_per_customer is None:
+            return True
+        return self.get_user_redemptions(user) < self.usage_limit_per_customer
+
     
     def get_total_redemptions(self):
         return PromoCodeUsage.objects.filter(promo_code=self).count()
@@ -136,6 +157,11 @@ class PromoCode(AbstractBaseModel):
             raise ValidationError("Redemption limit must be a positive integer.")
         if self.min_purchase_amount is not None and self.min_purchase_amount < 0:
             raise ValidationError("Minimum purchase amount cannot be negative.")
+        if self.specific_customers.exists() and self.new_customers_only:
+            raise ValidationError("Cannot specify specific customers and new customers only.")
+        if self.min_purchase_amount is not None and self.min_purchase_period is None:
+            raise ValidationError("Must specify a time period for the minimum purchase amount.")
+        
         super().clean()
     
     class Meta:

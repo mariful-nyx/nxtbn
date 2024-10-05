@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from nxtbn.discount import PromoCodeType
-from nxtbn.product.models import ProductVariant
+from nxtbn.discount.models import PromoCode
+from nxtbn.product.models import Product, ProductVariant
 from decimal import Decimal, InvalidOperation
 
 from nxtbn.shipping.models import ShippingRate
@@ -204,6 +205,42 @@ class DiscountCalculator:
                 raise serializers.ValidationError({"custom_discount_amount": "Invalid discount amount."})
 
         return discount, discount_name
+    
+    def validated_promocode(self):
+        promocode = self.validated_data.get('promocode')
+        if promocode:
+            try:
+                promocode = PromoCode.objects.get(code=promocode)
+            except PromoCode.DoesNotExist:
+                raise serializers.ValidationError({"promocode": "Promo code not found."})
+        return promocode
+    
+    def get_promocode_instance(self, promocode):
+        customer = self.validated_data.get('customer_id', None)
+        product_ids = Product.objects.filter(variants__alias__in=[v['alias'] for v in self.validated_data['variants']]).values_list('id', flat=True)
+        if promocode:
+            try:
+                promocode = PromoCode.objects.get(code=promocode.upper())
+                if not promocode.is_active:
+                    raise serializers.ValidationError("Promo code is not active.")
+                if not promocode.is_valid_customer(customer):
+                    raise serializers.ValidationError("This promo code is restricted to specific customers and is not valid for you.")
+                if not promocode.is_valid_product(product_ids):
+                    raise serializers.ValidationError("Promo code is not valid for the products in your cart.")
+                if not promocode.is_valid_min_purchase(customer):
+                    raise serializers.ValidationError("Promo code is not valid for your purchase amount.")
+                if not promocode.is_valid_redemption_limit(customer):
+                    raise serializers.ValidationError("Promo code has reached its redemption limit.")
+                if not promocode.is_valid_usage_limit_per_customer(customer):
+                    raise serializers.ValidationError("Promo code has reached its usage limit for you.")
+                if not promocode.is_valid_new_customer(customer):
+                    raise serializers.ValidationError("Promo code is only valid for new customers.")
+                
+                
+                return promocode
+            except PromoCode.DoesNotExist:
+                raise serializers.ValidationError("Promo code does not exist.")
+        return None
 
 class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCalculator, DiscountCalculator):
     from nxtbn.core.api.common.serializers import OrderEstimateSerializer
@@ -217,7 +254,7 @@ class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCa
         try:
             # Extract data from validated serializer
             custom_discount_amount = self.validated_data.get('custom_discount_amount')
-            promocode = self.validated_data.get('promocode')
+            promocode = self.get_promocode_instance(self.validated_data.get('promocode'))
             shipping_method_id = self.validated_data.get('shipping_method_id', '')
             shipping_address = self.validated_data.get('shipping_address', {})
 

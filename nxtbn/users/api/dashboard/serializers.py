@@ -9,7 +9,7 @@ from nxtbn.order.api.storefront.serializers import AddressSerializer
 from nxtbn.users import UserRole
 from nxtbn.users.admin import User
 from django.utils.crypto import get_random_string
-
+from allauth.utils import  generate_unique_username
 
 class DashboardLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
@@ -73,23 +73,31 @@ class UserMututionalSerializer(serializers.ModelSerializer):
             'is_staff': {'read_only': True},
             'is_superuser': {'read_only': True},
             'role': {'read_only': True},
+            'username': {'read_only': True}
+
         }
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
-        
-        # Set role to STAFF and is_superuser to False
-        validated_data['role'] = UserRole.STAFF
-        validated_data['is_superuser'] = False
-
+ 
         # Create user instance
-        user = User(**validated_data)
+        user = self.Meta.model(
+            username = generate_unique_username(
+                [
+                    validated_data.get('first_name'),
+                    validated_data.get('last_name'),
+                    validated_data.get('email'),
+                ]
+            ),
+            role = UserRole.STAFF,
+            is_superuser = False
+        )
         
         # If no password is provided, set a dummy password
         if password:
             user.set_password(password)
         else:
-            user.set_password(get_random_string())
+            user.set_password(get_random_string(8))
         
         user.save()
         return user

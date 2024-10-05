@@ -252,53 +252,56 @@ class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCa
         self.validated_data = serializer.validated_data
 
         try:
-            # Extract data from validated serializer
-            custom_discount_amount = self.validated_data.get('custom_discount_amount')
-            promocode = self.get_promocode_instance(self.validated_data.get('promocode'))
-            shipping_method_id = self.validated_data.get('shipping_method_id', '')
-            shipping_address = self.validated_data.get('shipping_address', {})
-
-            # Retrieve variants from the database
-            variants = self.get_variants()
-
-            # Calculate subtotal from the variants
-            total_subtotal = self.get_subtotal(variants)
-
-            # Calculate discount
-            discount, discount_name = self.calculate_discount(total_subtotal, custom_discount_amount, promocode)
-            discount_percentage = (discount / total_subtotal * 100) if total_subtotal > 0 else 0
-
-            # Calculate shipping fee and name
-            shipping_fee, shipping_name = self.get_total_shipping_fee(variants, shipping_method_id, shipping_address)
-
-            # Convert shipping_fee to Decimal
-            shipping_fee = Decimal(shipping_fee)
-
-            # Calculate estimated tax
-            estimated_tax, tax_details = self.calculate_tax(variants, discount, shipping_address)
-
-            # Calculate total
-            total = total_subtotal - discount + shipping_fee + estimated_tax
-
-            response_data = {
-                "subtotal": str(total_subtotal),
-                "total_items": self.get_total_items(variants),
-                "discount": str(discount),
-                "discount_percentage": discount_percentage,
-                "discount_name": discount_name,
-                "shipping_fee": str(shipping_fee),
-                "shipping_name": shipping_name,
-                "estimated_tax": str(estimated_tax),
-                "tax_details": tax_details,
-                "total": str(total),
-            }
-
-            return Response(response_data)
-
+            response = self.get_response()
+            return Response(response)
         except serializers.ValidationError as e:
             return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+    def get_response(self):
+        custom_discount_amount = self.validated_data.get('custom_discount_amount')
+        promocode = self.get_promocode_instance(self.validated_data.get('promocode'))
+        shipping_method_id = self.validated_data.get('shipping_method_id', '')
+        shipping_address = self.validated_data.get('shipping_address', {})
+
+        # Retrieve variants from the database
+        variants = self.get_variants()
+
+        # Calculate subtotal from the variants
+        total_subtotal = self.get_subtotal(variants)
+
+        # Calculate discount
+        discount, discount_name = self.calculate_discount(total_subtotal, custom_discount_amount, promocode)
+        discount_percentage = (discount / total_subtotal * 100) if total_subtotal > 0 else 0
+
+        # Calculate shipping fee and name
+        shipping_fee, shipping_name = self.get_total_shipping_fee(variants, shipping_method_id, shipping_address)
+
+        # Convert shipping_fee to Decimal
+        shipping_fee = Decimal(shipping_fee)
+
+        # Calculate estimated tax
+        estimated_tax, tax_details = self.calculate_tax(variants, discount, shipping_address)
+
+        # Calculate total
+        total = total_subtotal - discount + shipping_fee + estimated_tax
+
+        response_data = {
+            "subtotal": str(total_subtotal),
+            "total_items": self.get_total_items(variants),
+            "discount": str(discount),
+            "discount_percentage": discount_percentage,
+            "discount_name": discount_name,
+            "shipping_fee": str(shipping_fee),
+            "shipping_name": shipping_name,
+            "estimated_tax": str(estimated_tax),
+            "tax_details": tax_details,
+            "total": str(total),
+        }
+        return response_data
+
 
     def get_variants(self):
         variants_data = self.validated_data.get('variants')

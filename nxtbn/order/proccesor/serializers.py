@@ -26,4 +26,3 @@ class OrderEstimateSerializer(serializers.Serializer):
     promocode = serializers.CharField(required=False)
     variants = serializers.ListSerializer(child=VariantQuantitySerializer(), required=True)
     customer_id = serializers.IntegerField(required=False)
-    create_order = serializers.BooleanField(required=False, default=False)

@@ -150,10 +150,10 @@ class BasicStatsView(APIView):
     
 
 class OrderEastimateView(OrderProccessorAPIView):
-    pass
+    create_order = False # Eastimate order
 
 class OrderCreateView(OrderProccessorAPIView):
-    pass
+    create_order = True # Eastimate and create order
 
 class CreateCustomAPIView(generics.CreateAPIView):
     queryset = User.objects.all()

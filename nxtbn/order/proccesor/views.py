@@ -319,7 +319,7 @@ class OrderCreator:
         )
         return address
 
-class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator):
+class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator, OrderCreator):
     def __init__(self, validated_data, create_order=False):
         self.validated_data = validated_data
         self.create_order = create_order
@@ -388,20 +388,19 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator)
     
 
 class OrderProccessorAPIView(generics.GenericAPIView):
-   
+    create_order = False
     serializer_class = OrderEstimateSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        create_order = serializer.validated_data.get('create_order', False)
 
         try:
-            order_calculation = OrderCalculation(serializer.validated_data, create_order=create_order)
+            order_calculation = OrderCalculation(serializer.validated_data, create_order=self.create_order)
             response = order_calculation.get_response()
 
-            if create_order:
+            if self.create_order:
                 order = order_calculation.create_order_instance()
                 response['order_id'] = str(order.id)  # Include order ID in the response
 

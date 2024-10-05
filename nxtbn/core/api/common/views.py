@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from nxtbn.discount import PromoCodeType
-from nxtbn.product.models import ProductVariant
+from nxtbn.discount.models import PromoCode
+from nxtbn.product.models import Product, ProductVariant
 from decimal import Decimal, InvalidOperation
 
 from nxtbn.shipping.models import ShippingRate
@@ -204,64 +205,91 @@ class DiscountCalculator:
                 raise serializers.ValidationError({"custom_discount_amount": "Invalid discount amount."})
 
         return discount, discount_name
+    
+    def validated_promocode(self):
+        promocode = self.validated_data.get('promocode')
+        if promocode:
+            try:
+                promocode = PromoCode.objects.get(code=promocode)
+            except PromoCode.DoesNotExist:
+                raise serializers.ValidationError({"promocode": "Promo code not found."})
+        return promocode
+    
+    def get_promocode_instance(self, promocode):
+        if promocode:
+            customer = self.validated_data.get('customer_id', None)
+            variant_aliases = [v['alias'] for v in self.validated_data['variants']]
+            try:
+                promocode = PromoCode.objects.get(code=promocode.upper())
+                if not promocode.is_active:
+                    raise serializers.ValidationError("Promo code is not active.")
+                if not promocode.is_valid_customer(customer):
+                    raise serializers.ValidationError("This promo code is restricted to specific customers and is not valid for you.")
+                if not promocode.is_valid_product(variant_aliases):
+                    raise serializers.ValidationError("Promo code is not valid for one or more of the products in your cart.")
+                if not promocode.is_valid_min_purchase(customer):
+                    raise serializers.ValidationError("Promo code is not valid for your purchase amount.")
+                if not promocode.is_valid_redemption_limit(customer):
+                    raise serializers.ValidationError("Promo code has reached its redemption limit.")
+                if not promocode.is_valid_usage_limit_per_customer(customer):
+                    raise serializers.ValidationError("Promo code has reached its usage limit for you.")
+                if not promocode.is_valid_new_customer(customer):
+                    raise serializers.ValidationError("Promo code is only valid for new customers.")
+                
+                
+                return promocode
+            except PromoCode.DoesNotExist:
+                raise serializers.ValidationError("Promo code does not exist.")
+        return None
 
-class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCalculator, DiscountCalculator):
-    from nxtbn.core.api.common.serializers import OrderEstimateSerializer
-    serializer_class = OrderEstimateSerializer
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.validated_data = serializer.validated_data
 
-        try:
-            # Extract data from validated serializer
-            custom_discount_amount = self.validated_data.get('custom_discount_amount')
-            promocode = self.validated_data.get('promocode')
-            shipping_method_id = self.validated_data.get('shipping_method_id', '')
-            shipping_address = self.validated_data.get('shipping_address', {})
+class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator):
+    def __init__(self, validated_data):
+        self.validated_data = validated_data
 
-            # Retrieve variants from the database
-            variants = self.get_variants()
+    def get_response(self):
+        custom_discount_amount = self.validated_data.get('custom_discount_amount')
+        promocode = self.get_promocode_instance(self.validated_data.get('promocode'))
+        shipping_method_id = self.validated_data.get('shipping_method_id', '')
+        shipping_address = self.validated_data.get('shipping_address', {})
 
-            # Calculate subtotal from the variants
-            total_subtotal = self.get_subtotal(variants)
+        # Retrieve variants from the database
+        variants = self.get_variants()
 
-            # Calculate discount
-            discount, discount_name = self.calculate_discount(total_subtotal, custom_discount_amount, promocode)
-            discount_percentage = (discount / total_subtotal * 100) if total_subtotal > 0 else 0
+        # Calculate subtotal from the variants
+        total_subtotal = self.get_subtotal(variants)
 
-            # Calculate shipping fee and name
-            shipping_fee, shipping_name = self.get_total_shipping_fee(variants, shipping_method_id, shipping_address)
+        # Calculate discount
+        discount, discount_name = self.calculate_discount(total_subtotal, custom_discount_amount, promocode)
+        discount_percentage = (discount / total_subtotal * 100) if total_subtotal > 0 else 0
 
-            # Convert shipping_fee to Decimal
-            shipping_fee = Decimal(shipping_fee)
+        # Calculate shipping fee and name
+        shipping_fee, shipping_name = self.get_total_shipping_fee(variants, shipping_method_id, shipping_address)
 
-            # Calculate estimated tax
-            estimated_tax, tax_details = self.calculate_tax(variants, discount, shipping_address)
+        # Convert shipping_fee to Decimal
+        shipping_fee = Decimal(shipping_fee)
 
-            # Calculate total
-            total = total_subtotal - discount + shipping_fee + estimated_tax
+        # Calculate estimated tax
+        estimated_tax, tax_details = self.calculate_tax(variants, discount, shipping_address)
 
-            response_data = {
-                "subtotal": str(total_subtotal),
-                "total_items": self.get_total_items(variants),
-                "discount": str(discount),
-                "discount_percentage": discount_percentage,
-                "discount_name": discount_name,
-                "shipping_fee": str(shipping_fee),
-                "shipping_name": shipping_name,
-                "estimated_tax": str(estimated_tax),
-                "tax_details": tax_details,
-                "total": str(total),
-            }
+        # Calculate total
+        total = total_subtotal - discount + shipping_fee + estimated_tax
 
-            return Response(response_data)
+        response_data = {
+            "subtotal": str(total_subtotal),
+            "total_items": self.get_total_items(variants),
+            "discount": str(discount),
+            "discount_percentage": discount_percentage,
+            "discount_name": discount_name,
+            "shipping_fee": str(shipping_fee),
+            "shipping_name": shipping_name,
+            "estimated_tax": str(estimated_tax),
+            "tax_details": tax_details,
+            "total": str(total),
+        }
+        return response_data
 
-        except serializers.ValidationError as e:
-            return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def get_variants(self):
         variants_data = self.validated_data.get('variants')
@@ -288,3 +316,21 @@ class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCa
 
     def get_total_items(self, variants):
         return sum(variant['quantity'] for variant in variants)
+    
+
+class OrderEstimateAPIView(generics.GenericAPIView):
+    from nxtbn.core.api.common.serializers import OrderEstimateSerializer
+    serializer_class = OrderEstimateSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            order_calculation = OrderCalculation(serializer.validated_data)
+            response = order_calculation.get_response()
+            return Response(response)
+        except serializers.ValidationError as e:
+            return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

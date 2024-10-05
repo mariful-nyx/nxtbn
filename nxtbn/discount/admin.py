@@ -42,13 +42,13 @@ class PromoCodeAdmin(admin.ModelAdmin):
         'code',
         'code_type',
         'value_display',
-        'active',
+        'is_active',
         'expiration_date',
         'redemption_limit',
         'get_total_redemptions',
     ]
     list_filter = [
-        'active',
+        'is_active',
         'code_type',
         'expiration_date',
     ]
@@ -63,7 +63,7 @@ class PromoCodeAdmin(admin.ModelAdmin):
     ]
     fieldsets = (
         (None, {
-            'fields': ('code', 'description', 'code_type', 'value', 'expiration_date', 'active')
+            'fields': ('code', 'description', 'code_type', 'value', 'expiration_date', 'is_active')
         }),
         ('Advanced options', {
             'fields': ('min_purchase_amount', 'min_purchase_period', 'redemption_limit', 'new_customers_only', 'usage_limit_per_customer')

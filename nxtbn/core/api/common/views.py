@@ -242,23 +242,11 @@ class DiscountCalculator:
                 raise serializers.ValidationError("Promo code does not exist.")
         return None
 
-class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCalculator, DiscountCalculator):
-    from nxtbn.core.api.common.serializers import OrderEstimateSerializer
-    serializer_class = OrderEstimateSerializer
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.validated_data = serializer.validated_data
 
-        try:
-            response = self.get_response()
-            return Response(response)
-        except serializers.ValidationError as e:
-            return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
-        except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
+class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator):
+    def __init__(self, validated_data):
+        self.validated_data = validated_data
 
     def get_response(self):
         custom_discount_amount = self.validated_data.get('custom_discount_amount')
@@ -328,3 +316,21 @@ class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCa
 
     def get_total_items(self, variants):
         return sum(variant['quantity'] for variant in variants)
+    
+
+class OrderEstimateAPIView(generics.GenericAPIView):
+    from nxtbn.core.api.common.serializers import OrderEstimateSerializer
+    serializer_class = OrderEstimateSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            order_calculation = OrderCalculation(serializer.validated_data)
+            response = order_calculation.get_response()
+            return Response(response)
+        except serializers.ValidationError as e:
+            return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -2,9 +2,14 @@ from rest_framework import generics
 
 from rest_framework.response import Response
 from rest_framework import status
+from django.db import transaction
 
+from nxtbn.core import CurrencyTypes
 from nxtbn.discount import PromoCodeType
 from nxtbn.discount.models import PromoCode
+from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
+from nxtbn.order.proccesor.serializers import OrderEstimateSerializer
+from nxtbn.order.models import Address, Order, OrderLineItem
 from nxtbn.product.models import Product, ProductVariant
 from decimal import Decimal, InvalidOperation
 
@@ -243,50 +248,114 @@ class DiscountCalculator:
         return None
 
 
+class OrderCreator:
+    def create_order_instance(self):
+        """
+        Creates and saves an Order instance based on the pre-calculated data.
+        Also creates corresponding OrderLineItems.
+        """
+        with transaction.atomic():
+            custom_discount_amount = self.validated_data.get('custom_discount_amount')
+            promocode = self.get_promocode_instance(self.validated_data.get('promocode'))
+            shipping_method_id = self.validated_data.get('shipping_method_id', '')
+            shipping_address = self.validated_data.get('shipping_address', {})
+            billing_address = self.validated_data.get('billing_address', {})
+
+            # Prepare Order data
+            order_data = {
+                "user": self.validated_data.get('user'),
+                "supplier": self.validated_data.get('supplier'),
+                "shipping_address": self.get_or_create_address(shipping_address),
+                "billing_address": self.get_or_create_address(billing_address),
+                "currency": self.validated_data.get('currency', CurrencyTypes.USD),
+                "total_price": int(self.total * 100),  # Assuming total is in units, convert to cents
+                "customer_currency": self.validated_data.get('customer_currency', CurrencyTypes.USD),
+                "total_price_in_customer_currency": self.total,
+                "status": OrderStatus.PENDING,
+                "authorize_status": OrderAuthorizationStatus.NONE,
+                "charge_status": OrderChargeStatus.DUE,
+                "promo_code": promocode,
+            }
+
+            # Create Order instance
+            order = Order.objects.create(**order_data)
+
+            # Create OrderLineItems
+            for variant in self.variants:
+                OrderLineItem.objects.create(
+                    order=order,
+                    variant=variant['variant'],
+                    quantity=variant['quantity'],
+                    price_per_unit=variant['price'],
+                    currency=order.currency,
+                    total_price=int(variant['quantity'] * variant['price'] * 100),  # Convert to cents
+                    customer_currency=order.customer_currency,
+                    total_price_in_customer_currency=variant['quantity'] * variant['price'],
+                    tax_rate=self.get_tax_rate(variant['tax_class'], shipping_address).rate if self.get_tax_rate(variant['tax_class'], shipping_address) else Decimal('0.00'),
+                )
+
+            return order
+
+    def get_or_create_address(self, address_data):
+        """
+        Retrieves an existing Address or creates a new one based on the provided data.
+        """
+        if not address_data:
+            return None
+
+        # Assuming address_data contains enough information to uniquely identify an address
+        address, created = Address.objects.get_or_create(
+            user=self.validated_data.get('user'),
+            first_name=address_data.get('first_name', ''),
+            last_name=address_data.get('last_name', ''),
+            phone_number=address_data.get('phone_number', ''),
+            email_address=address_data.get('email_address', ''),
+            address_type=address_data.get('address_type', AddressType.DSA_DBA),
+            street_address=address_data.get('street_address', ''),
+            city=address_data.get('city', ''),
+            state=address_data.get('state', ''),
+            country=address_data.get('country', ''),
+            defaults=address_data
+        )
+        return address
 
 class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator):
-    def __init__(self, validated_data):
+    def __init__(self, validated_data, create_order=False):
         self.validated_data = validated_data
+        self.create_order = create_order
+        self.variants = self.get_variants()
+        self.total_subtotal = self.get_subtotal(self.variants)
+        self.total_items = self.get_total_items(self.variants)
+        self.discount, self.discount_name = self.calculate_discount(
+            self.total_subtotal,
+            self.validated_data.get('custom_discount_amount'),
+            self.get_promocode_instance(self.validated_data.get('promocode'))
+        )
+        self.discount_percentage = (self.discount / self.total_subtotal * 100) if self.total_subtotal > 0 else 0
+        self.shipping_fee, self.shipping_name = self.get_total_shipping_fee(
+            self.variants,
+            self.validated_data.get('shipping_method_id', ''),
+            self.validated_data.get('shipping_address', {})
+        )
+        self.estimated_tax, self.tax_details = self.calculate_tax(
+            self.variants,
+            self.discount,
+            self.validated_data.get('shipping_address', {})
+        )
+        self.total = self.total_subtotal - self.discount + self.shipping_fee + self.estimated_tax
 
     def get_response(self):
-        custom_discount_amount = self.validated_data.get('custom_discount_amount')
-        promocode = self.get_promocode_instance(self.validated_data.get('promocode'))
-        shipping_method_id = self.validated_data.get('shipping_method_id', '')
-        shipping_address = self.validated_data.get('shipping_address', {})
-
-        # Retrieve variants from the database
-        variants = self.get_variants()
-
-        # Calculate subtotal from the variants
-        total_subtotal = self.get_subtotal(variants)
-
-        # Calculate discount
-        discount, discount_name = self.calculate_discount(total_subtotal, custom_discount_amount, promocode)
-        discount_percentage = (discount / total_subtotal * 100) if total_subtotal > 0 else 0
-
-        # Calculate shipping fee and name
-        shipping_fee, shipping_name = self.get_total_shipping_fee(variants, shipping_method_id, shipping_address)
-
-        # Convert shipping_fee to Decimal
-        shipping_fee = Decimal(shipping_fee)
-
-        # Calculate estimated tax
-        estimated_tax, tax_details = self.calculate_tax(variants, discount, shipping_address)
-
-        # Calculate total
-        total = total_subtotal - discount + shipping_fee + estimated_tax
-
         response_data = {
-            "subtotal": str(total_subtotal),
-            "total_items": self.get_total_items(variants),
-            "discount": str(discount),
-            "discount_percentage": discount_percentage,
-            "discount_name": discount_name,
-            "shipping_fee": str(shipping_fee),
-            "shipping_name": shipping_name,
-            "estimated_tax": str(estimated_tax),
-            "tax_details": tax_details,
-            "total": str(total),
+            "subtotal": str(self.total_subtotal),
+            "total_items": self.total_items,
+            "discount": str(self.discount),
+            "discount_percentage": self.discount_percentage,
+            "discount_name": self.discount_name,
+            "shipping_fee": str(self.shipping_fee),
+            "shipping_name": self.shipping_name,
+            "estimated_tax": str(self.estimated_tax),
+            "tax_details": self.tax_details,
+            "total": str(self.total),
         }
         return response_data
 
@@ -318,18 +387,25 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator)
         return sum(variant['quantity'] for variant in variants)
     
 
-class OrderEstimateAPIView(generics.GenericAPIView):
-    from nxtbn.core.api.common.serializers import OrderEstimateSerializer
+class OrderProccessorAPIView(generics.GenericAPIView):
+   
     serializer_class = OrderEstimateSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        create_order = serializer.validated_data.get('create_order', False)
+
         try:
-            order_calculation = OrderCalculation(serializer.validated_data)
+            order_calculation = OrderCalculation(serializer.validated_data, create_order=create_order)
             response = order_calculation.get_response()
-            return Response(response)
+
+            if create_order:
+                order = order_calculation.create_order_instance()
+                response['order_id'] = str(order.id)  # Include order ID in the response
+
+            return Response(response, status=status.HTTP_200_OK)
         except serializers.ValidationError as e:
             return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
         except ValueError as e:

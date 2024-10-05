@@ -18,13 +18,14 @@ import django_filters
 from django_filters import rest_framework as filters
 
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
+from nxtbn.order.proccesor.views import OrderProccessorAPIView
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
 from nxtbn.order.models import Order, OrderLineItem
 from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 from nxtbn.product.models import ProductVariant
 from nxtbn.users.admin import User
-from .serializers import CustomerCreateSerializer, OrderCreateSerializer, OrderListSerializer, OrderSerializer
+from .serializers import CustomerCreateSerializer, OrderListSerializer, OrderSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 from babel.numbers import get_currency_precision
@@ -148,9 +149,11 @@ class BasicStatsView(APIView):
         return Response(data)
     
 
-class OrderCreateView(generics.CreateAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderCreateSerializer
+class OrderEastimateView(OrderProccessorAPIView):
+    pass
+
+class OrderCreateView(OrderProccessorAPIView):
+    pass
 
 class CreateCustomAPIView(generics.CreateAPIView):
     queryset = User.objects.all()

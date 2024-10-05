@@ -13,7 +13,168 @@ from django.db.models import Q
 from rest_framework import serializers
 
 
-class OrderEstimateAPIView(generics.GenericAPIView):
+class ShippingFeeCalculator:
+    def get_shipping_rate_instance(self, shipping_method_id, address):
+        if not shipping_method_id:
+            return None
+
+        if not address:
+            raise ValueError("Address is required when a shipping method ID is provided.")
+
+        shipping_rate_qs = ShippingRate.objects.filter(shipping_method__id=shipping_method_id)
+
+        # Check for a rate defined at the city level
+        if address.get('city'):
+            rate = shipping_rate_qs.filter(
+                city=address['city'].lower(),
+                country=address['country'].upper(),
+                region=address['state'].lower() if address.get('state') else None,
+            ).first()
+            if rate:
+                return rate
+
+        # Check for a rate defined at the state level
+        if address.get('state'):
+            if rate:
+                rate = shipping_rate_qs.filter(
+                    region=address['state'].lower(),
+                    city__isnull=True,
+                    country=address['country'].upper(),
+                ).first()
+                return rate
+
+        # Check for a rate at the country level if no state rate is found, nationwide
+        if address.get('country'):
+            rate = shipping_rate_qs.filter(country=address['country']).first()
+            if rate:
+                rate = shipping_rate_qs.filter(
+                    country=address['country'].upper(),
+                    region__isnull=True,
+                    city__isnull=True
+                ).first()
+                return rate
+            
+        # Global
+        if not address.get('country'):
+            rate = shipping_rate_qs.filter(country=address['country']).first()
+            if rate:
+                rate = shipping_rate_qs.filter(
+                    country__isnull=True,
+                    region__isnull=True,
+                    city__isnull=True
+                ).first()
+                return rate
+        else:
+            raise serializers.ValidationError({"details": "We don't ship to this location."})
+
+        # If no rate is found for the address, raise an exception
+        raise ValueError("No shipping rate available for the provided location.")
+
+    def get_shipping_fee_by_rate(self, shipping_method_id, address, total_weight):
+        rate_instance = self.get_shipping_rate_instance(shipping_method_id, address)
+        if not rate_instance:
+            custom_shipping_amount = self.validated_data.get('custom_shipping_amount', {})
+            if custom_shipping_amount:
+                return Decimal(custom_shipping_amount['price']), custom_shipping_amount.get('name', '-')
+            else:
+                return Decimal('0.00'), '-'
+
+        # Calculate shipping fee based on weight
+        base_weight = rate_instance.weight_min
+        base_rate = rate_instance.rate
+        incremental_rate = rate_instance.incremental_rate  # Assume ShippingRate has incremental_rate field
+
+        if total_weight <= base_weight:
+            shipping_fee = base_rate
+        else:
+            extra_weight = total_weight - base_weight
+            shipping_fee = base_rate + (extra_weight * incremental_rate)
+
+        shipping_name = rate_instance.name if hasattr(rate_instance, 'name') else 'Standard Shipping'
+
+        return shipping_fee, shipping_name
+
+    def get_total_shipping_fee(self, variants, shipping_method_id, address):
+        total_weight = self.get_total_weight(variants)
+        shipping_fee, shipping_name = self.get_shipping_fee_by_rate(shipping_method_id, address, total_weight)
+        return shipping_fee, shipping_name
+    
+    def get_total_weight(self, variants):
+        return sum(variant['quantity'] * variant['weight'] for variant in variants)
+
+
+
+class TaxCalculator:
+    def calculate_tax(self, variants, discount, shipping_address):
+        """
+        Calculate tax based on each product's tax_class and the applicable TaxRate.
+        Hierarchy for TaxRate: State > Country
+        """
+        from collections import defaultdict
+
+        # Group subtotal by tax_class
+        tax_class_subtotals = defaultdict(Decimal)
+        for variant in variants:
+            tax_class = variant['tax_class']
+            variant_subtotal = variant['quantity'] * variant['price']
+            tax_class_subtotals[tax_class] += variant_subtotal
+
+        # Calculate total subtotal for proportional discount allocation
+        total_subtotal = sum(tax_class_subtotals.values())
+        if total_subtotal > 0 and discount > 0:
+            for tax_class in tax_class_subtotals:
+                # Allocate discount proportionally based on subtotal
+                tax_class_subtotals[tax_class] -= (tax_class_subtotals[tax_class] / total_subtotal) * discount
+
+        estimated_tax = Decimal('0.00')
+        tax_details = []
+
+        for tax_class, class_subtotal in tax_class_subtotals.items():
+            tax_rate_instance = self.get_tax_rate(tax_class, shipping_address)
+            if tax_rate_instance:
+                tax_rate = tax_rate_instance.rate / Decimal('100')  # Assuming rate is percentage
+                tax_type = tax_rate_instance.tax_class.name  # Assuming you want the tax class name
+            else:
+                tax_rate = Decimal('0.00')
+                tax_type = 'No Tax'
+
+            class_tax = (class_subtotal * tax_rate).quantize(Decimal('0.01'))
+            estimated_tax += class_tax
+
+            tax_details.append({
+                'tax_class': tax_type,
+                'tax_percentage': str(tax_rate * 100),
+                'tax_amount': str(class_tax),
+            })
+
+        return estimated_tax, tax_details
+
+    def get_tax_rate(self, tax_class, shipping_address):
+        """
+        Retrieve the applicable TaxRate for a given tax_class and shipping_address.
+        Hierarchy: State > Country
+        """
+        tax_rate_instance = None
+
+        if 'state' in shipping_address and shipping_address['state']:
+            tax_rate_instance = TaxRate.objects.filter(
+                tax_class=tax_class,
+                state=shipping_address['state'],
+                is_active=True
+            ).first()
+
+        if not tax_rate_instance and 'country' in shipping_address and shipping_address['country']:
+            tax_rate_instance = TaxRate.objects.filter(
+                tax_class=tax_class,
+                country=shipping_address['country'],
+                is_active=True
+            ).first()
+
+        return tax_rate_instance
+
+   
+
+class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCalculator):
     from nxtbn.core.api.common.serializers import OrderEstimateSerializer
     serializer_class = OrderEstimateSerializer
 
@@ -99,163 +260,10 @@ class OrderEstimateAPIView(generics.GenericAPIView):
         # Ensure discount does not exceed subtotal
         return min(discount, subtotal)
 
-    def calculate_tax(self, variants, discount, shipping_address):
-        """
-        Calculate tax based on each product's tax_class and the applicable TaxRate.
-        Hierarchy for TaxRate: State > Country
-        """
-        from collections import defaultdict
-
-        # Group subtotal by tax_class
-        tax_class_subtotals = defaultdict(Decimal)
-        for variant in variants:
-            tax_class = variant['tax_class']
-            variant_subtotal = variant['quantity'] * variant['price']
-            tax_class_subtotals[tax_class] += variant_subtotal
-
-        # Calculate total subtotal for proportional discount allocation
-        total_subtotal = sum(tax_class_subtotals.values())
-        if total_subtotal > 0 and discount > 0:
-            for tax_class in tax_class_subtotals:
-                # Allocate discount proportionally based on subtotal
-                tax_class_subtotals[tax_class] -= (tax_class_subtotals[tax_class] / total_subtotal) * discount
-
-        estimated_tax = Decimal('0.00')
-        tax_details = []
-
-        for tax_class, class_subtotal in tax_class_subtotals.items():
-            tax_rate_instance = self.get_tax_rate(tax_class, shipping_address)
-            if tax_rate_instance:
-                tax_rate = tax_rate_instance.rate / Decimal('100')  # Assuming rate is percentage
-                tax_type = tax_rate_instance.tax_class.name  # Assuming you want the tax class name
-            else:
-                tax_rate = Decimal('0.00')
-                tax_type = 'No Tax'
-
-            class_tax = (class_subtotal * tax_rate).quantize(Decimal('0.01'))
-            estimated_tax += class_tax
-
-            tax_details.append({
-                'tax_class': tax_type,
-                'tax_percentage': str(tax_rate * 100),
-                'tax_amount': str(class_tax),
-            })
-
-        return estimated_tax, tax_details
-
-    def get_tax_rate(self, tax_class, shipping_address):
-        """
-        Retrieve the applicable TaxRate for a given tax_class and shipping_address.
-        Hierarchy: State > Country
-        """
-        tax_rate_instance = None
-
-        if 'state' in shipping_address and shipping_address['state']:
-            tax_rate_instance = TaxRate.objects.filter(
-                tax_class=tax_class,
-                state=shipping_address['state'],
-                is_active=True
-            ).first()
-
-        if not tax_rate_instance and 'country' in shipping_address and shipping_address['country']:
-            tax_rate_instance = TaxRate.objects.filter(
-                tax_class=tax_class,
-                country=shipping_address['country'],
-                is_active=True
-            ).first()
-
-        return tax_rate_instance
-
-    def get_shipping_rate_instance(self, shipping_method_id, address):
-        if not shipping_method_id:
-            return None
-
-        if not address:
-            raise ValueError("Address is required when a shipping method ID is provided.")
-
-        shipping_rate_qs = ShippingRate.objects.filter(shipping_method__id=shipping_method_id)
-
-        # Check for a rate defined at the city level
-        if address.get('city'):
-            rate = shipping_rate_qs.filter(
-                city=address['city'].lower(),
-                country=address['country'].upper(),
-                region=address['state'].lower() if address.get('state') else None,
-            ).first()
-            if rate:
-                return rate
-
-        # Check for a rate defined at the state level
-        if address.get('state'):
-            if rate:
-                rate = shipping_rate_qs.filter(
-                    region=address['state'].lower(),
-                    city__isnull=True,
-                    country=address['country'].upper(),
-                ).first()
-                return rate
-
-        # Check for a rate at the country level if no state rate is found, nationwide
-        if address.get('country'):
-            rate = shipping_rate_qs.filter(country=address['country']).first()
-            if rate:
-                rate = shipping_rate_qs.filter(
-                    country=address['country'].upper(),
-                    region__isnull=True,
-                    city__isnull=True
-                ).first()
-                return rate
-            
-        # Global
-        if not address.get('country'):
-            rate = shipping_rate_qs.filter(country=address['country']).first()
-            if rate:
-                rate = shipping_rate_qs.filter(
-                    country__isnull=True,
-                    region__isnull=True,
-                    city__isnull=True
-                ).first()
-                return rate
-        else:
-            raise serializers.ValidationError({"details": "We don't ship to this location."})
-
-        # If no rate is found for the address, raise an exception
-        raise ValueError("No shipping rate available for the provided location.")
-
-    def get_shipping_fee_by_rate(self, shipping_method_id, address, total_weight):
-        rate_instance = self.get_shipping_rate_instance(shipping_method_id, address)
-        if not rate_instance:
-            custom_shipping_amount = self.validated_data.get('custom_shipping_amount', {})
-            if custom_shipping_amount:
-                return Decimal(custom_shipping_amount['price']), custom_shipping_amount.get('name', '-')
-            else:
-                return Decimal('0.00'), '-'
-
-        # Calculate shipping fee based on weight
-        base_weight = rate_instance.weight_min
-        base_rate = rate_instance.rate
-        incremental_rate = rate_instance.incremental_rate  # Assume ShippingRate has incremental_rate field
-
-        if total_weight <= base_weight:
-            shipping_fee = base_rate
-        else:
-            extra_weight = total_weight - base_weight
-            shipping_fee = base_rate + (extra_weight * incremental_rate)
-
-        shipping_name = rate_instance.name if hasattr(rate_instance, 'name') else 'Standard Shipping'
-
-        return shipping_fee, shipping_name
-
-    def get_total_shipping_fee(self, variants, shipping_method_id, address):
-        total_weight = self.get_total_weight(variants)
-        shipping_fee, shipping_name = self.get_shipping_fee_by_rate(shipping_method_id, address, total_weight)
-        return shipping_fee, shipping_name
+    
 
     def get_subtotal(self, variants):
         return sum(variant['quantity'] * variant['price'] for variant in variants)
 
     def get_total_items(self, variants):
         return sum(variant['quantity'] for variant in variants)
-
-    def get_total_weight(self, variants):
-        return sum(variant['quantity'] * variant['weight'] for variant in variants)

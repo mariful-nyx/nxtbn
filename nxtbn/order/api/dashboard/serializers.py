@@ -3,8 +3,11 @@ from rest_framework import serializers
 from django.db import transaction
 
 
+from nxtbn.discount.api.dashboard.serializers import PromoCodeBasicSerializer
 from nxtbn.order import AddressType, OrderStatus
+from nxtbn.order.api.storefront.serializers import AddressSerializer
 from nxtbn.order.models import Address, Order, OrderLineItem
+from nxtbn.payment.api.dashboard.serializers import BasicPaymentSerializer
 from nxtbn.payment.models import Payment
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
 from nxtbn.users.api.dashboard.serializers import UserSerializer
@@ -13,9 +16,17 @@ from nxtbn.users.models import User
 
 class OrderLineItemSerializer(serializers.ModelSerializer):
     # variant = ProductVariantSerializer(read_only=True)
+    total_price = serializers.SerializerMethodField()
+    price_per_unit = serializers.SerializerMethodField()
     class Meta:
         model = OrderLineItem
         fields = ('id', 'quantity', 'price_per_unit', 'total_price',)
+
+    def get_total_price(self, obj):
+        return obj.humanize_total_price()
+    
+    def get_price_per_unit(self, obj):
+        return obj.humanize_price_per_unit()
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -24,7 +35,6 @@ class OrderSerializer(serializers.ModelSerializer):
     supplier = serializers.StringRelatedField(allow_null=True)
     shipping_address = serializers.StringRelatedField(allow_null=True)
     billing_address = serializers.StringRelatedField(allow_null=True)
-    promo_code = serializers.StringRelatedField(allow_null=True)
     gift_card = serializers.StringRelatedField(allow_null=True)
     payment_method = serializers.CharField(source='get_payment_method')
 
@@ -106,13 +116,18 @@ class CustomerCreateSerializer(serializers.ModelSerializer):
         return value
     
 
+
 class OrderDetailsSerializer(serializers.ModelSerializer):
     line_items = OrderLineItemSerializer(many=True, read_only=True)
-    shipping_address = serializers.StringRelatedField()
-    billing_address = serializers.StringRelatedField()
+    shipping_address = AddressSerializer()
+    billing_address =  AddressSerializer()
     total_price = serializers.SerializerMethodField()
     total_price_in_customer_currency = serializers.SerializerMethodField()
     user = UserSerializer()
+    total_price = serializers.SerializerMethodField()
+    payment_method = serializers.CharField(source='get_payment_method')
+    promo_code = PromoCodeBasicSerializer()
+    payments = BasicPaymentSerializer(many=True)
 
     class Meta:
         model = Order
@@ -125,6 +140,9 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'customer_currency',
             'total_price_in_customer_currency',
             'status',
+            'authorize_status',
+            'charge_status',
+            'payment_method',
             'created_at',
             'shipping_address',
             'billing_address',
@@ -132,6 +150,8 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'promo_code',
             'gift_card',
             'due_date',
+            'payment_terms',
+            'payments',
         )
 
     def get_total_price(self, obj):

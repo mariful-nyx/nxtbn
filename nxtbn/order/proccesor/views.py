@@ -5,6 +5,7 @@ from rest_framework import status
 from django.db import transaction
 
 from nxtbn.core import CurrencyTypes
+from nxtbn.core.utils import build_currency_amount
 from nxtbn.discount import PromoCodeType
 from nxtbn.discount.models import PromoCode
 from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
@@ -222,23 +223,22 @@ class DiscountCalculator:
     
     def get_promocode_instance(self, promocode):
         if promocode:
-            customer = self.validated_data.get('customer_id', None)
             variant_aliases = [v['alias'] for v in self.validated_data['variants']]
             try:
                 promocode = PromoCode.objects.get(code=promocode.upper())
                 if not promocode.is_active:
                     raise serializers.ValidationError("Promo code is not active.")
-                if not promocode.is_valid_customer(customer):
+                if not promocode.is_valid_customer(self.customer):
                     raise serializers.ValidationError("This promo code is restricted to specific customers and is not valid for you.")
                 if not promocode.is_valid_product(variant_aliases):
                     raise serializers.ValidationError("Promo code is not valid for one or more of the products in your cart.")
-                if not promocode.is_valid_min_purchase(customer):
+                if not promocode.is_valid_min_purchase(self.customer):
                     raise serializers.ValidationError("Promo code is not valid for your purchase amount.")
-                if not promocode.is_valid_redemption_limit(customer):
+                if not promocode.is_valid_redemption_limit(self.customer):
                     raise serializers.ValidationError("Promo code has reached its redemption limit.")
-                if not promocode.is_valid_usage_limit_per_customer(customer):
+                if not promocode.is_valid_usage_limit_per_customer(self.customer):
                     raise serializers.ValidationError("Promo code has reached its usage limit for you.")
-                if not promocode.is_valid_new_customer(customer):
+                if not promocode.is_valid_new_customer(self.customer):
                     raise serializers.ValidationError("Promo code is only valid for new customers.")
                 
                 
@@ -262,15 +262,16 @@ class OrderCreator:
             billing_address = self.validated_data.get('billing_address', {})
 
             # Prepare Order data
+            customer_currency = self.validated_data.get('customer_currency', CurrencyTypes.USD)
             order_data = {
-                "user": self.validated_data.get('user'),
+                "user_id": self.customer,
                 "supplier": self.validated_data.get('supplier'),
                 "shipping_address": self.get_or_create_address(shipping_address),
                 "billing_address": self.get_or_create_address(billing_address),
                 "currency": self.validated_data.get('currency', CurrencyTypes.USD),
                 "total_price": int(self.total * 100),  # Assuming total is in units, convert to cents
                 "customer_currency": self.validated_data.get('customer_currency', CurrencyTypes.USD),
-                "total_price_in_customer_currency": self.total,
+                "total_price_in_customer_currency": build_currency_amount(self.total, customer_currency),
                 "status": OrderStatus.PENDING,
                 "authorize_status": OrderAuthorizationStatus.NONE,
                 "charge_status": OrderChargeStatus.DUE,
@@ -305,7 +306,7 @@ class OrderCreator:
 
         # Assuming address_data contains enough information to uniquely identify an address
         address, created = Address.objects.get_or_create(
-            user=self.validated_data.get('user'),
+            user_id=self.customer,
             first_name=address_data.get('first_name', ''),
             last_name=address_data.get('last_name', ''),
             phone_number=address_data.get('phone_number', ''),
@@ -323,6 +324,7 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
     def __init__(self, validated_data, create_order=False):
         self.validated_data = validated_data
         self.create_order = create_order
+        self.customer = self.validated_data.get('customer_id', None)
         self.variants = self.get_variants()
         self.total_subtotal = self.get_subtotal(self.variants)
         self.total_items = self.get_total_items(self.variants)

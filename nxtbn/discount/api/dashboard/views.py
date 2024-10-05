@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.discount.models import PromoCode, PromoCodeCustomer, PromoCodeProduct
-from nxtbn.discount.api.dashboard.serializers import AttachPromoCodeEntitiesSerializer, PromoCodeCustomerSerializer, PromoCodeProductSerializer, PromoCodeSerializer
+from nxtbn.discount.api.dashboard.serializers import AttachPromoCodeEntitiesSerializer, PromoCodeCustomerSerializer, PromoCodeProductSerializer, PromoCodeCountedSerializer
 
 from rest_framework import filters as drf_filters
 import django_filters
@@ -12,12 +12,12 @@ from django_filters import rest_framework as filters
 class PromoCodeListCreateAPIView(generics.ListCreateAPIView):
     pagination_class = NxtbnPagination
     queryset = PromoCode.objects.all()
-    serializer_class = PromoCodeSerializer
+    serializer_class = PromoCodeCountedSerializer
 
 
 class PromoCodeUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = PromoCode.objects.all()
-    serializer_class = PromoCodeSerializer
+    serializer_class = PromoCodeCountedSerializer
     lookup_field = 'id'
 
 class AttachPromoCodeEntitiesAPIView(generics.CreateAPIView):

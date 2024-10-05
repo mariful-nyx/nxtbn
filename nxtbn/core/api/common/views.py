@@ -3,8 +3,9 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 
+from nxtbn.discount import PromoCodeType
 from nxtbn.product.models import ProductVariant
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from nxtbn.shipping.models import ShippingRate
 from nxtbn.tax.models import TaxRate
@@ -172,9 +173,39 @@ class TaxCalculator:
 
         return tax_rate_instance
 
-   
 
-class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCalculator):
+class DiscountCalculator:
+    def calculate_discount(self, subtotal, custom_discount_amount, promocode):
+        """
+        Calculate discount based on custom discount amount and/or promo code.
+        Priority can be given to promo code over custom discount or vice versa based on business logic.
+        """
+        discount = Decimal('0.00')
+        discount_name = 'No Discount'
+
+        # Apply Promo Code Discount if available
+        if promocode:
+            if promocode.code_type == PromoCodeType.FIXED_AMOUNT:
+                discount = promocode.value
+                discount_name = f"Promo Code {promocode.code}"
+            elif promocode.code_type == PromoCodeType.PERCENTAGE:
+                discount = (subtotal * promocode.value) / Decimal('100')
+                discount_name = f"Promo Code {promocode.code} ({promocode.value}%)"
+            # Ensure discount does not exceed subtotal
+            discount = min(discount, subtotal)
+
+        # Apply Custom Discount if available and no Promo Code is used
+        elif custom_discount_amount:
+            try:
+                discount = Decimal(custom_discount_amount['price'])
+                discount_name = custom_discount_amount.get('name', 'Custom Discount')
+                discount = min(discount, subtotal)
+            except (KeyError, InvalidOperation):
+                raise serializers.ValidationError({"custom_discount_amount": "Invalid discount amount."})
+
+        return discount, discount_name
+
+class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCalculator, DiscountCalculator):
     from nxtbn.core.api.common.serializers import OrderEstimateSerializer
     serializer_class = OrderEstimateSerializer
 
@@ -186,6 +217,7 @@ class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCa
         try:
             # Extract data from validated serializer
             custom_discount_amount = self.validated_data.get('custom_discount_amount')
+            promocode = self.validated_data.get('promocode')
             shipping_method_id = self.validated_data.get('shipping_method_id', '')
             shipping_address = self.validated_data.get('shipping_address', {})
 
@@ -196,7 +228,7 @@ class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCa
             total_subtotal = self.get_subtotal(variants)
 
             # Calculate discount
-            discount = self.calculate_discount(total_subtotal, custom_discount_amount)
+            discount, discount_name = self.calculate_discount(total_subtotal, custom_discount_amount, promocode)
             discount_percentage = (discount / total_subtotal * 100) if total_subtotal > 0 else 0
 
             # Calculate shipping fee and name
@@ -216,11 +248,11 @@ class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCa
                 "total_items": self.get_total_items(variants),
                 "discount": str(discount),
                 "discount_percentage": discount_percentage,
-                'discount_name': 'Discount Name',  # You might want to make this dynamic
+                "discount_name": discount_name,
                 "shipping_fee": str(shipping_fee),
                 "shipping_name": shipping_name,
                 "estimated_tax": str(estimated_tax),
-                "tax_details": tax_details,  # Detailed tax information
+                "tax_details": tax_details,
                 "total": str(total),
             }
 
@@ -249,17 +281,6 @@ class OrderEstimateAPIView(generics.GenericAPIView, ShippingFeeCalculator, TaxCa
             except ProductVariant.DoesNotExist:
                 raise serializers.ValidationError({"variants": f"Variant with alias '{variant_data['alias']}' not found."})
         return variants
-
-    def calculate_discount(self, subtotal, custom_discount_amount):
-        """
-        Calculate discount based on the fixed discount amount if provided.
-        """
-        discount = Decimal('0.00')  # Default no discount
-        if custom_discount_amount:
-            discount = Decimal(custom_discount_amount['price'])
-        # Ensure discount does not exceed subtotal
-        return min(discount, subtotal)
-
     
 
     def get_subtotal(self, variants):

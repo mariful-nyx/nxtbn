@@ -25,7 +25,7 @@ from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 from nxtbn.product.models import ProductVariant
 from nxtbn.users.admin import User
-from .serializers import CustomerCreateSerializer, OrderListSerializer, OrderSerializer
+from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 from babel.numbers import get_currency_precision
@@ -98,8 +98,8 @@ class OrderListView(generics.ListAPIView):
 class OrderDetailView(generics.RetrieveAPIView):
     permission_classes = (NxtbnAdminPermission,)
     queryset = Order.objects.all()
-    serializer_class = OrderSerializer
-    lookup_field = 'id'
+    serializer_class = OrderDetailsSerializer
+    lookup_field = 'alias'
 
     
 

@@ -177,7 +177,7 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
 
     promo_code = models.ForeignKey(PromoCode, on_delete=models.SET_NULL, null=True, blank=True)
     gift_card = models.ForeignKey(GiftCard, on_delete=models.SET_NULL, null=True, blank=True)
-    payment_terms = models.CharField(
+    payment_terms = models.CharField( # incase charge_status is DUE
         max_length=32,
         default=PaymentTerms.DUE_ON_RECEIPT,
         choices=PaymentTerms.choices,
@@ -203,54 +203,6 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
             raise ValidationError(_('Due date is required when payment terms are FIXED_DATE.'))
         super().clean()
 
-
-    def apply_promo_code(self): # TODO: Do we still need this?
-        """
-        Apply a promotional code to the order, reducing the total price accordingly.
-
-        If the promo code is valid and active, the discount is calculated based on the type
-        of promo code (either a percentage or a fixed amount). The order's total is reduced
-        by the calculated discount.
-
-        This method does not automatically save the changes to the database. You must call
-        `order.save()` after calling this method to persist changes.
-
-        Returns:
-            decimal.Decimal: The amount of the discount applied to the order, or 0 if no discount is applied.
-    """
-        if self.promo_code and self.promo_code.is_valid():
-            if self.promo_code.code_type == 'percentage':
-                discount = (self.total * (self.promo_code.value / 100))
-            else:
-                discount = self.promo_code.value
-            self.total -= discount
-            return discount
-        return 0
-
-    def apply_gift_card(self):  # TODO Do we still need this?
-        """
-            Apply a gift card to the order, reducing the total price by the balance available on the gift card.
-
-            If the gift card is valid and has sufficient balance, the order's total will be reduced accordingly.
-            If the gift card's balance is greater than or equal to the order's total, the order's total is set to
-            zero. Otherwise, the order's total is reduced by the gift card's balance.
-
-            This method does not automatically save the changes to the database. You must call `order.save()`
-            after calling this method to persist changes.
-
-            Note:
-                This method reduces the gift card's balance according to the applied discount.
-
-            Returns:
-                None
-        """
-        if self.gift_card and self.gift_card.is_valid():
-            if self.gift_card.current_balance >= self.total:
-                self.gift_card.reduce_balance(self.total)
-                self.total = 0
-            else:
-                self.total -= self.gift_card.current_balance
-                self.gift_card.reduce_balance(self.gift_card.current_balance)
     
 
     def total_in_units(self): #subunit -to-unit 
@@ -300,6 +252,31 @@ class OrderLineItem(MonetaryMixin, models.Model):
         max_digits=12,
     )
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text=_("Tax rate at the time of the order"))
+
+    def total_in_units(self): #subunit -to-unit 
+        precision = get_currency_precision(self.currency)
+        unit = self.total_price / (10 ** precision)
+        return unit
+
+    def humanize_total_price(self):
+        """
+        Returns the total price of the order formatted with the currency symbol,
+        making it more human-readable.
+
+        Returns:
+            str: The formatted total price with the currency symbol.
+        """
+        return format_currency(self.total_in_units(), self.currency, locale='en_US')
+    
+    def humanize_price_per_unit(self):
+        """
+        Returns the price per unit of the order formatted with the currency symbol,
+        making it more human-readable.
+
+        Returns:
+            str: The formatted price per unit with the currency symbol.
+        """
+        return format_currency(self.price_per_unit, self.currency, locale='en_US')
 
 
     def __str__(self):

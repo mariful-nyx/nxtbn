@@ -4,7 +4,7 @@ from nxtbn.product.models import Product
 from nxtbn.users.models import User
 
 
-class PromoCodeSerializer(serializers.ModelSerializer):
+class PromoCodeCountedSerializer(serializers.ModelSerializer):
     total_redemptions = serializers.IntegerField(read_only=True, source='get_total_redemptions')
     total_applicable_products = serializers.IntegerField(read_only=True, source='get_total_applicable_products')
     total_specific_customers = serializers.IntegerField(read_only=True, source='get_total_specific_customers')
@@ -12,7 +12,10 @@ class PromoCodeSerializer(serializers.ModelSerializer):
         model = PromoCode
         exclude = ('applicable_products', 'specific_customers',)
 
-
+class PromoCodeBasicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PromoCode
+        fields = ('id', 'code', 'code_type', 'value', 'is_active', 'expiration_date',)
 
 class AttachPromoCodeEntitiesSerializer(serializers.Serializer):
     promo_code = serializers.CharField()

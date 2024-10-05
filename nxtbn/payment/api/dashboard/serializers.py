@@ -16,3 +16,8 @@ class RefundSerializer(serializers.ModelSerializer):
         amount = validated_data.get('amount', '') # if null, then full refund, if amount, partial refund
         instance.refund_payment(amount)
         return instance
+
+class BasicPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['id', 'payment_amount', 'payment_status', 'gateway_name', 'created_at',]

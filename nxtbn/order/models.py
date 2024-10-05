@@ -189,7 +189,7 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
     def get_payment_method(self):
         if self.payments.exists():
             return self.payments.first().payment_method
-        return 'PAYMENT_METHOD_NOT_FOUND'
+        return 'AWAITING_SELECTION'
 
     class Meta:
         ordering = ('-created_at',) # # Most recent orders first

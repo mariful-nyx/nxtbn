@@ -85,7 +85,7 @@ class PromoCode(AbstractBaseModel):
             return True
         if user is None:
             return False
-        return self.specific_customers.filter(id=user.id).exists()
+        return self.specific_customers.filter(id=user).exists()
 
     def is_valid_new_customer(self, user=None):
         if self.new_customers_only:
@@ -94,10 +94,12 @@ class PromoCode(AbstractBaseModel):
     
     
 
-    def is_valid_product(self, payload_products):
-        if not self.applicable_products.exists():
-            return True
-        return any(p in self.applicable_products.all().values_list('id') for p in payload_products)
+    def is_valid_product(self, variants_aliases):
+        if self.applicable_products.exists():
+            for variants_alias in variants_aliases:
+                if not self.applicable_products.filter(variants__alias=variants_alias).exists():
+                    return False
+        return True
     
     def is_valid_min_purchase(self, user=None):
         return self.has_min_purchase(user)

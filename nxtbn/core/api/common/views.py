@@ -216,17 +216,17 @@ class DiscountCalculator:
         return promocode
     
     def get_promocode_instance(self, promocode):
-        customer = self.validated_data.get('customer_id', None)
-        product_ids = Product.objects.filter(variants__alias__in=[v['alias'] for v in self.validated_data['variants']]).values_list('id', flat=True)
         if promocode:
+            customer = self.validated_data.get('customer_id', None)
+            variant_aliases = [v['alias'] for v in self.validated_data['variants']]
             try:
                 promocode = PromoCode.objects.get(code=promocode.upper())
                 if not promocode.is_active:
                     raise serializers.ValidationError("Promo code is not active.")
                 if not promocode.is_valid_customer(customer):
                     raise serializers.ValidationError("This promo code is restricted to specific customers and is not valid for you.")
-                if not promocode.is_valid_product(product_ids):
-                    raise serializers.ValidationError("Promo code is not valid for the products in your cart.")
+                if not promocode.is_valid_product(variant_aliases):
+                    raise serializers.ValidationError("Promo code is not valid for one or more of the products in your cart.")
                 if not promocode.is_valid_min_purchase(customer):
                     raise serializers.ValidationError("Promo code is not valid for your purchase amount.")
                 if not promocode.is_valid_redemption_limit(customer):

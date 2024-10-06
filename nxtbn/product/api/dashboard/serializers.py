@@ -165,6 +165,13 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     weight_value = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     color_code = serializers.CharField(max_length=7, required=False, allow_null=True)
     is_default_variant = serializers.BooleanField(default=False)
+    track_inventory = serializers.BooleanField(default=False)
+    allow_backorder = serializers.BooleanField(default=False)
+
+    # def validate_sku(self, value):
+    #     if ProductVariant.objects.filter(sku=value).exists():
+    #         raise serializers.ValidationError("SKU already exists.")
+    #     return value
 
 
 class ProductMutationSerializer(serializers.ModelSerializer):
@@ -388,6 +395,27 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             
         return instance
     
+    def validate(self, attrs):
+        variants_data = attrs.get('variants_payload', [])
+        variant_skus = [variant.get('sku') for variant in variants_data if variant.get('sku')]
+
+        # Check for duplicates within the provided SKUs
+        if len(variant_skus) != len(set(variant_skus)):
+            raise serializers.ValidationError("Duplicate SKUs found in variants. Each SKU must be unique.")
+
+        # Validate each variant using VariantCreatePayloadSerializer
+        for variant_data in variants_data:
+            variant_serializer = VariantCreatePayloadSerializer(data=variant_data)
+            if not variant_serializer.is_valid():
+                raise serializers.ValidationError(variant_serializer.errors)
+
+            # Check for existing SKUs in the database
+            sku = variant_data.get('sku')
+            if sku and ProductVariant.objects.filter(sku=sku).exists():
+                raise serializers.ValidationError(f"SKU '{sku}' already exists. Please use a different SKU.")
+
+        return super().validate(attrs)
+    
 
 class ColorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -400,6 +428,7 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
     default_variant = ProductVariantSerializer(read_only=True)
     product_thumbnail = serializers.SerializerMethodField()
+    stock = serializers.IntegerField(read_only=True, source='get_stock')
     class Meta:
         model = Product 
         ref_name = 'product_dashboard_variant_get'
@@ -416,6 +445,7 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
             'status',
             'is_live',
             'product_thumbnail',
+            'stock',
         )
 
     def get_product_thumbnail(self, obj):

@@ -26,3 +26,8 @@ class OrderEstimateSerializer(serializers.Serializer):
     promocode = serializers.CharField(required=False)
     variants = serializers.ListSerializer(child=VariantQuantitySerializer(), required=True)
     customer_id = serializers.IntegerField(required=False)
+
+    def validate_variants(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError("You must add one or more products to your cart.")
+        return value

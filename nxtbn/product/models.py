@@ -161,6 +161,9 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     
     def colors(self):
         return self.variants.values_list('color_code', flat=True).distinct()
+    
+    def get_stock(self):
+        return self.variants.aggregate(stock=models.Sum('stock'))['stock']
 
     def __str__(self):
         return self.name
@@ -199,11 +202,12 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
     cost_per_unit = models.DecimalField(max_digits=12, decimal_places=3, validators=[MinValueValidator(Decimal('0.01'))])
 
   
-    track_inventory = models.BooleanField(default=True)
+    track_inventory = models.BooleanField(default=False)
+    allow_backorder = models.BooleanField(default=False, help_text="Allow orders even if out of stock.")
 
     # if track_inventory is enabled
     stock = models.IntegerField(default=0, verbose_name="Stock")
-    low_stock_threshold = models.IntegerField(default=0, verbose_name="Stock")
+    low_stock_threshold = models.IntegerField(default=0, verbose_name="Stock", help_text="Threshold to trigger low stock alert.")
 
     # if track_inventory is not enabled
     stock_status = models.CharField(default=StockStatus.IN_STOCK, choices=StockStatus.choices, max_length=15)

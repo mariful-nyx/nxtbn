@@ -122,9 +122,11 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
     shipping_address = AddressSerializer()
     billing_address =  AddressSerializer()
     total_price = serializers.SerializerMethodField()
+    total_shipping_cost = serializers.SerializerMethodField()
+    total_discounted_amount = serializers.SerializerMethodField()
+    total_tax = serializers.SerializerMethodField()
     total_price_in_customer_currency = serializers.SerializerMethodField()
     user = UserSerializer()
-    total_price = serializers.SerializerMethodField()
     payment_method = serializers.CharField(source='get_payment_method')
     promo_code = PromoCodeBasicSerializer()
     payments = BasicPaymentSerializer(many=True)
@@ -137,6 +139,9 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'user',
             'supplier',
             'total_price',
+            'total_shipping_cost',
+            'total_discounted_amount',
+            'total_tax',
             'customer_currency',
             'total_price_in_customer_currency',
             'status',
@@ -157,6 +162,15 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
 
     def get_total_price(self, obj):
         return obj.humanize_total_price()
+    
+    def get_total_shipping_cost(self, obj):
+        return obj.humanize_total_shipping_cost()
+    
+    def get_total_discounted_amount(self, obj):
+        return obj.humanize_total_discounted_amount()
+    
+    def get_total_tax(self, obj):
+        return obj.humanize_total_tax()
 
     def get_total_price_in_customer_currency(self, obj):
         return obj.total_price_in_customer_currency

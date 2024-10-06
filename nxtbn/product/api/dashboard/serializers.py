@@ -166,6 +166,12 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     color_code = serializers.CharField(max_length=7, required=False, allow_null=True)
     is_default_variant = serializers.BooleanField(default=False)
     track_inventory = serializers.BooleanField(default=False)
+    allow_backorder = serializers.BooleanField(default=False)
+
+    # def validate_sku(self, value):
+    #     if ProductVariant.objects.filter(sku=value).exists():
+    #         raise serializers.ValidationError("SKU already exists.")
+    #     return value
 
 
 class ProductMutationSerializer(serializers.ModelSerializer):
@@ -388,6 +394,27 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             instance.save()
             
         return instance
+    
+    def validate(self, attrs):
+        variants_data = attrs.get('variants_payload', [])
+        variant_skus = [variant.get('sku') for variant in variants_data if variant.get('sku')]
+
+        # Check for duplicates within the provided SKUs
+        if len(variant_skus) != len(set(variant_skus)):
+            raise serializers.ValidationError("Duplicate SKUs found in variants. Each SKU must be unique.")
+
+        # Validate each variant using VariantCreatePayloadSerializer
+        for variant_data in variants_data:
+            variant_serializer = VariantCreatePayloadSerializer(data=variant_data)
+            if not variant_serializer.is_valid():
+                raise serializers.ValidationError(variant_serializer.errors)
+
+            # Check for existing SKUs in the database
+            sku = variant_data.get('sku')
+            if sku and ProductVariant.objects.filter(sku=sku).exists():
+                raise serializers.ValidationError(f"SKU '{sku}' already exists. Please use a different SKU.")
+
+        return super().validate(attrs)
     
 
 class ColorSerializer(serializers.ModelSerializer):

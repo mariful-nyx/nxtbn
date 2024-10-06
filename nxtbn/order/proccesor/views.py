@@ -373,8 +373,9 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
                 quantity = variant_data['quantity']
                 weight = variant.weight_value if variant.weight_value is not None else Decimal('0.00')
 
-                # Stock validation
-                if variant.track_inventory and variant.stock < quantity:
+                # Stock validation with backorder consideration
+                if variant.track_inventory and not variant.allow_backorder and variant.stock < quantity:
+                # if variant.track_inventory and variant.stock < quantity:
                     product_name = variant.product.name
                     # Determine inventory name: prefer variant.name, fallback to sku
                     inventory_name = variant.name if variant.name else variant.sku

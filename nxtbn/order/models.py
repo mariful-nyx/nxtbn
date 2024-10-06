@@ -108,6 +108,21 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
             "currency_field": "customer_currency",
             "type": MoneyFieldTypes.UNIT,
         },
+        "total_shipping_cost": {
+            "currency_field": "currency",
+            "type": MoneyFieldTypes.SUBUNIT,
+            "require_base_currency": True,
+        },
+        "total_discounted_amount": {
+            "currency_field": "currency",
+            "type": MoneyFieldTypes.SUBUNIT,
+            "require_base_currency": True,
+        },
+        "total_tax": {
+            "currency_field": "currency",
+            "type": MoneyFieldTypes.SUBUNIT,
+            "require_base_currency": True,
+        },
     }
 
 
@@ -138,6 +153,22 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
                 "For example, if the base currency is USD and the customer_currency is different (e.g., AUD), the total amount will be converted to USD. "
                 "This converted amount is stored in cents."
     )
+    total_shipping_cost = models.BigIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(0)],
+        help_text="Total shipping amount of the order in cents, stored in the base currency.",
+        default=0,
+    )
+    total_discounted_amount = models.BigIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(0)],
+        default=0,
+        help_text="Total amount of the order after applying discounts in cents, stored in the base currency."
+    )
+    total_tax = models.BigIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(0)],
+        default=0,
+        help_text="Total tax amount of the order in cents, stored in the base currency."
+    )
+
     customer_currency = models.CharField(
         max_length=3,
         choices=CurrencyTypes.choices,
@@ -185,6 +216,12 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
     )
     due_date = models.DateTimeField(null=True, blank=True) # if payment_term is FIXED_DATE
 
+    preferred_payment_method = models.CharField(
+        max_length=32,
+        choices=PaymentMethod.choices,
+        default=PaymentMethod.CASH_ON_DELIVERY,
+        help_text="Preferred payment method for this order. The actual payment method may differ when the order is initiated or paid."
+    )
 
     def get_payment_method(self):
         if self.payments.exists():
@@ -210,15 +247,38 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         unit = self.total_price / (10 ** precision)
         return unit
     
+    def total_shipping_cost_in_units(self): #subunit -to-unit
+        if self.total_shipping_cost is None:
+            return 0
+        precision = get_currency_precision(self.currency)
+        unit = self.total_shipping_cost / (10 ** precision)
+        return unit
+    
+    def total_discounted_amount_in_units(self): #subunit -to-unit
+        if self.total_discounted_amount is None:
+            return 0
+        precision = get_currency_precision(self.currency)
+        unit = self.total_discounted_amount / (10 ** precision)
+        return unit
+    
+    def total_tax_in_units(self): #subunit -to-unit
+        if self.total_tax is None:
+            return 0
+        precision = get_currency_precision(self.currency)
+        unit = self.total_tax / (10 ** precision)
+        return unit
+    
     def humanize_total_price(self):
-        """
-        Returns the total price of the order formatted with the currency symbol,
-        making it more human-readable.
-
-        Returns:
-            str: The formatted total price with the currency symbol.
-        """
         return format_currency(self.total_in_units(), self.currency, locale='en_US')
+    
+    def humanize_total_shipping_cost(self):
+        return format_currency(self.total_shipping_cost_in_units(), self.currency, locale='en_US')
+    
+    def humanize_total_discounted_amount(self):
+        return format_currency(self.total_discounted_amount_in_units(), self.currency, locale='en_US')
+    
+    def humanize_total_tax(self):
+        return format_currency(self.total_tax_in_units(), self.currency, locale='en_US')
     
     def __str__(self):
         return f"Order {self.id} - {self.status}"

@@ -4,7 +4,7 @@ from django.db import transaction
 
 
 from nxtbn.discount.api.dashboard.serializers import PromoCodeBasicSerializer
-from nxtbn.order import AddressType, OrderStatus
+from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus
 from nxtbn.order.api.storefront.serializers import AddressSerializer
 from nxtbn.order.models import Address, Order, OrderLineItem
 from nxtbn.payment.api.dashboard.serializers import BasicPaymentSerializer
@@ -122,9 +122,11 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
     shipping_address = AddressSerializer()
     billing_address =  AddressSerializer()
     total_price = serializers.SerializerMethodField()
+    total_shipping_cost = serializers.SerializerMethodField()
+    total_discounted_amount = serializers.SerializerMethodField()
+    total_tax = serializers.SerializerMethodField()
     total_price_in_customer_currency = serializers.SerializerMethodField()
     user = UserSerializer()
-    total_price = serializers.SerializerMethodField()
     payment_method = serializers.CharField(source='get_payment_method')
     promo_code = PromoCodeBasicSerializer()
     payments = BasicPaymentSerializer(many=True)
@@ -137,6 +139,9 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'user',
             'supplier',
             'total_price',
+            'total_shipping_cost',
+            'total_discounted_amount',
+            'total_tax',
             'customer_currency',
             'total_price_in_customer_currency',
             'status',
@@ -152,10 +157,20 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'due_date',
             'payment_term',
             'payments',
+            'preferred_payment_method',
         )
 
     def get_total_price(self, obj):
         return obj.humanize_total_price()
+    
+    def get_total_shipping_cost(self, obj):
+        return obj.humanize_total_shipping_cost()
+    
+    def get_total_discounted_amount(self, obj):
+        return obj.humanize_total_discounted_amount()
+    
+    def get_total_tax(self, obj):
+        return obj.humanize_total_tax()
 
     def get_total_price_in_customer_currency(self, obj):
         return obj.total_price_in_customer_currency
@@ -201,3 +216,18 @@ class OrderStatusUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(_("Order must be shipped before it can be delivered."))
         
         return attrs
+    
+
+class OrderPaymentMethodSerializer(serializers.ModelSerializer):
+        preferred_payment_method = serializers.CharField()
+
+        class Meta:
+            model = Order
+            fields = ['preferred_payment_method']
+
+        def validate(self, attrs):
+            order = self.instance
+            if order.charge_status != OrderChargeStatus.DUE:
+                raise serializers.ValidationError(_("Cannot change payment method for orders with charged funds."))
+              
+            return attrs

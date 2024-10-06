@@ -276,6 +276,9 @@ class OrderCreator:
                 "authorize_status": OrderAuthorizationStatus.NONE,
                 "charge_status": OrderChargeStatus.DUE,
                 "promo_code": promocode,
+                "total_shipping_cost": int(self.shipping_fee * 100),  # Convert to cents
+                "total_discounted_amount": int(self.discount * 100),  # Convert to cents
+                "total_tax": int(self.estimated_tax * 100),  # Convert to cents
             }
 
             # Create Order instance

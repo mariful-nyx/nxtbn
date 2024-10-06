@@ -405,6 +405,7 @@ class OrderProccessorAPIView(generics.GenericAPIView):
             if self.create_order:
                 order = order_calculation.create_order_instance()
                 response['order_id'] = str(order.id)  # Include order ID in the response
+                response['order_alias'] = order.alias
 
             return Response(response, status=status.HTTP_200_OK)
         except serializers.ValidationError as e:

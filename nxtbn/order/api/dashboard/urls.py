@@ -9,5 +9,6 @@ urlpatterns = [
     path('orders/eastimate/', order_views.OrderEastimateView.as_view(), name='order-eastimate'),
     path('create-customer/', order_views.CreateCustomAPIView.as_view(), name='create-customer'),
     path('orders/<uuid:alias>/', order_views.OrderDetailView.as_view(), name='order-detail'),
+    path('orders/status/update/<uuid:alias>/', order_views.OrderStatusUpdateAPIView.as_view(), name='order-update'),
     path('stats/', order_views.BasicStatsView.as_view(), name='basic-stats'),
 ]

@@ -158,4 +158,46 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
         return obj.humanize_total_price()
 
     def get_total_price_in_customer_currency(self, obj):
-        return obj.total_price_in_customer_currency 
+        return obj.total_price_in_customer_currency
+    
+
+class OrderStatusUpdateSerializer(serializers.ModelSerializer):
+    status = serializers.ChoiceField(choices=OrderStatus.choices)
+
+    class Meta:
+        model = Order
+        fields = ['status']
+
+    def validate(self, attrs):
+        order = self.instance
+
+        current_status = order.status
+        new_status = attrs.get('status')
+
+        if new_status == OrderStatus.CANCELLED:
+            if current_status == OrderStatus.CANCELLED:
+                raise serializers.ValidationError(_("Order is already cancelled."))
+            elif current_status not in [OrderStatus.PENDING, OrderStatus.PROCESSING]:
+                raise serializers.ValidationError(_("Only pending or processing orders can be cancelled."))
+        
+        if new_status == OrderStatus.PROCESSING:
+            if current_status != OrderStatus.PENDING:
+                raise serializers.ValidationError(_("The order already started processing."))
+            
+        if new_status == OrderStatus.SHIPPED:
+            if current_status == OrderStatus.CANCELLED:
+                raise serializers.ValidationError(_("Cancelled orders cannot be shipped."))
+            if current_status in [OrderStatus.SHIPPED, OrderStatus.DELIVERED]:
+                raise serializers.ValidationError(_("Order is already shipped or delivered."))
+            if current_status == OrderStatus.RETURNED:
+                raise serializers.ValidationError(_("Returned orders cannot be re-shipped."))
+            
+        if new_status == OrderStatus.DELIVERED:
+            if current_status == OrderStatus.CANCELLED:
+                raise serializers.ValidationError(_("Cancelled orders cannot be delivered."))
+            if current_status in [OrderStatus.DELIVERED]:
+                raise serializers.ValidationError(_("Order is already delivered."))
+            if current_status != OrderStatus.SHIPPED:
+                raise serializers.ValidationError(_("Order must be shipped before it can be delivered."))
+        
+        return attrs

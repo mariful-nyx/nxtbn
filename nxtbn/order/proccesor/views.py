@@ -365,11 +365,23 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
     def get_variants(self):
         variants_data = self.validated_data.get('variants')
         variants = []
+        stock_errors = []
+
         for variant_data in variants_data:
             try:
                 variant = ProductVariant.objects.get(alias=variant_data['alias'])
                 quantity = variant_data['quantity']
                 weight = variant.weight_value if variant.weight_value is not None else Decimal('0.00')
+
+                # Stock validation
+                if variant.track_inventory and variant.stock < quantity:
+                    product_name = variant.product.name
+                    # Determine inventory name: prefer variant.name, fallback to sku
+                    inventory_name = variant.name if variant.name else variant.sku
+                    stock_errors.append(
+                        f"Insufficient stock for product '{product_name}', inventory '{inventory_name}'."
+                    )
+
                 variants.append({
                     'variant': variant,
                     'quantity': quantity,
@@ -377,10 +389,17 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
                     'price': variant.price,
                     'tax_class': variant.product.tax_class,
                 })
+
             except ProductVariant.DoesNotExist:
-                raise serializers.ValidationError({"variants": f"Variant with alias '{variant_data['alias']}' not found."})
+                raise serializers.ValidationError({
+                    "variants": f"Variant with alias '{variant_data['alias']}' not found."
+                })
+
+        if stock_errors:
+            # Combine all stock error messages into one response
+            raise serializers.ValidationError(stock_errors)
+
         return variants
-    
 
     def get_subtotal(self, variants):
         return sum(variant['quantity'] * variant['price'] for variant in variants)

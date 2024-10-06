@@ -165,6 +165,7 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     weight_value = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     color_code = serializers.CharField(max_length=7, required=False, allow_null=True)
     is_default_variant = serializers.BooleanField(default=False)
+    track_inventory = serializers.BooleanField(default=False)
 
 
 class ProductMutationSerializer(serializers.ModelSerializer):
@@ -400,6 +401,7 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
     default_variant = ProductVariantSerializer(read_only=True)
     product_thumbnail = serializers.SerializerMethodField()
+    stock = serializers.IntegerField(read_only=True, source='get_stock')
     class Meta:
         model = Product 
         ref_name = 'product_dashboard_variant_get'
@@ -416,6 +418,7 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
             'status',
             'is_live',
             'product_thumbnail',
+            'stock',
         )
 
     def get_product_thumbnail(self, obj):

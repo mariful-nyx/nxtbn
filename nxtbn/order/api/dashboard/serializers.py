@@ -150,7 +150,7 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'promo_code',
             'gift_card',
             'due_date',
-            'payment_terms',
+            'payment_term',
             'payments',
         )
 
@@ -182,7 +182,7 @@ class OrderStatusUpdateSerializer(serializers.ModelSerializer):
         
         if new_status == OrderStatus.PROCESSING:
             if current_status != OrderStatus.PENDING:
-                raise serializers.ValidationError(_("The order already started processing."))
+                raise serializers.ValidationError(_("Only pending orders can be started to processing."))
             
         if new_status == OrderStatus.SHIPPED:
             if current_status == OrderStatus.CANCELLED:

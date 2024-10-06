@@ -108,6 +108,21 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
             "currency_field": "customer_currency",
             "type": MoneyFieldTypes.UNIT,
         },
+        "total_shipping_cost": {
+            "currency_field": "currency",
+            "type": MoneyFieldTypes.SUBUNIT,
+            "require_base_currency": True,
+        },
+        "total_discounted_amount": {
+            "currency_field": "currency",
+            "type": MoneyFieldTypes.SUBUNIT,
+            "require_base_currency": True,
+        },
+        "total_tax": {
+            "currency_field": "currency",
+            "type": MoneyFieldTypes.SUBUNIT,
+            "require_base_currency": True,
+        },
     }
 
 
@@ -138,6 +153,19 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
                 "For example, if the base currency is USD and the customer_currency is different (e.g., AUD), the total amount will be converted to USD. "
                 "This converted amount is stored in cents."
     )
+    total_shipping_cost = models.BigIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(0)],
+        help_text="Total shipping amount of the order in cents, stored in the base currency."
+    )
+    total_discounted_amount = models.BigIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(0)],
+        help_text="Total amount of the order after applying discounts in cents, stored in the base currency."
+    )
+    total_tax = models.BigIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(0)],
+        help_text="Total tax amount of the order in cents, stored in the base currency."
+    )
+
     customer_currency = models.CharField(
         max_length=3,
         choices=CurrencyTypes.choices,

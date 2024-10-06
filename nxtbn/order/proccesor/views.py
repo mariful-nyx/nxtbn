@@ -269,7 +269,7 @@ class OrderCreator:
                 "shipping_address": self.get_or_create_address(shipping_address),
                 "billing_address": self.get_or_create_address(billing_address),
                 "currency": self.validated_data.get('currency', CurrencyTypes.USD),
-                "total_price": int(self.total * 100),  # Assuming total is in units, convert to cents
+                "total_price": int(self.total * 100),  #  total is in units, convert to cents/subunits
                 "customer_currency": self.validated_data.get('customer_currency', CurrencyTypes.USD),
                 "total_price_in_customer_currency": build_currency_amount(self.total, customer_currency),
                 "status": OrderStatus.PENDING,

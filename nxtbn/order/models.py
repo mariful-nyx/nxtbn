@@ -185,6 +185,12 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
     )
     due_date = models.DateTimeField(null=True, blank=True) # if payment_term is FIXED_DATE
 
+    preferred_payment_method = models.CharField(
+        max_length=32,
+        choices=PaymentMethod.choices,
+        default=PaymentMethod.CASH_ON_DELIVERY,
+        help_text="Preferred payment method for this order. The actual payment method may differ when the order is initiated or paid."
+    )
 
     def get_payment_method(self):
         if self.payments.exists():

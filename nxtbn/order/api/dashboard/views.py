@@ -25,7 +25,7 @@ from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 from nxtbn.product.models import ProductVariant
 from nxtbn.users.admin import User
-from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderSerializer, OrderStatusUpdateSerializer
+from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderSerializer, OrderStatusUpdateSerializer, OrderPaymentMethodSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 from babel.numbers import get_currency_precision
@@ -162,4 +162,9 @@ class CreateCustomAPIView(generics.CreateAPIView):
 class OrderStatusUpdateAPIView(generics.UpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderStatusUpdateSerializer
+    lookup_field = 'alias'
+
+class OrderPaymentMethodUpdateAPIView(generics.UpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderPaymentMethodSerializer
     lookup_field = 'alias'

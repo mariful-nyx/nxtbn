@@ -4,7 +4,7 @@ from django.db import transaction
 
 
 from nxtbn.discount.api.dashboard.serializers import PromoCodeBasicSerializer
-from nxtbn.order import AddressType, OrderStatus
+from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus
 from nxtbn.order.api.storefront.serializers import AddressSerializer
 from nxtbn.order.models import Address, Order, OrderLineItem
 from nxtbn.payment.api.dashboard.serializers import BasicPaymentSerializer
@@ -152,6 +152,7 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'due_date',
             'payment_term',
             'payments',
+            'preferred_payment_method',
         )
 
     def get_total_price(self, obj):
@@ -201,3 +202,18 @@ class OrderStatusUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(_("Order must be shipped before it can be delivered."))
         
         return attrs
+    
+
+class OrderPaymentMethodSerializer(serializers.ModelSerializer):
+        preferred_payment_method = serializers.CharField()
+
+        class Meta:
+            model = Order
+            fields = ['preferred_payment_method']
+
+        def validate(self, attrs):
+            order = self.instance
+            if order.charge_status != OrderChargeStatus.DUE:
+                raise serializers.ValidationError(_("Cannot change payment method for orders with charged funds."))
+              
+            return attrs

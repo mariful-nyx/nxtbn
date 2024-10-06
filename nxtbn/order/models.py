@@ -177,13 +177,13 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
 
     promo_code = models.ForeignKey(PromoCode, on_delete=models.SET_NULL, null=True, blank=True)
     gift_card = models.ForeignKey(GiftCard, on_delete=models.SET_NULL, null=True, blank=True)
-    payment_terms = models.CharField( # incase charge_status is DUE
+    payment_term = models.CharField( # incase charge_status is DUE
         max_length=32,
         default=PaymentTerms.DUE_ON_RECEIPT,
         choices=PaymentTerms.choices,
         help_text="Represents the payment terms for the order."
     )
-    due_date = models.DateTimeField(null=True, blank=True) # if payment_terms is FIXED_DATE
+    due_date = models.DateTimeField(null=True, blank=True) # if payment_term is FIXED_DATE
 
 
     def get_payment_method(self):
@@ -192,14 +192,14 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         return 'AWAITING_SELECTION'
 
     class Meta:
-        ordering = ('-created_at',) # # Most recent orders first
+        ordering = ('-created_at',) # Most recent orders first
 
     def save(self, *args, **kwargs):
         self.validate_amount()
         super(Order, self).save(*args, **kwargs)
 
     def clean(self):
-        if self.payment_terms == PaymentTerms.FIXED_DATE and not self.due_date:
+        if self.payment_term == PaymentTerms.FIXED_DATE and not self.due_date:
             raise ValidationError(_('Due date is required when payment terms are FIXED_DATE.'))
         super().clean()
 

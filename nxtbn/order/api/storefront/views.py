@@ -9,11 +9,12 @@ from rest_framework.exceptions import APIException
 from rest_framework.views import APIView
 
 from nxtbn.core.paginator import NxtbnPagination
-from nxtbn.order.api.storefront.serializers import AuthenticatedUserOrderSerializer, OrderSerializer, GuestOrderSerializer
+from nxtbn.order.api.storefront.serializers import  OrderSerializer
 from nxtbn.order.models import Order
 from nxtbn.order import OrderStatus
 from django.conf import settings
 
+from nxtbn.order.proccesor.views import OrderProccessorAPIView
 from nxtbn.payment import PaymentStatus
 from nxtbn.payment.models import Payment
 from nxtbn.payment.payment_manager import PaymentManager
@@ -29,30 +30,11 @@ class OrderListView(generics.ListAPIView):
 
     def get_queryset(self):
         return  Order.objects.filter(id=self.request.user)
-    
 
+class OrderEastimateAPIView(OrderProccessorAPIView):
+    permission_classes = [AllowAny]
+    create_order = False # Eastimate order does not create order
 
-class GuestUserOrderCreateAPIView(generics.CreateAPIView):
-    """
-    API endpoint to create an anonymous user order.
-
-    This view allows anonymous users to create orders. The serializer used for the order creation
-    is determined dynamically based on the payment gateway ID provided in the URL.
-    """
-
-    permission_classes = (AllowAny,)
-    serializer_class = GuestOrderSerializer
-
-
-
-
-
-class OrderCreateAPIView(generics.CreateAPIView):
-    """
-    API endpoint to create an authenticated user order.
-
-    This view allows authenticated users to create orders. The serializer used for the order creation
-    is determined dynamically based on the payment gateway ID provided in the URL.
-    """
-
-    serializer_class = AuthenticatedUserOrderSerializer
+class OrderCreateAPIView(OrderProccessorAPIView):
+    permission_classes = [AllowAny]
+    create_order = True # Eastimate and Create Order with eastimated result

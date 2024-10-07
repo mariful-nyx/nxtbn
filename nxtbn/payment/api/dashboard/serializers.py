@@ -50,6 +50,7 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         # Pop order_alias and find corresponding order instance
         order = validated_data.pop('order')
 
+        validated_data['order'] = order
         validated_data['user'] = order.user
 
         # Additional logic for processing the payment (e.g., validate plugin, transaction)

@@ -5,6 +5,7 @@ from django.db import transaction
 from nxtbn.core.utils import to_currency_subunit
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
 from nxtbn.order.models import Order
+from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 
 class RefundSerializer(serializers.ModelSerializer):
@@ -19,9 +20,20 @@ class RefundSerializer(serializers.ModelSerializer):
         return instance
 
 class BasicPaymentSerializer(serializers.ModelSerializer):
+    payment_amount = serializers.CharField(source='humanize_payment_amount')
     class Meta:
         model = Payment
-        fields = ['id', 'payment_amount', 'payment_status', 'gateway_name', 'created_at',]
+        fields = [
+            'id',
+            'payment_method',
+            'payment_amount',
+            'paid_at',
+            'is_successful',
+            'payment_status',
+            'transaction_id',
+            'payment_status',
+            'created_at',
+        ]
 
 
 class PaymentCreateSerializer(serializers.ModelSerializer):
@@ -47,16 +59,21 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         except Order.DoesNotExist:
             raise serializers.ValidationError(f"Order with alias '{value}' does not exist.")
         return order
-
+    
     def create(self, validated_data):
         forice_it = validated_data.pop('force_it', False)
         order = validated_data.get('order')
+
+        if validated_data['payment_method'] == PaymentMethod.CASH_ON_DELIVERY:
+            if order.status != OrderStatus.DELIVERED:
+                raise serializers.ValidationError(_("If cash on delivery payment method is selected, the order must be delivered first."))
 
         order_total_subunit = order.total_price
 
         validated_data['user'] = order.user
         validated_data['currency'] = order.currency
         validated_data['payment_amount'] =  to_currency_subunit(validated_data['payment_amount'], order.currency)
+        validated_data['is_successful'] = True
 
     
         if validated_data['payment_amount'] < order_total_subunit:

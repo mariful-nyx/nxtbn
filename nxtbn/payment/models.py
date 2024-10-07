@@ -18,6 +18,7 @@ from nxtbn.payment.payment_manager import PaymentManager
 from nxtbn.plugins import PluginType
 from nxtbn.plugins.manager import PluginPathManager
 from nxtbn.users.admin import User
+from babel.numbers import get_currency_precision, format_currency
 
 class Payment(MonetaryMixin, AbstractBaseUUIDModel):
     money_validator_map = {
@@ -38,6 +39,7 @@ class Payment(MonetaryMixin, AbstractBaseUUIDModel):
     # For storing payment gateway references
     transaction_id = models.CharField(max_length=100, blank=True, null=True, unique=True)  
     payment_status = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.AUTHORIZED)
+    is_successful = models.BooleanField(default=False) # Transaction is successful or not. vice versa for PaymentStatus.CAPTURED and PaymentStatus.FAILED
 
     currency = models.CharField(
         max_length=3,
@@ -61,6 +63,16 @@ class Payment(MonetaryMixin, AbstractBaseUUIDModel):
     def save(self, *args, **kwargs):
         self.validate_amount()
         super(Payment, self).save(*args, **kwargs)
+
+    def payment_amount_in_units(self): #subunit -to-unit 
+        precision = get_currency_precision(self.currency)
+        unit = self.payment_amount / (10 ** precision)
+        return unit
+    
+    def humanize_payment_amount(self, locale='en_US'):
+        if locale:
+            return format_currency(self.payment_amount_in_units(), self.currency, locale=locale)
+        return self.payment_amount_in_units()
 
     def authorize_payment(self, amount: Decimal, **kwargs): # TO DO: Do we still need this method?
         """Authorize payment through the specified gateway."""

@@ -126,6 +126,8 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
     total_shipping_cost = serializers.SerializerMethodField()
     total_discounted_amount = serializers.SerializerMethodField()
     total_tax = serializers.SerializerMethodField()
+    due = serializers.SerializerMethodField()
+    overcharged_amount = serializers.CharField(source='get_overcharged_amount')
     total_price_in_customer_currency = serializers.SerializerMethodField()
     user = UserSerializer()
     payment_method = serializers.CharField(source='get_payment_method')
@@ -144,6 +146,8 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'total_shipping_cost',
             'total_discounted_amount',
             'total_tax',
+            'due',
+            'overcharged_amount',
             'customer_currency',
             'total_price_in_customer_currency',
             'status',
@@ -160,13 +164,14 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'payment_term',
             'payments',
             'preferred_payment_method',
+            'is_overdue',
         )
 
     def get_total_price(self, obj):
         return obj.humanize_total_price()
     
     def get_total_price_without_symbol(self, obj):
-        return obj.humanize_total_price(symbol=False)
+        return obj.humanize_total_price()
     
     def get_total_shipping_cost(self, obj):
         return obj.humanize_total_shipping_cost()
@@ -179,6 +184,9 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
 
     def get_total_price_in_customer_currency(self, obj):
         return obj.total_price_in_customer_currency
+    
+    def get_due(self, obj):
+        return obj.get_due()
     
 
 class OrderStatusUpdateSerializer(serializers.ModelSerializer):

@@ -63,7 +63,7 @@ def build_currency_amount(amount: float, currency_code: str, with_symbol: bool =
     return formatted_currency
 
 
-def build_currency_subunit(amount: float, currency_code: str) -> int:
+def to_currency_subunit(amount: float, currency_code: str) -> int:
     """
     Converts a given amount to subunits (like cents for USD or fils for KWD) based on the currency.
 
@@ -75,9 +75,9 @@ def build_currency_subunit(amount: float, currency_code: str) -> int:
         int: The amount in subunits.
 
     # Example usage:
-    print(build_currency_subunit(204.170, 'USD'))  # Output: 20417 (in cents)
-    print(build_currency_subunit(204.170, 'KWD'))  # Output: 204170 (in fils)
-    print(build_currency_subunit(204, 'JPY'))      # Output: 204 (no subunits for JPY)
+    print(to_currency_subunit(204.170, 'USD'))  # Output: 20417 (in cents)
+    print(to_currency_subunit(204.170, 'KWD'))  # Output: 204170 (in fils)
+    print(to_currency_subunit(204.000, 'JPY'))  # Output: 204 (no subunits for JPY)
     """
     # Ensure the currency is valid
     try:

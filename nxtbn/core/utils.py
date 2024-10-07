@@ -98,5 +98,4 @@ def build_currency_subunit(amount: float, currency_code: str) -> int:
     except (InvalidOperation, ValueError):
         raise ValueError(f"Invalid amount: {amount} for currency '{currency_code}'")
 
-    print(amount, subunit_amount)
     return int(subunit_amount)

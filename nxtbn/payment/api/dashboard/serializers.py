@@ -52,7 +52,7 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         forice_it = validated_data.pop('force_it', False)
         order = validated_data.get('order')
 
-        order_total_subunit = build_currency_subunit(order.total_price, order.currency)
+        order_total_subunit = order.total_price
 
         validated_data['user'] = order.user
         validated_data['currency'] = order.currency
@@ -65,7 +65,7 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         
             order.charge_status = OrderChargeStatus.PARTIAL
             order.authorization_status = OrderAuthorizationStatus.PARTIAL
-        
+
         if validated_data['payment_amount'] > order_total_subunit:
             if not forice_it:
                 raise serializers.ValidationError(_("Payment amount exceeds the total order price."))
@@ -74,7 +74,6 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         if validated_data['payment_amount'] == order_total_subunit:
             order.charge_status = OrderChargeStatus.FULL
             order.authorization_status = OrderAuthorizationStatus.FULL
-
 
         payment = Payment.objects.create(**validated_data)
         order.save()

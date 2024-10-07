@@ -11,7 +11,7 @@ from nxtbn.core import CurrencyTypes, MoneyFieldTypes
 from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.core.models import AbstractMetadata, AbstractSEOModel, AbstractUUIDModel, PublishableModel, AbstractBaseUUIDModel, AbstractBaseModel, NameDescriptionAbstract
 from nxtbn.filemanager.models import Document, Image
-from nxtbn.product import StockStatus, WeightUnits
+from nxtbn.product import DimensionUnits, StockStatus, WeightUnits
 from nxtbn.tax.models import TaxClass
 from nxtbn.users.admin import User
 
@@ -227,6 +227,16 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
         null=True,
         blank=True
     )
+    dimensions = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        choices=DimensionUnits.choices,
+        help_text="Format: Height x Width x Depth"
+    )
+    dimensions_value = models.CharField(max_length=50, blank=True, null=True)
+
+
 
     class Meta:
         ordering = ('price',)  # Order by price ascending

@@ -16,7 +16,21 @@ class WeightUnits(models.TextChoices):
     OUNCE = 'OZ', 'Ounce'
     TON = 'TON', 'Ton'
 
+class DimensionUnits(models.TextChoices):
+    """Defines standard units of dimension for product measurement.
 
+    - 'MILLIMETER': Dimension in millimeters.
+    - 'CENTIMETER': Dimension in centimeters.
+    - 'METER': Dimension in meters.
+    - 'INCH': Dimension in inches.
+    - 'FEET': Dimension in feet.
+    """
+
+    MILLIMETER = 'MM', 'Millimeter'
+    CENTIMETER = 'CM', 'Centimeter'
+    METER = 'M', 'Meter'
+    INCH = 'IN', 'Inch'
+    FEET = 'FT', 'Feet'
 
 class StockStatus(models.TextChoices):
     """Defines the stock availability status for products.

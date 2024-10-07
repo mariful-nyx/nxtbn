@@ -2,7 +2,8 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from django.db import transaction
 
-from nxtbn.order import OrderStatus
+from nxtbn.core.utils import build_currency_amount
+from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
 from nxtbn.order.models import Order
 from nxtbn.payment.models import Payment
 
@@ -26,6 +27,7 @@ class BasicPaymentSerializer(serializers.ModelSerializer):
 class PaymentCreateSerializer(serializers.ModelSerializer):
     order = serializers.CharField(write_only=True)
     payment_amount = serializers.IntegerField(required=True, min_value=1)
+    force_it = serializers.BooleanField(write_only=True, default=False)
 
     class Meta:
         model = Payment
@@ -33,9 +35,9 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
             'order',
             'payment_method',
             'transaction_id',
-            'currency',
             'payment_amount',
             'paid_at',
+            'force_it',
         ]
         read_only_fields = ['order', 'user']  # You might want to set some fields as read-only
 
@@ -48,12 +50,25 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # Pop order_alias and find corresponding order instance
-        order = validated_data.pop('order')
+        order = validated_data.get('order')
 
-        validated_data['order'] = order
         validated_data['user'] = order.user
+        validated_data['currency'] = order.currency
+        validated_data['payment_amount'] =  build_currency_amount(order.currency, validated_data['payment_amount'])
 
         # Additional logic for processing the payment (e.g., validate plugin, transaction)
         payment = Payment.objects.create(**validated_data)
+        order.charge_status = OrderChargeStatus.FULL
+        if validated_data['payment_amount'] < order.humanize_total_price(symbol=False):
+            order.charge_status = OrderChargeStatus.PARTIAL
+            order.authorization_status = OrderAuthorizationStatus.PARTIAL
+        elif validated_data['payment_amount'] > order.humanize_total_price(symbol=False):
+            if not validated_data.get('force_it', False):
+                raise serializers.ValidationError(_("Payment amount exceeds the total order price."))
+            order.charge_status = OrderChargeStatus.OVERCHARGED
+        else:
+            order.charge_status = OrderChargeStatus.FULL
+            order.authorization_status = OrderAuthorizationStatus.FULL
+        order.save()
 
         return payment

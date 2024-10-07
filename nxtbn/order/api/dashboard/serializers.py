@@ -122,6 +122,7 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
     shipping_address = AddressSerializer()
     billing_address =  AddressSerializer()
     total_price = serializers.SerializerMethodField()
+    total_price_without_symbol = serializers.SerializerMethodField()
     total_shipping_cost = serializers.SerializerMethodField()
     total_discounted_amount = serializers.SerializerMethodField()
     total_tax = serializers.SerializerMethodField()
@@ -139,6 +140,7 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'user',
             'supplier',
             'total_price',
+            'total_price_without_symbol',
             'total_shipping_cost',
             'total_discounted_amount',
             'total_tax',
@@ -162,6 +164,9 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
 
     def get_total_price(self, obj):
         return obj.humanize_total_price()
+    
+    def get_total_price_without_symbol(self, obj):
+        return obj.humanize_total_price(symbol=False)
     
     def get_total_shipping_cost(self, obj):
         return obj.humanize_total_shipping_cost()

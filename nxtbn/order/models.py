@@ -268,8 +268,10 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         unit = self.total_tax / (10 ** precision)
         return unit
     
-    def humanize_total_price(self):
-        return format_currency(self.total_in_units(), self.currency, locale='en_US')
+    def humanize_total_price(self, symbol=True):
+        if symbol:
+            return format_currency(self.total_in_units(), self.currency, locale='en_US')
+        return self.total_in_units()
     
     def humanize_total_shipping_cost(self):
         return format_currency(self.total_shipping_cost_in_units(), self.currency, locale='en_US')
@@ -318,7 +320,7 @@ class OrderLineItem(MonetaryMixin, models.Model):
         unit = self.total_price / (10 ** precision)
         return unit
 
-    def humanize_total_price(self):
+    def humanize_total_price(self, symbol=True):
         """
         Returns the total price of the order formatted with the currency symbol,
         making it more human-readable.
@@ -326,7 +328,10 @@ class OrderLineItem(MonetaryMixin, models.Model):
         Returns:
             str: The formatted total price with the currency symbol.
         """
-        return format_currency(self.total_in_units(), self.currency, locale='en_US')
+        if symbol:
+            return format_currency(self.total_in_units(), self.currency, locale='en_US')
+        return self.total_in_units()
+        
     
     def humanize_price_per_unit(self):
         """

@@ -64,6 +64,9 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         forice_it = validated_data.pop('force_it', False)
         order = validated_data.get('order')
 
+        if order.status == OrderStatus.CANCELLED:
+            raise serializers.ValidationError(_("Cancelled orders cannot be paid for."))
+
         if validated_data['payment_method'] == PaymentMethod.CASH_ON_DELIVERY:
             if order.status != OrderStatus.DELIVERED:
                 raise serializers.ValidationError(_("If cash on delivery payment method is selected, the order must be delivered first."))

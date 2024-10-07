@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from django.db import transaction
 
-from nxtbn.core.utils import build_currency_subunit
+from nxtbn.core.utils import to_currency_subunit
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
 from nxtbn.order.models import Order
 from nxtbn.payment.models import Payment
@@ -56,7 +56,7 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
 
         validated_data['user'] = order.user
         validated_data['currency'] = order.currency
-        validated_data['payment_amount'] =  build_currency_subunit(validated_data['payment_amount'], order.currency)
+        validated_data['payment_amount'] =  to_currency_subunit(validated_data['payment_amount'], order.currency)
 
     
         if validated_data['payment_amount'] < order_total_subunit:

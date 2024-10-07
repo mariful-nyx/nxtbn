@@ -10,14 +10,14 @@ def make_path(module_path):
     
 
 
-def build_currency_amount(amount: float, currency_code: str, with_symbol: bool = False) -> str:
+def build_currency_amount(amount: float, currency_code: str, locale: str = '') -> str:
     """
     Formats and validates a currency amount based on the specified currency code.
 
     Args:
         amount (float): The amount to be formatted.
         currency_code (str): The currency code (e.g., 'USD', 'KWD', 'OMR', 'JPY').
-        with_symbol (bool): Flag to indicate whether to include the currency symbol in the output.
+        locale (bool): Flag to indicate whether to include the currency symbol in the output.
 
     Returns:
         str: The formatted currency string.
@@ -55,8 +55,8 @@ def build_currency_amount(amount: float, currency_code: str, with_symbol: bool =
         raise ValueError(f"Invalid amount '{formatted_amount}' for currency '{currency_code}'")
 
     # Format the currency for output
-    if with_symbol:
-        formatted_currency = format_currency(money.amount, currency_code)
+    if locale:
+        formatted_currency = format_currency(money.amount, currency_code, locale=locale)
     else:
         formatted_currency = f"{money.amount}"
 
@@ -99,3 +99,52 @@ def to_currency_subunit(amount: float, currency_code: str) -> int:
         raise ValueError(f"Invalid amount: {amount} for currency '{currency_code}'")
 
     return int(subunit_amount)
+
+
+def to_currency_unit(subunit: int, currency_code: str, locale: str = ''):
+    """
+    Converts a given amount in subunits (e.g., cents for USD, fils for KWD) to a formatted currency string 
+    based on the specified currency code and optional locale.
+
+    Args:
+        subunit (int): The amount in subunits to be converted (e.g., 2045 for 2045 cents).
+        currency_code (str): The currency code (e.g., 'USD', 'KWD', 'JPY') for which the conversion is done.
+        locale (str, optional): A locale string for formatting the currency output (default is an empty string).
+
+    Returns:
+        str: The formatted currency string representation of the amount in units.
+
+    Raises:
+        ValueError: If the currency code is invalid or the subunit amount is invalid for the specified currency.
+
+    Example usage:
+        print(to_currency_unit(2045, 'USD'))  # Output: "$ 20.45"
+        print(to_currency_unit(204170, 'KWD', locale='en_KW'))  # Output: "د.ك 204.170"
+        print(to_currency_unit(20456, 'JPY'))  # Output: "¥ 20456"  # JPY has no decimal places
+    """
+   
+    # Ensure the currency is valid
+    try:
+        currency = Currency(currency_code)
+    except ValueError:
+        raise ValueError(f"Invalid currency code: {currency_code}")
+    
+    try:
+        decimal_places = get_currency_precision(currency_code)
+    except KeyError:
+        raise ValueError(f"Currency precision not found for: {currency_code}")
+    
+    # Divide the subunit amount by 10^decimal_places to convert it into units (e.g., 2045 cents -> 20.45 USD)
+    try:
+        unit_amount = Decimal(subunit) / (10 ** decimal_places)
+        unit_amount = unit_amount.quantize(Decimal(f'1.{"0" * decimal_places}'), rounding=ROUND_HALF_UP)
+    except (InvalidOperation, ValueError):
+        raise ValueError(f"Invalid subunit amount: {subunit} for currency '{currency_code}'")
+    
+    # Format the currency for output
+    if locale:
+        formatted_currency = format_currency(unit_amount, currency_code, locale=locale)
+    else:
+        formatted_currency = f"{unit_amount}"
+
+    return formatted_currency

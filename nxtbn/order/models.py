@@ -4,11 +4,13 @@ from django.db import models
 from django.conf import settings
 from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes
 from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.core.models import AbstractAddressModels, AbstractBaseModel, AbstractBaseUUIDModel
+from nxtbn.core.utils import build_currency_amount, to_currency_unit
 from nxtbn.discount.models import PromoCode
 from nxtbn.gift_card.models import GiftCard
 from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, PaymentTerms
@@ -268,9 +270,9 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         unit = self.total_tax / (10 ** precision)
         return unit
     
-    def humanize_total_price(self, symbol=True):
-        if symbol:
-            return format_currency(self.total_in_units(), self.currency, locale='en_US')
+    def humanize_total_price(self, locale='en_US'):
+        if locale:
+            return format_currency(self.total_in_units(), self.currency, locale=locale)
         return self.total_in_units()
     
     def humanize_total_shipping_cost(self):
@@ -281,6 +283,34 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
     
     def humanize_total_tax(self):
         return format_currency(self.total_tax_in_units(), self.currency, locale='en_US')
+    
+    def get_due(self):
+        if self.charge_status == OrderChargeStatus.DUE:
+            return self.humanize_total_price()
+        
+        if self.charge_status in [OrderChargeStatus.FULL, OrderChargeStatus.OVERCHARGED]:
+            return to_currency_unit(0, self.currency, locale='en_US')
+        
+        if self.charge_status == OrderChargeStatus.PARTIAL:
+            paid_amount = self.payments.filter(is_successful=True,).aggregate(models.Sum('payment_amount'))['payment_amount__sum']
+            if paid_amount is None:
+                return  to_currency_unit(0, self.currency, locale='en_US')
+
+            due_in_subunits = self.total_price - paid_amount
+            return to_currency_unit(due_in_subunits, self.currency, locale='en_US')
+        
+    def is_overdue(self):
+        if self.due_date and self.due_date < timezone.now():
+            return True
+        return False
+    
+    def get_overcharged_amount(self):
+        if self.charge_status == OrderChargeStatus.OVERCHARGED:
+            overcharged_amount = self.payments.filter(is_successful=True).aggregate(models.Sum('payment_amount'))['payment_amount__sum'] - self.total_price
+            return to_currency_unit(overcharged_amount, self.currency, locale='en_US')
+        return to_currency_unit(0, self.currency, locale='en_US')
+        
+
     
     def __str__(self):
         return f"Order {self.id} - {self.status}"
@@ -320,7 +350,7 @@ class OrderLineItem(MonetaryMixin, models.Model):
         unit = self.total_price / (10 ** precision)
         return unit
 
-    def humanize_total_price(self, symbol=True):
+    def humanize_total_price(self, locale='en_US'):
         """
         Returns the total price of the order formatted with the currency symbol,
         making it more human-readable.
@@ -328,7 +358,7 @@ class OrderLineItem(MonetaryMixin, models.Model):
         Returns:
             str: The formatted total price with the currency symbol.
         """
-        if symbol:
+        if locale:
             return format_currency(self.total_in_units(), self.currency, locale='en_US')
         return self.total_in_units()
         

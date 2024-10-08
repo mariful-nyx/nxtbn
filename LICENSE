@@ -18,6 +18,15 @@ modification, are permitted provided that the following conditions are met:
    contributors may be used to endorse or promote products derived from
    this software without specific prior written permission.
 
+4. Attribution Requirements:
+   All copies or substantial portions of the software, or any website or
+   application utilizing the software or its API,shall include the following 
+   credit line in the footer: "Powered by NXTBN" (with "NXTBN" linking to https://nxtbn.com).
+   Any use of the code or API, or integration of the API with any other software,
+   shall also require attribution to the authors, unless prior written permission
+   has been obtained from the copyright holder to remove the credit line.
+
+
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE

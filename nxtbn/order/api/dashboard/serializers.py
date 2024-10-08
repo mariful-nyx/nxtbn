@@ -171,7 +171,7 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
         return obj.humanize_total_price()
     
     def get_total_price_without_symbol(self, obj):
-        return obj.humanize_total_price()
+        return obj.humanize_total_price(locale='')
     
     def get_total_shipping_cost(self, obj):
         return obj.humanize_total_shipping_cost()

@@ -61,7 +61,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         return ProductWithVariantSerializer
 
     @action(detail=False, methods=['get'], url_path='default')
-    def list_products(self, request):
+    def default(self, request):
         queryset = self.filter_queryset(self.queryset)
         return self.paginate_and_serialize(queryset)
         

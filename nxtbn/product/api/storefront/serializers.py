@@ -58,6 +58,7 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
 
 class ProductWithDefaultVariantSerializer(serializers.ModelSerializer):
     product_thumbnail = serializers.SerializerMethodField()
+    default_variant = ProductVariantSerializer(read_only=True)
 
     class Meta:
         model = Product

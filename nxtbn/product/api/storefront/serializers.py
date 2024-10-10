@@ -20,7 +20,7 @@ class CollectionSerializer(serializers.ModelSerializer):
 
 
 class ProductVariantSerializer(serializers.ModelSerializer):
-    variant_image = ImageSerializer(many=True, read_only=True)
+    variant_image = ImageSerializer(read_only=True)
     price_in_target_currency = serializers.SerializerMethodField()
     class Meta:
         model = ProductVariant
@@ -34,8 +34,29 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             price = currency_Backend().to_target_currency(currency_code, obj.price)
         return price
 
-class ProductSerializer(serializers.ModelSerializer):
-    default_variant = ProductVariantSerializer()
+class ProductWithVariantSerializer(serializers.ModelSerializer):
+    variants = ProductVariantSerializer(many=True)
+    product_thumbnail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = (
+            'id',
+            'name',
+            'summary',
+            'description',
+            'category',
+            'brand',
+            'slug',
+            'variants',
+            'product_thumbnail'
+        )
+
+    def get_product_thumbnail(self, obj):
+        return obj.product_thumbnail(self.context['request'])
+    
+
+class ProductWithDefaultVariantSerializer(serializers.ModelSerializer):
     product_thumbnail = serializers.SerializerMethodField()
 
     class Meta:

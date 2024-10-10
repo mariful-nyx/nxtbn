@@ -1,3 +1,5 @@
+from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework import generics, status
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
@@ -10,7 +12,7 @@ from django_filters import rest_framework as filters
 
 
 from nxtbn.core.paginator import NxtbnPagination
-from nxtbn.product.api.storefront.serializers import CategorySerializer, CollectionSerializer, ProductDetailSerializer, ProductSerializer
+from nxtbn.product.api.storefront.serializers import CategorySerializer, CollectionSerializer, ProductDetailSerializer, ProductWithDefaultVariantSerializer, ProductWithVariantSerializer
 from nxtbn.product.models import Category, Collection, Product
 from nxtbn.product.models import Supplier
 
@@ -31,22 +33,44 @@ class ProductFilter(filters.FilterSet):
         fields = ('name', 'summary', 'description', 'category', 'supplier', 'brand', 'type', 'related_to', 'collection')
 
 
-    
-
-
-class ProductListView(generics.ListAPIView):
+class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = NxtbnPagination
     permission_classes = (AllowAny,)
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
     filter_backends = [
         django_filters.rest_framework.DjangoFilterBackend,
         drf_filters.SearchFilter,
-        drf_filters.OrderingFilter
+        drf_filters.OrderingFilter,
     ]
     filterset_class = ProductFilter
-    search_fields = ['name', 'summary', 'description', 'category__name', 'type']
     ordering_fields = ['name', 'created_at']
+
+    def paginate_and_serialize(self, queryset): # Custom
+        # Helper function to handle pagination and serialization
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
+    def get_serializer_class(self):
+        # Select the serializer dynamically based on the action
+        if self.action == 'default':
+            return  ProductWithDefaultVariantSerializer
+        return ProductWithVariantSerializer
+
+    @action(detail=False, methods=['get'], url_path='default')
+    def list_products(self, request):
+        queryset = self.filter_queryset(self.queryset)
+        return self.paginate_and_serialize(queryset)
+        
+
+    @action(detail=False, methods=['get'], url_path='withvariant')
+    def list_products_with_variant(self, request):
+        queryset = self.filter_queryset(self.queryset)
+        return self.paginate_and_serialize(queryset)
+    
 
 class CollectionListView(generics.ListAPIView):
     permission_classes = (AllowAny,)

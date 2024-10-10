@@ -1,11 +1,11 @@
-from datetime import timezone
 from django.db import models
+from django. utils import timezone
 
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes
 from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.core.models import  AbstractBaseUUIDModel
 from nxtbn.order import OrderStatus
-from nxtbn.order.models import Order
+from nxtbn.order.models import Order, ReturnRequest
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
 from decimal import Decimal
@@ -13,7 +13,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 
-from nxtbn.payment import PaymentMethod, PaymentStatus
+from nxtbn.payment import PaymentMethod, PaymentStatus, RefundMethod, RefundStatus
 from nxtbn.payment.payment_manager import PaymentManager
 from nxtbn.plugins import PluginType
 from nxtbn.plugins.manager import PluginPathManager
@@ -180,3 +180,34 @@ class PaymentSource(AbstractBaseUUIDModel):
     card_exp_month = models.CharField(_("Expiry Month"), max_length=2, null=True, blank=True)
     card_exp_year = models.CharField(_("Expiry Year"), max_length=4, null=True, blank=True)
     card_brand = models.CharField(_("Card Brand"), max_length=20, null=True, blank=True)
+
+
+class Refund(AbstractBaseUUIDModel):
+    """
+    Represents a refund transaction associated with a return request.
+    """
+    initiated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE, related_name="refunds")
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name="refunds")
+    refund_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Amount to be refunded in the order's currency."
+    )
+    refund_method = models.CharField(
+        max_length=32,
+        choices=RefundMethod.choices,
+        help_text="Method through which the refund will be processed."
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=RefundStatus.choices,
+        default=RefundStatus.PENDING,
+        help_text="Current status of the refund."
+    )
+    initiated_at = models.DateTimeField(default=timezone.now, help_text="Timestamp when the refund was initiated.")
+    completed_at = models.DateTimeField(null=True, blank=True, help_text="Timestamp when the refund was completed.")
+    failure_reason = models.TextField(blank=True, null=True, help_text="Reason for refund failure, if any.")
+    # For online refunds, store gateway-specific IDs
+    payment_plugin_id = models.CharField(max_length=255, blank=True, null=True, help_text="Refund ID from the payment gateway.")

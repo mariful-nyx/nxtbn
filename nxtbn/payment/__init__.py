@@ -67,3 +67,17 @@ class PaymentMethod(models.TextChoices):
     POSTAL_MONEY_ORDER = "POSTAL_MONEY_ORDER", _("Postal Money Order")
     CHEQUE = "CHEQUE", _("Cheque")
     OTHER = "OTHER", _("Other")
+
+
+class RefundMethod(models.TextChoices):
+    ORIGINAL_PAYMENT = 'ORIGINAL_PAYMENT', _('Original Payment Method')
+    STORE_CREDIT = 'STORE_CREDIT', _('Store Credit')
+    OTHER = 'OTHER', _('Other')
+
+
+class RefundStatus(models.TextChoices):
+    PENDING = 'PENDING', _('Pending')
+    COMPLETED = 'COMPLETED', _('Completed')
+    FAILED = 'FAILED', _('Failed')
+    CANCELED = 'CANCELED', _('Canceled')
+    PROCESSING = 'PROCESSING', _('Processing')

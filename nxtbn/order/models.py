@@ -13,7 +13,7 @@ from nxtbn.core.models import AbstractAddressModels, AbstractBaseModel, Abstract
 from nxtbn.core.utils import build_currency_amount, to_currency_unit
 from nxtbn.discount.models import PromoCode
 from nxtbn.gift_card.models import GiftCard
-from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, PaymentTerms
+from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, PaymentTerms, ReturnStatus
 from nxtbn.payment import PaymentMethod
 from nxtbn.product.models import ProductVariant
 from nxtbn.users import UserRole
@@ -377,3 +377,30 @@ class OrderLineItem(MonetaryMixin, models.Model):
     def __str__(self):
         return f"{self.variant.product.name} - {self.variant.name} - Qty: {self.quantity}"
 
+
+
+class ReturnRequest(AbstractBaseUUIDModel):
+    intiated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="returns")
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="returns")
+    requested_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=ReturnStatus.choices,
+        default=ReturnStatus.REQUESTED,
+        verbose_name="Return Status",
+    )
+    reason = models.TextField(help_text="Reason for the return")
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejected_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+
+class ReturnLineItem(models.Model):
+    return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE, related_name="line_items")
+    order_line_item = models.ForeignKey(OrderLineItem, on_delete=models.CASCADE, related_name="return_line_items")
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    reason = models.TextField(help_text="Reason for returning this specific item")
+    refunded_amount = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text="Amount refunded for this line item"
+    )

@@ -44,6 +44,7 @@ class OrderStatus(models.TextChoices):
     SHIPPED = "SHIPPED", _("Shipped")
     DELIVERED = "DELIVERED", _("Delivered")
     CANCELLED = "CANCELLED", _("Cancelled")
+    PENDING_RETURN = "PENDING_RETURN", _("Pending Return")
     RETURNED = "RETURNED", _("Returned")
 
 
@@ -79,8 +80,17 @@ class PaymentTerms(models.TextChoices): # incase of due payment
 
 
 class AddressType(models.TextChoices):
-        DSA = 'DSA', 'Default Shipping Address'
-        DBA = 'DBA', 'Default Billing Address'
-        SA = 'SA', 'Shipping Address'
-        BA = 'BA', 'Billing Address'
-        DSA_DBA = 'DSA_DBA', 'Default Shipping and Billing Address'
+    DSA = 'DSA', 'Default Shipping Address'
+    DBA = 'DBA', 'Default Billing Address'
+    SA = 'SA', 'Shipping Address'
+    BA = 'BA', 'Billing Address'
+    DSA_DBA = 'DSA_DBA', 'Default Shipping and Billing Address'
+
+
+class ReturnStatus(models.TextChoices):
+    REQUESTED = 'REQUESTED', _('Requested')
+    APPROVED = 'APPROVED', _('Approved')
+    REJECTED = 'REJECTED', _('Rejected')
+    COMPLETED = 'COMPLETED', _('Completed')
+    CANCELLED = 'CANCELLED', _('Cancelled')
+

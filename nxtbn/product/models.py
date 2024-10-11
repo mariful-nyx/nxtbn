@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes
 from nxtbn.core.mixin import MonetaryMixin
-from nxtbn.core.models import AbstractMetadata, AbstractSEOModel, AbstractUUIDModel, PublishableModel, AbstractBaseUUIDModel, AbstractBaseModel, NameDescriptionAbstract
+from nxtbn.core.models import AbstractMetadata, AbstractSEOModel, AbstractUUIDModel, PublishableModel, AbstractBaseUUIDModel, AbstractBaseModel, NameDescriptionAbstract, no_nested_values
 from nxtbn.filemanager.models import Document, Image
 from nxtbn.product import DimensionUnits, StockStatus, WeightUnits
 from nxtbn.tax.models import TaxClass
@@ -177,7 +177,7 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
         return reverse("product_detail", args=[self.slug])
 
 
-class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.Model):
+class ProductVariant(MonetaryMixin, AbstractUUIDModel, models.Model):
     money_validator_map = {
         "price": {
             "currency_field": "currency",
@@ -212,9 +212,11 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
     # if track_inventory is not enabled
     stock_status = models.CharField(default=StockStatus.IN_STOCK, choices=StockStatus.choices, max_length=15)
 
-    color_code = models.CharField(max_length=7, null=True, blank=True)
-
     sku = models.CharField(max_length=50, unique=True)
+
+
+    color_code = models.CharField(max_length=7, null=True, blank=True)
+    # Weight and dimensions are also types of attributes, but we created these fields separately for shipping rate calculation purposes.
     weight_unit = models.CharField(
         max_length=5,
         choices=WeightUnits.choices,
@@ -235,6 +237,15 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
         help_text="Format: Height x Width x Depth"
     )
     dimensions_value = models.CharField(max_length=50, blank=True, null=True)
+
+
+    attributes = models.JSONField(
+        blank=True,
+        null=True,
+        default=dict,
+        validators=[no_nested_values],
+        help_text="A JSON field to store custom attributes for the variant. Primary attributes include color code, dimension, and weight value. Weight value and dimension are used for shipping calculations. This field allows adding as many custom attributes as needed."
+    )
 
 
 

@@ -116,6 +116,39 @@ class CustomerCreateSerializer(serializers.ModelSerializer):
         return value
     
 
+class CustomerUpdateSerializer(serializers.ModelSerializer):
+    address = AddressCreateSerializer(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id','full_name', 'first_name', 'last_name', 'phone_number', 'email', 'address']
+        read_only_fields = ['id', 'full_name',]
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+
+        address_data = validated_data.pop('address', None)
+
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        instance.email = validated_data.get('email', instance.email)
+        instance.save()
+
+        if address_data:
+            Address.objects.update_or_create(
+                user=instance,
+                address_type=AddressType.DSA_DBA,
+                defaults={**address_data}
+            )
+
+        return instance
+    
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exclude(pk=self.instance.pk).exists():
+            raise serializers.ValidationError("A customer with this email already exists.")
+        return value
+    
 
 class OrderDetailsSerializer(serializers.ModelSerializer):
     line_items = OrderLineItemSerializer(many=True, read_only=True)

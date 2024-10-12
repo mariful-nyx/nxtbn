@@ -7,4 +7,5 @@ urlpatterns = [
     path('promocodes/attach-entities/', discount_views.AttachPromoCodeEntitiesAPIView.as_view(), name='attach-promo-code-entities'),
     path('promocodes/products/', discount_views.PromoCodeProductListAPIView.as_view(), name='promo-code-product-list'),
     path('promocodes/customers/', discount_views.PromoCodeCustomertListAPIView.as_view(), name='promo-code-customer-list'),
+    path('promocodes/usage/', discount_views.PromocodeUsageList.as_view(), name='promocode-usage')
 ]

@@ -69,7 +69,7 @@ class PromoCodeCustomertListAPIView(generics.ListAPIView):
     filterset_class = PromoCodeCustomerFilter
 
 
-class PromocodeUsageList(generics.ListCreateAPIView):
+class PromocodeUsageList(generics.ListAPIView):
     queryset = PromoCodeUsage.objects.all()
     serializer_class = PromocodeUsageSerializer
     pagination_class = NxtbnPagination

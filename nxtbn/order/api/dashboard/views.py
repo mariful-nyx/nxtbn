@@ -10,6 +10,9 @@ from django.db.models import Sum, Count, F
 from django.utils import timezone
 
 from datetime import timedelta
+from dateutil.relativedelta import relativedelta
+from django.db.models.functions import TruncMonth
+import calendar
 
 from decimal import Decimal
 
@@ -25,10 +28,13 @@ from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 from nxtbn.product.models import ProductVariant
 from nxtbn.users.admin import User
+from nxtbn.filemanager.models import Image
+
 from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderSerializer, OrderStatusUpdateSerializer, OrderPaymentMethodSerializer, CustomerUpdateSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 from babel.numbers import get_currency_precision
+import json
 
 
 
@@ -127,7 +133,75 @@ class BasicStatsView(APIView):
         net_sales_last_week = Payment.objects.filter(created_at__gte=last_week).aggregate(net_total=Sum(F('payment_amount') / Decimal(100)))['net_total'] or Decimal(0)
         net_sales_last_week_percentage_change = (net_sales_last_week / net_sales) * 100 if net_sales > 0 else 0
 
-        # Prepare the response data
+
+        # Total stock
+        total_stock = ProductVariant.objects.filter(track_inventory=True).aggregate(total=Sum('stock'))['total'] or Decimal(0)
+        total_untracked_stock = ProductVariant.objects.filter(track_inventory=False, stock_status='in_stock').count()
+
+        net_stock = total_stock - OrderLineItem.objects.aggregate(total=Sum('quantity'))['total'] or 0
+        
+        backordered_stock = 0
+        
+        # Total Order
+        total_orders = Order.objects.aggregate(total = Sum('total_price'))['total'] or Decimal(0)
+        total_orders_last_week = Order.objects.filter(due_date__gte=last_week).aggregate(total=Sum('total_price'))['total'] or Decimal(0)
+        total_orders_last_percentage_change = (total_orders_last_week/total_orders) * 100 
+        
+        # order processing
+        order_processing = Order.objects.filter(status = 'PROCESSING').aggregate(total = Sum('total_price'))['total'] or Decimal(0)
+        
+
+        # order delivered
+        order_delivered = Order.objects.filter(status = 'DELIVERED').aggregate(total = Sum('total_price'))['total'] or Decimal(0)
+        
+        last_order = Order.objects.latest('due_date')
+        last_ordered_date = last_order.due_date if last_order else None
+
+        #last five month sale graph
+        five_months_ago = today - timedelta(days=30 * 5)  
+        
+        monthly_payments = (
+            Payment.objects
+            .filter(paid_at__gte=five_months_ago)
+            .annotate(month=TruncMonth('paid_at')) 
+            .values('month')
+            .annotate(total=Sum('payment_amount'))  
+            .order_by('month') 
+        )
+        
+        results = {}
+        
+        for i in range(5):
+            month_date = (today - timedelta(days=30 * i)).replace(day=1)
+            results[month_date.strftime('%B %Y')] = 0 
+
+        for payment in monthly_payments:
+            month_key = payment['month'].strftime('%B %Y')
+            results[month_key] = payment['total']
+
+        
+        # Calculate most selling product 
+        most_selling_product = []
+
+        most_selling_variants = (
+            ProductVariant.objects
+            .annotate(total_sold=Sum('orderlineitems__quantity'))
+            .order_by('-total_sold')  # Order by total sold in descending order
+        )
+
+
+        for variant in most_selling_variants:
+            name = variant.name
+     
+            most_selling_product.append({
+                'name': f"{variant.product.name}-{name}",
+                'image': request.build_absolute_uri(variant.variant_image.image.url if variant.variant_image and variant.variant_image.image else None),
+                'sales': variant.total_sold,
+                'stock': variant.stock,
+                'price': variant.price
+            })
+
+     
         data = {
             'sales': {
                 'amount': total_sale,
@@ -143,6 +217,37 @@ class BasicStatsView(APIView):
             'net_sales': {
                 'amount': net_sales,
                 'last_percentage_change': net_sales_last_week_percentage_change
+            },
+            'total_stock': {
+                'amount': total_stock
+            },
+            'total_untracked_stock': {
+                'amount': total_untracked_stock
+            },
+            'net_stock' : {
+                'amount': net_stock
+            },
+            'backordered_stock':{
+                'amount': 0
+            },
+            'total_order': {
+                'amount': total_orders,
+                'last_percentage_change': 0,
+                'last_ordered_date': last_ordered_date,
+            },
+            'order_processing': {
+                'amount': order_processing,
+                'last_percentage_change': 0
+            },
+            'order_delivered': {
+                'amount': order_delivered,
+                'last_percentage_change': 0
+            },
+            'sell_past_month': {
+                'results': results
+            },
+            'most_selling_product': {
+                'results': most_selling_product
             }
         }
         

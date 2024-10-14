@@ -13,3 +13,8 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = '__all__'
+
+
+class CartAddUpdateSerializer(serializers.Serializer):
+    product_variant_id = serializers.IntegerField()
+    quantity = serializers.IntegerField(default=1)

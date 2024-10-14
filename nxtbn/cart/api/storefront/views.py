@@ -1,11 +1,165 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from nxtbn.cart.models import CartItem
-from nxtbn.cart.api.storefront.serializers import CartItemSerializer
+from nxtbn.cart.models import Cart, CartItem
+from nxtbn.cart.api.storefront.serializers import CartItemSerializer, CartSerializer
+from rest_framework import status
+from rest_framework.permissions import AllowAny
 
-class CartItemListView(generics.ListAPIView):
+from nxtbn.cart.utils import get_or_create_cart, save_guest_cart
+from nxtbn.product.models import ProductVariant
+
+
+
+
+class CartView(generics.GenericAPIView):
     """
-    API endpoint for listing all carts.
+    GET: Retrieve the current cart.
     """
-    queryset = CartItem.objects.all()
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        cart, is_guest = get_or_create_cart(request)
+
+        if is_guest:
+            # Handle guest cart stored in session
+            items = []
+            total = 0
+            for product_variant_id, item in cart.items():
+                try:
+                    product_variant = ProductVariant.objects.get(id=product_variant_id)
+                    subtotal = product_variant.price * item['quantity']
+                    total += subtotal
+                    items.append({
+                        'product_variant': {
+                            'id': product_variant.id,
+                            'name': product_variant.name,
+                            'price': product_variant.price,
+                            'stock': product_variant.stock
+                        },
+                        'quantity': item['quantity'],
+                        'subtotal': subtotal
+                    })
+                except ProductVariant.DoesNotExist:
+                    continue  # Optionally, handle missing product variants
+
+            return Response({'items': items, 'total': total}, status=status.HTTP_200_OK)
+        else:
+            # Handle authenticated user's cart
+            serializer = CartSerializer(cart)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AddToCartView(generics.CreateAPIView):
+    """
+    POST: Add an item to the cart.
+    """
+    permission_classes = [AllowAny]
     serializer_class = CartItemSerializer
+
+    def post(self, request, *args, **kwargs):
+        product_variant_id = request.data.get('product_variant_id')
+        quantity = int(request.data.get('quantity', 1))
+
+        product_variant = get_object_or_404(ProductVariant, id=product_variant_id)
+
+        cart, is_guest = get_or_create_cart(request)
+
+        if not is_guest:
+            # Authenticated user
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart,
+                product_variant=product_variant
+            )
+            if not created:
+                cart_item.quantity += quantity
+                cart_item.save()
+            else:
+                cart_item.quantity = quantity
+                cart_item.save()
+            serializer = CartSerializer(cart)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            # Guest user
+            cart = request.session.get('cart', {})
+            if str(product_variant_id) in cart:
+                cart[str(product_variant_id)]['quantity'] += quantity
+            else:
+                cart[str(product_variant_id)] = {
+                    'quantity': quantity,
+                    'price': str(product_variant.price)  # Ensure JSON serializable
+                }
+            save_guest_cart(request, cart)
+            return Response({'message': 'Item added to cart successfully.'}, status=status.HTTP_200_OK)
+
+
+class UpdateCartItemView(generics.UpdateAPIView):
+    """
+    PUT: Update the quantity of a cart item.
+    """
+    permission_classes = [AllowAny]
+    serializer_class = CartItemSerializer
+
+    def put(self, request, *args, **kwargs):
+        product_variant_id = request.data.get('product_variant_id')
+        quantity = int(request.data.get('quantity', 1))
+
+        if quantity < 1:
+            return Response({'error': 'Quantity must be at least 1.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        product_variant = get_object_or_404(ProductVariant, id=product_variant_id)
+
+        cart, is_guest = get_or_create_cart(request)
+
+        if not is_guest:
+            # Authenticated user
+            try:
+                cart_item = CartItem.objects.get(cart=cart, product_variant=product_variant)
+                cart_item.quantity = quantity
+                cart_item.save()
+                serializer = CartSerializer(cart)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except CartItem.DoesNotExist:
+                return Response({'error': 'Item not found in cart.'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            # Guest user
+            cart = request.session.get('cart', {})
+            if str(product_variant_id) in cart:
+                cart[str(product_variant_id)]['quantity'] = quantity
+                save_guest_cart(request, cart)
+                return Response({'message': 'Cart item updated successfully.'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Item not found in cart.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class RemoveFromCartView(generics.DestroyAPIView):
+    """
+    DELETE: Remove an item from the cart.
+    """
+    permission_classes = [AllowAny]
+
+    def delete(self, request, *args, **kwargs):
+        product_variant_id = request.data.get('product_variant_id')
+        product_variant = get_object_or_404(ProductVariant, id=product_variant_id)
+
+        cart, is_guest = get_or_create_cart(request)
+
+        if not is_guest:
+            # Authenticated user
+            try:
+                cart_item = CartItem.objects.get(cart=cart, product_variant=product_variant)
+                cart_item.delete()
+                serializer = CartSerializer(cart)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except CartItem.DoesNotExist:
+                return Response({'error': 'Item not found in cart.'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            # Guest user
+            cart = request.session.get('cart', {})
+            if str(product_variant_id) in cart:
+                del cart[str(product_variant_id)]
+                save_guest_cart(request, cart)
+                return Response({'message': 'Item removed from cart successfully.'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Item not found in cart.'}, status=status.HTTP_404_NOT_FOUND)

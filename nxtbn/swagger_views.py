@@ -22,7 +22,8 @@ DASHBOARD_PATTERNS = [
     path('seo/dashboard/api/', include('nxtbn.seo.api.dashboard.urls')),
     path('plugins/dashboard/api/', include('nxtbn.plugins.api.dashboard.urls')),
     path('shipping/dashboard/api/', include('nxtbn.shipping.api.dashboard.urls')),
-    path('tax/dashboard/api/', include('nxtbn.tax.api.dashboard.urls'))
+    path('tax/dashboard/api/', include('nxtbn.tax.api.dashboard.urls')),
+    path('cart/dashboard/api/', include('nxtbn.cart.api.dashboard.urls')),
 
 ]
 
@@ -35,6 +36,7 @@ STOREFRONT_PATTERNS = [
     path('product/storefront/api/', include('nxtbn.product.api.storefront.urls')),
     path('payment/storefront/api/', include('nxtbn.payment.api.storefront.urls')),
     path('seo/storefront/api/', include('nxtbn.seo.api.storefront.urls')),
+    path('cart/storefront/api/', include('nxtbn.cart.api.storefront.urls')),
 ]
 
 

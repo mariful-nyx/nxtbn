@@ -3,7 +3,7 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from nxtbn.cart.models import Cart, CartItem
-from nxtbn.cart.api.storefront.serializers import CartItemSerializer, CartSerializer
+from nxtbn.cart.api.storefront.serializers import CartAddUpdateSerializer, CartSerializer
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 
@@ -22,10 +22,11 @@ class CartView(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         cart, is_guest = get_or_create_cart(request)
 
+        items = []
+        total = 0
+
         if is_guest:
             # Handle guest cart stored in session
-            items = []
-            total = 0
             for product_variant_id, item in cart.items():
                 try:
                     product_variant = ProductVariant.objects.get(id=product_variant_id)
@@ -34,6 +35,7 @@ class CartView(generics.GenericAPIView):
                     items.append({
                         'product_variant': {
                             'id': product_variant.id,
+                            'alias': product_variant.alias,
                             'name': product_variant.name,
                             'price': product_variant.price,
                             'stock': product_variant.stock
@@ -43,12 +45,28 @@ class CartView(generics.GenericAPIView):
                     })
                 except ProductVariant.DoesNotExist:
                     continue  # Optionally, handle missing product variants
-
-            return Response({'items': items, 'total': total}, status=status.HTTP_200_OK)
         else:
             # Handle authenticated user's cart
-            serializer = CartSerializer(cart)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            cart_items = cart.items.all()  # Assuming this is a reverse relation in Cart model
+            for cart_item in cart_items:
+                product_variant = cart_item.variant
+                subtotal = product_variant.price * cart_item.quantity
+                total += subtotal
+                items.append({
+                    'product_variant': {
+                        'id': product_variant.id,
+                        'alias': product_variant.alias,
+                        'name': product_variant.name,
+                        'price': product_variant.price,
+                        'stock': product_variant.stock
+                    },
+                    'quantity': cart_item.quantity,
+                    'subtotal': subtotal
+                })
+
+        # Unified response for both guest and authenticated users
+        return Response({'items': items, 'total': total}, status=status.HTTP_200_OK)
+
 
 
 class AddToCartView(generics.CreateAPIView):
@@ -56,7 +74,7 @@ class AddToCartView(generics.CreateAPIView):
     POST: Add an item to the cart.
     """
     permission_classes = [AllowAny]
-    serializer_class = CartItemSerializer
+    serializer_class = CartAddUpdateSerializer
 
     def post(self, request, *args, **kwargs):
         product_variant_id = request.data.get('product_variant_id')
@@ -99,7 +117,7 @@ class UpdateCartItemView(generics.UpdateAPIView):
     PUT: Update the quantity of a cart item.
     """
     permission_classes = [AllowAny]
-    serializer_class = CartItemSerializer
+    serializer_class = CartAddUpdateSerializer
 
     def put(self, request, *args, **kwargs):
         product_variant_id = request.data.get('product_variant_id')
@@ -118,8 +136,8 @@ class UpdateCartItemView(generics.UpdateAPIView):
                 cart_item = CartItem.objects.get(cart=cart, product_variant=product_variant)
                 cart_item.quantity = quantity
                 cart_item.save()
-                serializer = CartSerializer(cart)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                message = {'message': 'Cart item updated successfully.'}
+                return Response(message, status=status.HTTP_200_OK)
             except CartItem.DoesNotExist:
                 return Response({'error': 'Item not found in cart.'}, status=status.HTTP_404_NOT_FOUND)
         else:
@@ -140,7 +158,7 @@ class RemoveFromCartView(generics.DestroyAPIView):
     permission_classes = [AllowAny]
 
     def delete(self, request, *args, **kwargs):
-        product_variant_id = request.data.get('product_variant_id')
+        product_variant_id = kwargs.get('product_variant_id')
         product_variant = get_object_or_404(ProductVariant, id=product_variant_id)
 
         cart, is_guest = get_or_create_cart(request)

@@ -88,7 +88,7 @@ class AddToCartView(generics.CreateAPIView):
             # Authenticated user
             cart_item, created = CartItem.objects.get_or_create(
                 cart=cart,
-                product_variant=product_variant
+                variant=product_variant
             )
             if not created:
                 cart_item.quantity += quantity
@@ -133,7 +133,7 @@ class UpdateCartItemView(generics.UpdateAPIView):
         if not is_guest:
             # Authenticated user
             try:
-                cart_item = CartItem.objects.get(cart=cart, product_variant=product_variant)
+                cart_item = CartItem.objects.get(cart=cart, variant=product_variant)
                 cart_item.quantity = quantity
                 cart_item.save()
                 message = {'message': 'Cart item updated successfully.'}
@@ -166,7 +166,7 @@ class RemoveFromCartView(generics.DestroyAPIView):
         if not is_guest:
             # Authenticated user
             try:
-                cart_item = CartItem.objects.get(cart=cart, product_variant=product_variant)
+                cart_item = CartItem.objects.get(cart=cart, variant=product_variant)
                 cart_item.delete()
                 serializer = CartSerializer(cart)
                 return Response(serializer.data, status=status.HTTP_200_OK)

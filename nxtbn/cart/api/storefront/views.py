@@ -8,9 +8,8 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 
 from nxtbn.cart.utils import get_or_create_cart, save_guest_cart
+from nxtbn.core.utils import build_currency_amount
 from nxtbn.product.models import ProductVariant
-
-
 
 
 class CartView(generics.GenericAPIView):
@@ -38,10 +37,12 @@ class CartView(generics.GenericAPIView):
                             'alias': product_variant.alias,
                             'name': product_variant.name,
                             'price': product_variant.price,
+                            'humanize_price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
                             'stock': product_variant.stock
                         },
                         'quantity': item['quantity'],
-                        'subtotal': subtotal
+                        'subtotal': subtotal,
+                        'humanize_subtotal': build_currency_amount(subtotal, request.currency, 'en_US')
                     })
                 except ProductVariant.DoesNotExist:
                     continue  # Optionally, handle missing product variants
@@ -58,14 +59,21 @@ class CartView(generics.GenericAPIView):
                         'alias': product_variant.alias,
                         'name': product_variant.name,
                         'price': product_variant.price,
+                        'humanize_price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
                         'stock': product_variant.stock
                     },
                     'quantity': cart_item.quantity,
-                    'subtotal': subtotal
+                    'subtotal': subtotal,
+                    'humanize_subtotal': build_currency_amount(subtotal, request.currency, 'en_US')
                 })
 
         # Unified response for both guest and authenticated users
-        return Response({'items': items, 'total': total}, status=status.HTTP_200_OK)
+        unified_response = {
+            'items': items,
+            'total': total,
+            'humanize_total': build_currency_amount(total, request.currency, 'en_US')
+        }
+        return Response(unified_response, status=status.HTTP_200_OK)
 
 
 

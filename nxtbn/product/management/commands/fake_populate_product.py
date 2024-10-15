@@ -4,7 +4,7 @@ import shutil
 from django.conf import settings
 from django.core.management.base import BaseCommand
 import requests
-from nxtbn.core.currency.utils import normalize_amount_currencywise
+from nxtbn.core.utils import normalize_amount_currencywise
 from nxtbn.product.models import Category, Collection, Product, ProductType, ProductVariant
 from django.contrib.auth import get_user_model
 from nxtbn.product import StockStatus, WeightUnits

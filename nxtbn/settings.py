@@ -58,23 +58,27 @@ SECRET_KEY = get_env_var('SECRET_KEY', 'django-insecure-#(7!^&*')
 # SECURITY WARNING: Debug mode exposes sensitive information and should only be used during development.
 DEBUG = get_env_var("DEBUG", default=False, var_type=bool)
 
-# SECURITY WARNING: Allowing all origins in production is a security risk.
-CORS_ORIGIN_ALLOW_ALL = get_env_var("CORS_ORIGIN_ALLOW_ALL", default=False, var_type=bool)
 
 ALLOWED_HOSTS = get_env_var("ALLOWED_HOSTS", default=["*"], var_type=list)
-
-CORS_ALLOWED_ORIGINS = get_env_var("CORS_ALLOWED_ORIGINS", default=[
-    'http://localhost:3000',
-], var_type=list)
-
 
 DEVELOPMENT_SERVER = get_env_var("DEVELOPMENT_SERVER", default=False, var_type=bool)
 
 
-SITE_ID = 1
-
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = get_env_var("SECURE_SSL_REDIRECT", default=False, var_type=bool)
+
+
+# SESSOIN configured only for storefront cart handling
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True 
+
+
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
+
+
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False 
 
 
 # Application definition
@@ -129,10 +133,10 @@ SITE_ID = 1  # Default site ID (not used in headless API setup).
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # TODO: Do we need this?
-    'nxtbn.core.currency_middleware.CurrencyMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Must be first after SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Optional: For serving static files
+    'nxtbn.core.currency_middleware.CurrencyMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -140,6 +144,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
 ]
+
+# INSTALLED_APPS[]corsheaders specific settings
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ALLOWED_ORIGINS = get_env_var("CORS_ALLOWED_ORIGINS", default=[
+    'http://localhost:3000',
+], var_type=list)
+
 
 ROOT_URLCONF = 'nxtbn.urls'
 

@@ -373,13 +373,18 @@ CELERY_TIMEZONE = TIME_ZONE
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "unix:/tmp/memcached.sock",
+        "LOCATION": REDIS_URL,
     },
     "generic": {
         "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
-        "LOCATION": "unix:/tmp/memcached.sock",
+        "LOCATION": get_env_var("MEMCACHE_LOCATION", "127.0.0.1:11211"),
     }
 }
+# Default cache backend is dummy/ fallback to dummy cache if no cache backend is configured
+if not get_env_var("REDIS_URL", default=""):
+    CACHES["default"]["BACKEND"] = "django.core.cache.backends.dummy.DummyCache"
+if not get_env_var("MEMCACHE_LOCATION", default=""):
+    CACHES["generic"]["BACKEND"] = "django.core.cache.backends.dummy.DummyCache"
 
 # ============================
 # NXTBN Specific Configuration

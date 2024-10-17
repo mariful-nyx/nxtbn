@@ -18,7 +18,7 @@ def build_currency_amount(amount: float, currency_code: str, locale: str = ''):
     Args:
         amount (float): The amount to be formatted.
         currency_code (str): The currency code (e.g., 'USD', 'KWD', 'OMR', 'JPY').
-        locale (bool): Flag to indicate whether to include the currency symbol in the output.
+        locale (str): Optional locale to format with the currency symbol.
 
     Returns:
         str: The formatted currency string.
@@ -29,7 +29,7 @@ def build_currency_amount(amount: float, currency_code: str, locale: str = ''):
     # Example usage:
     print(build_currency_amount(204.170, 'USD'))  # Output: "$ 204.17"
     print(build_currency_amount(204.170, 'KWD'))  # Output: "د.ك 204.170"
-    print(build_currency_amount(204.000, 'JPY'))      # Output: "¥ 204"  # JPY has 0 decimal places
+    print(build_currency_amount(204.000, 'JPY'))  # Output: "¥ 204" (JPY has 0 decimal places)
     """
     # Ensure the currency is valid
     try:
@@ -59,7 +59,7 @@ def build_currency_amount(amount: float, currency_code: str, locale: str = ''):
     if locale:
         formatted_currency = format_currency(money.amount, currency_code, locale=locale)
     else:
-        formatted_currency = money.amount
+        formatted_currency = f"{formatted_amount:.{decimal_places}f}"
 
     return formatted_currency
 
@@ -190,3 +190,37 @@ def get_in_user_currency(amount: float, user_currency: str, base_currency: str, 
     cleaned_amount = build_currency_amount(amount, base_currency)
     backend = currency_Backend()
     return backend.to_target_currency(user_currency, cleaned_amount, locale)
+
+
+
+
+def apply_exchange_rate(amount: str, exchange_rate: str, target_currency: str, locale: str = '') -> str:
+    """
+    Converts the given amount from the base currency to the target currency using the exchange rate.
+
+    Args:
+        amount (float): The amount to be converted.
+        exchange_rate (float): The exchange rate from the base currency to the target currency.
+        target_currency (str): The currency code of the target currency.
+        locale (str, optional): The locale string for formatting the currency output (default is an empty string).
+
+    Returns:
+        str: The formatted currency string representation of the converted amount.
+    """
+    # Perform the conversion without formatting
+    try:
+        # Ensure amount is a Decimal for precision
+        amount_decimal = Decimal(amount)
+        converted_amount = amount_decimal * Decimal(exchange_rate)
+    except (InvalidOperation, ValueError):
+        raise ValueError(f"Invalid amount '{amount}' or exchange rate '{exchange_rate}'")
+
+    # Format the converted amount for output
+    if locale:
+        formatted_currency = format_currency(converted_amount, target_currency, locale=locale)
+    else:
+        # Return unformatted converted amount with the correct precision
+        decimal_places = get_currency_precision(target_currency)
+        formatted_currency = f"{converted_amount:.{decimal_places}f}"
+
+    return formatted_currency

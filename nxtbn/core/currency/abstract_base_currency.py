@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from decimal import Decimal
 from typing import Dict, List
 from django.conf import settings
 from nxtbn.core.models import CurrencyExchange
@@ -37,11 +38,16 @@ class CurrencyBackend(ABC):
 
 
     def get_exchange_rate(self, target_currency: str) -> float:
+        if target_currency == self.base_currency:
+            return 1.0
+        
+        
         cache = caches[self.cache_backend]
         key = f"{self.cache_key_prefix}_{target_currency}"
         rate = cache.get(key)
         if rate:
             return rate
+       
         
         # Fallback to database if not found in cache
         exchange_rate = CurrencyExchange.objects.filter(
@@ -49,16 +55,14 @@ class CurrencyBackend(ABC):
             target_currency=target_currency
         ).values_list('exchange_rate', flat=True).first()
 
-        try:
-            exchange_rate = CurrencyExchange.objects.get(
-                base_currency=settings.BASE_CURRENCY,
-                target_currency=target_currency
-            ).exchange_rate
-            key = f"{self.cache_key_prefix}_{target_currency}"
-            cache.set(key, exchange_rate, timeout=self.timeout)
-            return exchange_rate
-        except CurrencyExchange.DoesNotExist:
-            raise ValueError(f"Exchange rate for {target_currency} not found.")
+        if exchange_rate is None:
+            raise ValueError(f"Exchange rate not found for {target_currency}")
+        
+        
+        cache.set(key, exchange_rate, timeout=self.timeout)
+       
+        return exchange_rate
+
 
 
     def to_target_currency(self, target_currency: str, amount: float, locale: str = ''):
@@ -74,7 +78,7 @@ class CurrencyBackend(ABC):
         - float: Amount in the target currency, formatted to the correct precision.
         """
         exchange_rate = self.get_exchange_rate(target_currency)
-        converted_amount = amount * exchange_rate
+        converted_amount = Decimal(amount) * exchange_rate
         if locale:
             formatted_amount = format_currency(converted_amount, target_currency, locale=locale, format_type='standard')
         else:

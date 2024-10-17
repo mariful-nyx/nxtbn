@@ -4,7 +4,7 @@ from rest_framework import serializers
 from django.db import transaction
 
 from nxtbn.core.models import CurrencyExchange
-from nxtbn.core.utils import get_in_user_currency
+from nxtbn.core.utils import apply_exchange_rate, get_in_user_currency
 from nxtbn.product.api.dashboard.serializers import RecursiveCategorySerializer
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
 from nxtbn.product.models import Product, Collection, Category, ProductVariant
@@ -27,8 +27,10 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         model = ProductVariant
         fields = '__all__'
  
-    def get_price(self, obj): # TODO: Refactor this to reduce redundancy in currency database queries
-        return get_in_user_currency(obj.price, self.context['request'].currency, settings.BASE_CURRENCY, 'en_US')
+    def get_price(self, obj):
+        target_currency = self.context['request'].currency
+        converted_price = apply_exchange_rate(obj.price, self.context['exchange_rate'], target_currency, 'en_US')
+        return converted_price
 
 class ProductWithVariantSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True)

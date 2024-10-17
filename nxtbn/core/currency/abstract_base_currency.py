@@ -13,7 +13,7 @@ class CurrencyBackend(ABC):
         self.timeout = 604800 # Cache for 1 week
         self.cache_backend = 'generic'
 
-    @abstractmethod
+
     def fetch_data(self) -> List[Dict[str, float]]:
         """
         Fetch exchange rate data from a remote API or data source.
@@ -61,7 +61,7 @@ class CurrencyBackend(ABC):
             raise ValueError(f"Exchange rate for {target_currency} not found.")
 
 
-    def to_target_currency(self, target_currency: str, amount: float) -> float:
+    def to_target_currency(self, target_currency: str, amount: float, locale: str = ''):
         """
         Convert the given amount from the base currency to the target currency,
         considering the currency precision.
@@ -75,6 +75,10 @@ class CurrencyBackend(ABC):
         """
         exchange_rate = self.get_exchange_rate(target_currency)
         converted_amount = amount * exchange_rate
-        formatted_amount = format_currency(converted_amount, target_currency, locale='en_US', format_type='standard')
+        if locale:
+            formatted_amount = format_currency(converted_amount, target_currency, locale=locale, format_type='standard')
+        else:
+            formatted_amount = converted_amount
+    
         return formatted_amount
        

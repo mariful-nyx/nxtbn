@@ -4,13 +4,14 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from money.money import Currency, Money
 from babel.numbers import get_currency_precision, format_currency
 from money.exceptions import InvalidAmountError
+from nxtbn.core.currency.backend import currency_Backend
 
 def make_path(module_path):
     return os.path.join(*module_path.split('.')) + '/'
     
 
 
-def build_currency_amount(amount: float, currency_code: str, locale: str = '') -> str:
+def build_currency_amount(amount: float, currency_code: str, locale: str = ''):
     """
     Formats and validates a currency amount based on the specified currency code.
 
@@ -58,7 +59,7 @@ def build_currency_amount(amount: float, currency_code: str, locale: str = '') -
     if locale:
         formatted_currency = format_currency(money.amount, currency_code, locale=locale)
     else:
-        formatted_currency = f"{money.amount}"
+        formatted_currency = money.amount
 
     return formatted_currency
 
@@ -174,3 +175,18 @@ def normalize_amount_currencywise(amount: float, currency_code: str) -> Decimal:
     formatted_amount = amount_decimal.quantize(Decimal(quantize_format), rounding=ROUND_HALF_UP)
     
     return formatted_amount
+
+
+def get_in_user_currency(amount: float, user_currency: str, base_currency: str, locale: str = '') -> str:
+    """
+    Converts base currency amount to user currency amount through middleware delivered currency code
+    """
+    if not settings.IS_MULTI_CURRENCY:
+        return build_currency_amount(amount, base_currency, locale)
+    
+    if user_currency == base_currency:
+        return build_currency_amount(amount, base_currency, locale)
+
+    cleaned_amount = build_currency_amount(amount, base_currency)
+    backend = currency_Backend()
+    return backend.to_target_currency(user_currency, cleaned_amount, locale)

@@ -4,6 +4,7 @@ from rest_framework import serializers
 from django.db import transaction
 
 from nxtbn.core.models import CurrencyExchange
+from nxtbn.core.utils import get_in_user_currency
 from nxtbn.product.api.dashboard.serializers import RecursiveCategorySerializer
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
 from nxtbn.product.models import Product, Collection, Category, ProductVariant
@@ -21,18 +22,13 @@ class CollectionSerializer(serializers.ModelSerializer):
 
 class ProductVariantSerializer(serializers.ModelSerializer):
     variant_image = ImageSerializer(read_only=True)
-    price_in_target_currency = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
     class Meta:
         model = ProductVariant
         fields = '__all__'
 
-    def get_price_in_target_currency(self, obj):
-        if not settings.IS_MULTI_CURRENCY:
-            return obj.price
-        else:
-            currency_code = self.context.get('request').currency
-            price = currency_Backend().to_target_currency(currency_code, obj.price)
-        return price
+    def get_price(self, obj):
+        return get_in_user_currency(obj.price, self.context['request'].currency, settings.BASE_CURRENCY, 'en_US')
 
 class ProductWithVariantSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True)

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.views import APIView
@@ -8,7 +9,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 
 from nxtbn.cart.utils import get_or_create_cart, save_guest_cart
-from nxtbn.core.utils import build_currency_amount
+from nxtbn.core.utils import build_currency_amount, get_in_user_currency
 from nxtbn.product.models import ProductVariant
 
 
@@ -36,12 +37,12 @@ class CartView(generics.GenericAPIView):
                             'id': product_variant.id,
                             'alias': product_variant.alias,
                             'name': product_variant.get_descriptive_name(),
-                            'price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
+                            'price': get_in_user_currency(product_variant.price, request.currency, settings.BASE_CURRENCY, 'en_US'),
                             'stock': product_variant.stock,
                             'is_guest': is_guest
                         },
                         'quantity': item['quantity'],
-                        'subtotal': build_currency_amount(subtotal, request.currency, 'en_US')
+                        'subtotal': get_in_user_currency(subtotal, request.currency, settings.BASE_CURRENCY, 'en_US')
                     })
                 except ProductVariant.DoesNotExist:
                     continue  # Optionally, handle missing product variants
@@ -57,18 +58,18 @@ class CartView(generics.GenericAPIView):
                         'id': product_variant.id,
                         'alias': product_variant.alias,
                         'name': product_variant.get_descriptive_name(),
-                        'price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
+                        'price': get_in_user_currency(product_variant.price, request.currency, settings.BASE_CURRENCY, 'en_US'),
                         'stock': product_variant.stock,
                         'is_guest': is_guest
                     },
                     'quantity': cart_item.quantity,
-                    'subtotal': build_currency_amount(subtotal, request.currency, 'en_US')
+                    'subtotal': get_in_user_currency(subtotal, request.currency, settings.BASE_CURRENCY,'en_US')
                 })
 
         # Unified response for both guest and authenticated users
         unified_response = {
             'items': items,
-            'total': build_currency_amount(total, request.currency, 'en_US')
+            'total': get_in_user_currency(total, request.currency, settings.BASE_CURRENCY, 'en_US')
         }
         return Response(unified_response, status=status.HTTP_200_OK)
 

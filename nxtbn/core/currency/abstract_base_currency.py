@@ -41,14 +41,13 @@ class CurrencyBackend(ABC):
         if target_currency == self.base_currency:
             return 1.0
         
-        try:
-            cache = caches[self.cache_backend]
-            key = f"{self.cache_key_prefix}_{target_currency}"
-            rate = cache.get(key)
-            if rate:
-                return rate
-        except FileNotFoundError:
-            raise ValueError("Multi-currency is enabled but no cache backend is configured")
+        
+        cache = caches[self.cache_backend]
+        key = f"{self.cache_key_prefix}_{target_currency}"
+        rate = cache.get(key)
+        if rate:
+            return rate
+       
         
         # Fallback to database if not found in cache
         exchange_rate = CurrencyExchange.objects.filter(
@@ -59,11 +58,9 @@ class CurrencyBackend(ABC):
         if exchange_rate is None:
             raise ValueError(f"Exchange rate not found for {target_currency}")
         
-        try:
-            cache.set(key, exchange_rate, timeout=self.timeout)
-        except FileNotFoundError:
-            raise ValueError("Multi-currency is enabled but no cache backend is configured")
         
+        cache.set(key, exchange_rate, timeout=self.timeout)
+       
         return exchange_rate
 
 

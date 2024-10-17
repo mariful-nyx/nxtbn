@@ -36,13 +36,12 @@ class CartView(generics.GenericAPIView):
                             'id': product_variant.id,
                             'alias': product_variant.alias,
                             'name': product_variant.name,
-                            'price': product_variant.price,
-                            'humanize_price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
-                            'stock': product_variant.stock
+                            'price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
+                            'stock': product_variant.stock,
+                            'is_guest': is_guest
                         },
                         'quantity': item['quantity'],
-                        'subtotal': subtotal,
-                        'humanize_subtotal': build_currency_amount(subtotal, request.currency, 'en_US')
+                        'subtotal': build_currency_amount(subtotal, request.currency, 'en_US')
                     })
                 except ProductVariant.DoesNotExist:
                     continue  # Optionally, handle missing product variants
@@ -58,13 +57,12 @@ class CartView(generics.GenericAPIView):
                         'id': product_variant.id,
                         'alias': product_variant.alias,
                         'name': product_variant.name,
-                        'price': product_variant.price,
-                        'humanize_price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
-                        'stock': product_variant.stock
+                        'price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
+                        'stock': product_variant.stock,
+                        'is_guest': is_guest
                     },
                     'quantity': cart_item.quantity,
-                    'subtotal': subtotal,
-                    'humanize_subtotal': build_currency_amount(subtotal, request.currency, 'en_US')
+                    'subtotal': build_currency_amount(subtotal, request.currency, 'en_US')
                 })
 
         # Unified response for both guest and authenticated users

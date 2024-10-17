@@ -35,7 +35,7 @@ class CartView(generics.GenericAPIView):
                         'product_variant': {
                             'id': product_variant.id,
                             'alias': product_variant.alias,
-                            'name': product_variant.name,
+                            'name': product_variant.get_descriptive_name(),
                             'price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
                             'stock': product_variant.stock,
                             'is_guest': is_guest
@@ -56,7 +56,7 @@ class CartView(generics.GenericAPIView):
                     'product_variant': {
                         'id': product_variant.id,
                         'alias': product_variant.alias,
-                        'name': product_variant.name,
+                        'name': product_variant.get_descriptive_name(),
                         'price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
                         'stock': product_variant.stock,
                         'is_guest': is_guest
@@ -68,8 +68,7 @@ class CartView(generics.GenericAPIView):
         # Unified response for both guest and authenticated users
         unified_response = {
             'items': items,
-            'total': total,
-            'humanize_total': build_currency_amount(total, request.currency, 'en_US')
+            'total': build_currency_amount(total, request.currency, 'en_US')
         }
         return Response(unified_response, status=status.HTTP_200_OK)
 

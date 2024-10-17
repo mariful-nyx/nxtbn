@@ -229,16 +229,6 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, models.Model):
         null=True,
         blank=True
     )
-    dimensions = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-        choices=DimensionUnits.choices,
-        help_text="Format: Height x Width x Depth"
-    )
-    dimensions_value = models.CharField(max_length=50, blank=True, null=True)
-
-
     attributes = models.JSONField(
         blank=True,
         null=True,
@@ -246,6 +236,31 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, models.Model):
         validators=[no_nested_values],
         help_text="A JSON field to store custom attributes for the variant. Primary attributes include color code, dimension, and weight value. Weight value and dimension are used for shipping calculations. This field allows adding as many custom attributes as needed."
     )
+
+    def get_descriptive_name(self):
+        parts = [self.product.name]
+        
+        if self.name:
+            parts.append(self.name)
+        
+        if self.product.brand:
+            parts.append(self.product.brand)
+        
+        if self.weight_value:
+            parts.append(f"Weight: {self.weight_value} {self.weight_unit}")
+        
+        dimensions = []
+        if 'height' in self.attributes:
+            dimensions.append(f"Height: {self.attributes['height']}")
+        if 'width' in self.attributes:
+            dimensions.append(f"Width: {self.attributes['width']}")
+        if 'depth' in self.attributes:
+            dimensions.append(f"Depth: {self.attributes['depth']}")
+        if dimensions and 'dimension_type' in self.attributes:
+            parts.append(f"Dimensions: {' x '.join(dimensions)} {self.attributes['dimension_type']}")
+
+        
+        return " - ".join(parts)
 
 
 
@@ -259,3 +274,11 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, models.Model):
     def __str__(self):
         variant_name = self.name if self.name else 'Default'
         return f"{self.product.name} - {variant_name} (SKU: {self.sku})"
+    
+    def clean(self):
+        if self.attributes:
+            if 'height' in self.attributes or 'width' in self.attributes or 'depth' in self.attributes:
+                if not 'dimension_type' in self.attributes.keys():
+                    raise ValidationError("Dimension type is required if dimensions are provided.")
+                if self.attributes['dimension_type'] not in DimensionUnits.choices.keys():
+                    raise ValidationError("Invalid dimension type, must be one of: {}".format(DimensionUnits.choices.keys()))

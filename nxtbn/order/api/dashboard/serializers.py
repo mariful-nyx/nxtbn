@@ -18,15 +18,22 @@ class OrderLineItemSerializer(serializers.ModelSerializer):
     # variant = ProductVariantSerializer(read_only=True)
     total_price = serializers.SerializerMethodField()
     price_per_unit = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+
     class Meta:
         model = OrderLineItem
-        fields = ('id', 'quantity', 'price_per_unit', 'total_price',)
+        fields = ('id', 'name', 'quantity', 'price_per_unit', 'total_price',)
 
     def get_total_price(self, obj):
         return obj.humanize_total_price()
     
     def get_price_per_unit(self, obj):
         return obj.humanize_price_per_unit()
+    
+    def get_name(self, obj):
+        return obj.variant.name
+
+    
 
 
 class OrderSerializer(serializers.ModelSerializer):

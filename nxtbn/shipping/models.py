@@ -1,5 +1,7 @@
+from django.conf import settings
 from django.db import models
-from nxtbn.core import CurrencyTypes
+from nxtbn.core import CurrencyTypes, MoneyFieldTypes
+from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.core.models import AbstractBaseModel
 from django_countries.fields import CountryField
 from decimal import Decimal
@@ -39,7 +41,7 @@ class ShippingMethod(AbstractBaseModel):
         return f"{self.carrier} - {self.name}"
 
 
-class ShippingRate(AbstractBaseModel):
+class ShippingRate(MonetaryMixin, AbstractBaseModel):
     """
     Stores the shipping cost for a specific method, based on weight, country, and region.
     Each ShippingMethod can have multiple rates depending on these factors.
@@ -59,6 +61,18 @@ class ShippingRate(AbstractBaseModel):
         - DHL Express Shipping for packages between 0kg and 5kg in the US costs $25.00.
         - FedEx Standard Shipping for packages between 5kg and 10kg globally costs $30.00.
     """
+    money_validator_map = {
+        "rate": {
+            "currency_field": "currency",
+            "type": MoneyFieldTypes.UNIT,
+            "require_base_currency": True,
+        },
+        "incremental_rate": {
+            "currency_field": "currency",
+            "type": MoneyFieldTypes.UNIT,
+            "require_base_currency": True,
+        },
+    }
     shipping_method = models.ForeignKey(
         ShippingMethod, 
         on_delete=models.CASCADE, 
@@ -114,6 +128,18 @@ class ShippingRate(AbstractBaseModel):
         unique_together = ('shipping_method', 'country', 'region', 'city', 'weight_min', 'weight_max')
         verbose_name = "Shipping Rate"
         verbose_name_plural = "Shipping Rates"
+
+    def save(self, *args, **kwargs):
+        """
+        Override the save method to ensure that weight_min is always less than weight_max.
+        """
+        if self.weight_min >= self.weight_max:
+            raise ValueError("weight_min must be less than weight_max.")
+        self.validate_amount()
+        
+        self.currency = settings.DEFAULT_CURRENCY
+        
+        super().save(*args, **kwargs)
 
     def __str__(self):
         """

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.views import APIView
@@ -8,7 +9,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 
 from nxtbn.cart.utils import get_or_create_cart, save_guest_cart
-from nxtbn.core.utils import build_currency_amount
+from nxtbn.core.utils import build_currency_amount, get_in_user_currency
 from nxtbn.product.models import ProductVariant
 
 
@@ -35,14 +36,13 @@ class CartView(generics.GenericAPIView):
                         'product_variant': {
                             'id': product_variant.id,
                             'alias': product_variant.alias,
-                            'name': product_variant.name,
-                            'price': product_variant.price,
-                            'humanize_price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
-                            'stock': product_variant.stock
+                            'name': product_variant.get_descriptive_name(),
+                            'price': get_in_user_currency(product_variant.price, request.currency, settings.BASE_CURRENCY, 'en_US'), # TODO: Refactor this to reduce redundancy in currency database queries
+                            'stock': product_variant.stock,
+                            'is_guest': is_guest
                         },
                         'quantity': item['quantity'],
-                        'subtotal': subtotal,
-                        'humanize_subtotal': build_currency_amount(subtotal, request.currency, 'en_US')
+                        'subtotal': get_in_user_currency(subtotal, request.currency, settings.BASE_CURRENCY, 'en_US') # TODO: Refactor this to reduce redundancy in currency database queries
                     })
                 except ProductVariant.DoesNotExist:
                     continue  # Optionally, handle missing product variants
@@ -57,21 +57,19 @@ class CartView(generics.GenericAPIView):
                     'product_variant': {
                         'id': product_variant.id,
                         'alias': product_variant.alias,
-                        'name': product_variant.name,
-                        'price': product_variant.price,
-                        'humanize_price': build_currency_amount(product_variant.price, request.currency, 'en_US'),
-                        'stock': product_variant.stock
+                        'name': product_variant.get_descriptive_name(),
+                        'price': get_in_user_currency(product_variant.price, request.currency, settings.BASE_CURRENCY, 'en_US'), # TODO: Refactor this to reduce redundancy in currency database queries
+                        'stock': product_variant.stock,
+                        'is_guest': is_guest
                     },
                     'quantity': cart_item.quantity,
-                    'subtotal': subtotal,
-                    'humanize_subtotal': build_currency_amount(subtotal, request.currency, 'en_US')
+                    'subtotal': get_in_user_currency(subtotal, request.currency, settings.BASE_CURRENCY,'en_US') # TODO: Refactor this to reduce redundancy in currency database queries
                 })
 
         # Unified response for both guest and authenticated users
         unified_response = {
             'items': items,
-            'total': total,
-            'humanize_total': build_currency_amount(total, request.currency, 'en_US')
+            'total': get_in_user_currency(total, request.currency, settings.BASE_CURRENCY, 'en_US') # TODO: Refactor this to reduce redundancy in currency database queries
         }
         return Response(unified_response, status=status.HTTP_200_OK)
 

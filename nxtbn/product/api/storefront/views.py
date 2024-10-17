@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework import generics, status
@@ -15,6 +16,7 @@ from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.product.api.storefront.serializers import CategorySerializer, CollectionSerializer, ProductDetailSerializer, ProductWithDefaultVariantSerializer, ProductWithVariantSerializer
 from nxtbn.product.models import Category, Collection, Product
 from nxtbn.product.models import Supplier
+from nxtbn.core.currency.backend import currency_Backend
 
 
 class ProductFilter(filters.FilterSet):
@@ -44,6 +46,16 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     ]
     filterset_class = ProductFilter
     ordering_fields = ['name', 'created_at']
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if settings.IS_MULTI_CURRENCY:
+            context['exchange_rate'] = currency_Backend().get_exchange_rate(self.request.currency)
+        else:
+            context['exchange_rate'] = 1.0
+        
+        return context
+
 
     def paginate_and_serialize(self, queryset): # Custom
         # Helper function to handle pagination and serialization

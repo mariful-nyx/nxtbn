@@ -37,12 +37,12 @@ class CartView(generics.GenericAPIView):
                             'id': product_variant.id,
                             'alias': product_variant.alias,
                             'name': product_variant.get_descriptive_name(),
-                            'price': get_in_user_currency(product_variant.price, request.currency, settings.BASE_CURRENCY, 'en_US'),
+                            'price': get_in_user_currency(product_variant.price, request.currency, settings.BASE_CURRENCY, 'en_US'), # TODO: Refactor this to reduce redundancy in currency database queries
                             'stock': product_variant.stock,
                             'is_guest': is_guest
                         },
                         'quantity': item['quantity'],
-                        'subtotal': get_in_user_currency(subtotal, request.currency, settings.BASE_CURRENCY, 'en_US')
+                        'subtotal': get_in_user_currency(subtotal, request.currency, settings.BASE_CURRENCY, 'en_US') # TODO: Refactor this to reduce redundancy in currency database queries
                     })
                 except ProductVariant.DoesNotExist:
                     continue  # Optionally, handle missing product variants
@@ -58,18 +58,18 @@ class CartView(generics.GenericAPIView):
                         'id': product_variant.id,
                         'alias': product_variant.alias,
                         'name': product_variant.get_descriptive_name(),
-                        'price': get_in_user_currency(product_variant.price, request.currency, settings.BASE_CURRENCY, 'en_US'),
+                        'price': get_in_user_currency(product_variant.price, request.currency, settings.BASE_CURRENCY, 'en_US'), # TODO: Refactor this to reduce redundancy in currency database queries
                         'stock': product_variant.stock,
                         'is_guest': is_guest
                     },
                     'quantity': cart_item.quantity,
-                    'subtotal': get_in_user_currency(subtotal, request.currency, settings.BASE_CURRENCY,'en_US')
+                    'subtotal': get_in_user_currency(subtotal, request.currency, settings.BASE_CURRENCY,'en_US') # TODO: Refactor this to reduce redundancy in currency database queries
                 })
 
         # Unified response for both guest and authenticated users
         unified_response = {
             'items': items,
-            'total': get_in_user_currency(total, request.currency, settings.BASE_CURRENCY, 'en_US')
+            'total': get_in_user_currency(total, request.currency, settings.BASE_CURRENCY, 'en_US') # TODO: Refactor this to reduce redundancy in currency database queries
         }
         return Response(unified_response, status=status.HTTP_200_OK)
 

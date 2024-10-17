@@ -26,8 +26,8 @@ class ProductVariantSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductVariant
         fields = '__all__'
-
-    def get_price(self, obj):
+ 
+    def get_price(self, obj): # TODO: Refactor this to reduce redundancy in currency database queries
         return get_in_user_currency(obj.price, self.context['request'].currency, settings.BASE_CURRENCY, 'en_US')
 
 class ProductWithVariantSerializer(serializers.ModelSerializer):

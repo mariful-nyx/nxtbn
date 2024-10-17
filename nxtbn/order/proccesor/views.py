@@ -5,7 +5,7 @@ from rest_framework import status
 from django.db import transaction
 
 from nxtbn.core import CurrencyTypes
-from nxtbn.core.utils import build_currency_amount
+from nxtbn.core.utils import apply_exchange_rate, build_currency_amount
 from nxtbn.discount import PromoCodeType
 from nxtbn.discount.models import PromoCode
 from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
@@ -19,6 +19,7 @@ from nxtbn.tax.models import TaxRate
 
 from django.db.models import Q
 from rest_framework import serializers
+from nxtbn.core.currency.backend import currency_Backend
 
 
 class ShippingFeeCalculator:
@@ -324,9 +325,10 @@ class OrderCreator:
         return address
 
 class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator, OrderCreator):
-    def __init__(self, validated_data, create_order=False):
+    def __init__(self, validated_data, create_order=False, request=None):
         self.validated_data = validated_data
         self.create_order = create_order
+        self.request = request
         self.customer = self.validated_data.get('customer_id', None)
         self.variants = self.get_variants()
         self.total_subtotal = self.get_subtotal(self.variants)
@@ -350,17 +352,18 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
         self.total = self.total_subtotal - self.discount + self.shipping_fee + self.estimated_tax
 
     def get_response(self):
+        exchange_rate = currency_Backend().get_exchange_rate(self.request.currency)
         response_data = {
-            "subtotal": str(self.total_subtotal),
+            "subtotal":  apply_exchange_rate(self.total_subtotal, exchange_rate, self.request.currency, 'en_US'),
             "total_items": self.total_items,
-            "discount": str(self.discount),
+            "discount": apply_exchange_rate(self.discount, exchange_rate, self.request.currency, 'en_US'),
             "discount_percentage": self.discount_percentage,
             "discount_name": self.discount_name,
-            "shipping_fee": str(self.shipping_fee),
+            "shipping_fee": apply_exchange_rate(self.shipping_fee, exchange_rate, self.request.currency, 'en_US'),
             "shipping_name": self.shipping_name,
-            "estimated_tax": str(self.estimated_tax),
+            "estimated_tax": apply_exchange_rate(self.estimated_tax, exchange_rate, self.request.currency, 'en_US'),
             "tax_details": self.tax_details,
-            "total": str(self.total),
+            "total": apply_exchange_rate(self.total, exchange_rate, self.request.currency, 'en_US'),
         }
         return response_data
 
@@ -422,7 +425,7 @@ class OrderProccessorAPIView(generics.GenericAPIView):
 
 
         try:
-            order_calculation = OrderCalculation(serializer.validated_data, create_order=self.create_order)
+            order_calculation = OrderCalculation(serializer.validated_data, create_order=self.create_order, request=request)
             response = order_calculation.get_response()
 
             if self.create_order:

@@ -5,16 +5,17 @@ from nxtbn.shipping.models import ShippingMethod, ShippingRate
 class ShippingRateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShippingRate
-        fields = ['id', 
-                  'shipping_method',
-                  'country',
-                  'region', 
-                  'city', 
-                  'weight_min', 
-                  'weight_max', 
-                  'rate', 
-                  'incremental_rate', 
-                  'currency']
+        fields = [
+            'id', 
+            'shipping_method',
+            'country',
+            'region', 
+            'city', 
+            'weight_min', 
+            'weight_max', 
+            'rate', 
+            'incremental_rate', 
+        ]
         
         extra_kwargs = {
             'shipping_method': {'write_only': True} 

@@ -21,6 +21,7 @@ from django.db.models import Q
 from rest_framework import serializers
 from nxtbn.core.currency.backend import currency_Backend
 
+from nxtbn.core.signal_initiators import order_created
 
 class ShippingFeeCalculator:
     def get_shipping_rate_instance(self, shipping_method_id, address):
@@ -417,6 +418,8 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
 
 class OrderProccessorAPIView(generics.GenericAPIView):
     create_order = False
+    broadcast_on_order_create = False
+
     serializer_class = OrderEstimateSerializer
 
     def post(self, request, *args, **kwargs):
@@ -432,6 +435,8 @@ class OrderProccessorAPIView(generics.GenericAPIView):
                 order = order_calculation.create_order_instance()
                 response['order_id'] = str(order.id)  # Include order ID in the response
                 response['order_alias'] = order.alias
+                if self.broadcast_on_order_create:
+                    order_created.send(sender=self.__class__, order=order, request=request)
 
             return Response(response, status=status.HTTP_200_OK)
         except serializers.ValidationError as e:

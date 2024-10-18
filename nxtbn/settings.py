@@ -104,7 +104,7 @@ LOCAL_APPS = [
     'nxtbn.invoice',
     'nxtbn.plugins',
     'nxtbn.payment',
-    'nxtbn.order',
+    'nxtbn.order.apps.OrderConfig',
     'nxtbn.tax',
     'nxtbn.shipping',
     'nxtbn.filemanager',

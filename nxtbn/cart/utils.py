@@ -49,3 +49,34 @@ def merge_carts(request, user):
 
     # Clear the session cart after merging
     request.session['cart'] = {}
+
+
+
+def remove_ordered_items_from_cart(order, request=None):
+    """
+    Remove items from the cart that have been ordered.
+    If is_guest is True, cart is from the session, and request is required to modify the session.
+    """
+    if request is None: # If request is not provided, we can't modify the session cart
+        return
+    
+    cart, is_guest = get_or_create_cart(request)
+    if is_guest and request:
+        # Guest user: Handle session cart
+        for item in order.line_items.all():
+            product_variant_id = str(item.variant.id)
+            if product_variant_id in cart:
+                del cart[product_variant_id]  # Remove ordered item from session cart
+        
+        # Save updated guest cart back to the session
+        request.session['cart'] = cart
+        request.session.modified = True
+
+    else:
+        # Authenticated user: Handle cart stored in the database
+        for item in order.line_items.all():  # Assuming 'order.items' gives you the ordered items
+            try:
+                cart_item = CartItem.objects.get(cart=cart, variant=item.variant)
+                cart_item.delete()  # Remove the cart item corresponding to the ordered product
+            except CartItem.DoesNotExist:
+                continue  # Ignore if the item is not in the cart (already removed or wasn't added)

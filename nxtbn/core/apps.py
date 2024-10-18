@@ -6,4 +6,4 @@ class CoreConfig(AppConfig):
     name = 'nxtbn.core'
 
     def ready(self):
-        import nxtbn.core.signals  # noqa
+        import nxtbn.core.receivers  # noqa

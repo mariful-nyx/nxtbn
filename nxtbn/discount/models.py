@@ -173,7 +173,7 @@ class PromoCode(AbstractBaseModel):
 
 
 class PromoCodeUsage(AbstractBaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, help_text="Select the customer who redeemed this promo code.")
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, help_text="Select the customer who redeemed this promo code.")
     promo_code = models.ForeignKey(PromoCode, on_delete=models.CASCADE, help_text="The promo code that was applied to the order.")
     order = models.ForeignKey('order.Order', on_delete=models.CASCADE, help_text="The order associated with the use of this promo code.")
     applied_at = models.DateTimeField(auto_now_add=True, help_text="The timestamp when the promo code was applied.")

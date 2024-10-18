@@ -2,50 +2,39 @@ from rest_framework.permissions import BasePermission
 
 class NxtbnAdminPermission(BasePermission):
     """
-    Custom permission class that checks if a user has the required permission 
-    to perform an action on a specific model, based on Django Admin model-level permissions.
+    Generic permission class that dynamically checks permissions for any model and action.
     """
 
     def has_permission(self, request, view):
-        # Ensure the user is a staff member and is active
-        if not request.user.is_staff or not request.user.is_active:
+        user = request.user
+
+        # Ensure the user is authenticated
+        if not user.is_authenticated:
             return False
         
-        # Superusers always have full access
-        if request.user.is_superuser:
+        if user.is_superuser:
             return True
-        
-        # Get the model associated with the view's queryset
-        model = getattr(view.queryset, 'model', None)
+
+        # Dynamically get the model name from the view's queryset or model attribute
+        model = getattr(view, 'queryset', None) or getattr(view, 'model', None)
 
         if model is None:
-            return False  # Cannot proceed without a model reference
+            return False  # No model, no permissions
 
-        # Mapping of HTTP methods to Django permission actions
-        action_permissions = {
-            'get': 'view',
-            'post': 'add',
-            'put': 'change',
-            'patch': 'change',
-            'delete': 'delete'
-        }
+        # Generate the permission codename based on the action (e.g., 'can_add', 'can_change', 'can_delete', etc.)
+        action = view.action  # This is the DRF view's action (e.g., 'create', 'list', 'update', etc.)
 
-        # Determine the required permission for the HTTP method
-        permission_action = action_permissions.get(request.method.lower(), None)
+        if action == 'create':
+            perm_codename = f'{model._meta.app_label}.add_{model._meta.model_name}'
+        elif action in ['update', 'partial_update']:
+            perm_codename = f'{model._meta.app_label}.change_{model._meta.model_name}'
+        elif action == 'destroy':
+            perm_codename = f'{model._meta.app_label}.delete_{model._meta.model_name}'
+        elif action == 'list' or action == 'retrieve':
+            perm_codename = f'{model._meta.app_label}.view_{model._meta.model_name}'
+        else:
+            # Handle custom actions (e.g., 'cancel', 'ship', etc.)
+            perm_codename = f'{model._meta.app_label}.{action}_{model._meta.model_name}'
 
-        if permission_action is None:
-            return False  # Unsupported HTTP method
-        
-        # Build the permission codename (e.g., 'add_modelname')
-        app_label = model._meta.app_label
-        model_name = model._meta.model_name
-        permission_codename = f"{permission_action}_{model_name}"
-
-        # Check if the user has the specific permission
-        return request.user.has_perm(f"{app_label}.{permission_codename}")
-
-
-
-class IsSuperUser(BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_superuser
+        # Check if the user has the generated permission
+        return user.has_perm(perm_codename)

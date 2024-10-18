@@ -145,6 +145,11 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
 
     class Meta:
         ordering = ('name',)
+        permissions = [
+            ('manage_product', 'Can manage product'),
+            ('manage_product_variant', 'Can manage product variant'),
+            ('manage_stock', 'Can manage stock'),
+        ]
 
     def product_thumbnail(self, request):
         """

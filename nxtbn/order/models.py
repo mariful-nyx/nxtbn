@@ -233,6 +233,13 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
 
     class Meta:
         ordering = ('-created_at',) # Most recent orders first
+        permissions = [
+            ("can_cancel_order", "Can cancel an order"),
+            ("can_refund_order", "Can refund an order"),
+            ("can_ship_order", "Can ship an order"),
+            ("can_deliver_order", "Can deliver an order"),
+            ("can_return_order", "Can return an order"),
+        ]
 
     def save(self, *args, **kwargs):
         self.validate_amount()

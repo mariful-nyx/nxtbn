@@ -145,6 +145,11 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
 
     class Meta:
         ordering = ('name',)
+        permissions = [
+            ('manage_product', 'Can manage product'),
+            ('manage_product_variant', 'Can manage product variant'),
+            ('manage_stock', 'Can manage stock'),
+        ]
 
     def product_thumbnail(self, request):
         """
@@ -261,6 +266,20 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, models.Model):
 
         
         return " - ".join(parts)
+    
+    def variant_thumbnail(self, request):
+        """
+        Returns the URL of the first image associated with the variant. 
+        If no image is available, returns None.
+        """
+        if self.variant_image:
+            image_url = self.variant_image.image.url
+            full_url = request.build_absolute_uri(image_url)
+            return full_url
+        
+        if self.product.images.exists():
+            return self.product.product_thumbnail(request)
+
 
 
 

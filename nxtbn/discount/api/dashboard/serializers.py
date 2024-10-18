@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from nxtbn.discount.models import PromoCode, PromoCodeCustomer, PromoCodeProduct
+from nxtbn.discount.models import PromoCode, PromoCodeCustomer, PromoCodeProduct, PromoCodeUsage
 from nxtbn.product.models import Product
 from nxtbn.users.models import User
 
@@ -99,3 +99,23 @@ class PromoCodeCustomerSerializer(serializers.ModelSerializer):
             'id': obj.customer.id,
             'name': obj.customer.full_name() if obj.customer.first_name else obj.customer.username,
         }
+
+
+
+class PromoCodeUsageSerializer(serializers.ModelSerializer):
+    customer = serializers.SerializerMethodField()
+    promocode = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PromoCodeUsage
+        fields = ['id', 'customer', 'promocode', 'order', 'applied_at']
+
+    def get_customer(self, obj):
+        if obj.user:
+            return obj.user.username
+        elif obj.order and obj.order.phone_number:
+            return obj.order.phone_number
+        return None
+    
+    def get_promocode(self, obj):
+        return obj.promo_code.code

@@ -137,6 +137,7 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         blank=True,
         limit_choices_to={'role': UserRole.CUSTOMER}
     )
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
     supplier = models.ForeignKey(Supplier, null=True, blank=True, on_delete=models.SET_NULL)
     shipping_address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL, related_name="shipping_orders")
     billing_address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL, related_name="billing_orders")
@@ -232,6 +233,13 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
 
     class Meta:
         ordering = ('-created_at',) # Most recent orders first
+        permissions = [
+            ("can_cancel_order", "Can cancel an order"),
+            ("can_refund_order", "Can refund an order"),
+            ("can_ship_order", "Can ship an order"),
+            ("can_deliver_order", "Can deliver an order"),
+            ("can_return_order", "Can return an order"),
+        ]
 
     def save(self, *args, **kwargs):
         self.validate_amount()

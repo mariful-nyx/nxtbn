@@ -38,6 +38,7 @@ class CartView(generics.GenericAPIView):
                         'product_variant': {
                             'id': product_variant.id,
                             'alias': product_variant.alias,
+                            'thumbnail': product_variant.variant_thumbnail(request),
                             'name': product_variant.get_descriptive_name(),
                             'price': apply_exchange_rate(product_variant.price, exchange_rate, self.request.currency, 'en_US'),
                             'stock': product_variant.stock,
@@ -59,6 +60,7 @@ class CartView(generics.GenericAPIView):
                     'product_variant': {
                         'id': product_variant.id,
                         'alias': product_variant.alias,
+                        'thumbnail': product_variant.variant_thumbnail(request),
                         'name': product_variant.get_descriptive_name(),
                         'price': apply_exchange_rate(product_variant.price, exchange_rate, self.request.currency, 'en_US'),
                         'stock': product_variant.stock,

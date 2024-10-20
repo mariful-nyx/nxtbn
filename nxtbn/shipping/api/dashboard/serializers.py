@@ -18,7 +18,9 @@ class ShippingRateSerializer(serializers.ModelSerializer):
         ]
         
         extra_kwargs = {
-            'shipping_method': {'write_only': True} 
+            'shipping_method': {'write_only': True},
+            'region': {'required': False, 'allow_null': True},
+            'city': {'required': False, 'allow_null': True}
         }
 
 class ShippingMethodSerializer(serializers.ModelSerializer):

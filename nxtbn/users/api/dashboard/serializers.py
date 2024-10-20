@@ -19,7 +19,7 @@ class DashboardLoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'role']
+        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'role', 'full_name', 'phone_number']
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -73,12 +73,17 @@ class UserMututionalSerializer(serializers.ModelSerializer):
             'is_staff': {'read_only': True},
             'is_superuser': {'read_only': True},
             'role': {'read_only': True},
-            'username': {'read_only': True}
+            'username': {'read_only': True},
 
         }
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
+        email = validated_data.get('email')
+        first_name = validated_data.get('first_name')
+        last_name = validated_data.get('last_name')
+        phone_number = validated_data.get('phone_number')
+        avatar = validated_data.get('avatar')
  
         # Create user instance
         user = self.Meta.model(
@@ -89,6 +94,11 @@ class UserMututionalSerializer(serializers.ModelSerializer):
                     validated_data.get('email'),
                 ]
             ),
+            avatar = avatar,
+            email = email,
+            first_name = first_name,
+            last_name = last_name,
+            phone_number = phone_number,
             role = UserRole.STAFF,
             is_superuser = False
         )

@@ -19,7 +19,7 @@ class DashboardLoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'role']
+        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'role', 'full_name', 'phone_number']
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -90,7 +90,8 @@ class UserMututionalSerializer(serializers.ModelSerializer):
                 ]
             ),
             role = UserRole.STAFF,
-            is_superuser = False
+            is_superuser = False,
+            **validated_data
         )
         
         # If no password is provided, set a dummy password

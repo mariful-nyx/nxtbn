@@ -8,7 +8,7 @@ from nxtbn.core import PublishableStatus
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
 from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
 from nxtbn.tax.models import TaxClass
-
+from nxtbn.filemanager.models import Image
 
 class TaxClassSerializer(serializers.ModelSerializer):
     class Meta:
@@ -85,6 +85,8 @@ class CollectionSerializer(serializers.ModelSerializer):
 class ProductVariantSerializer(serializers.ModelSerializer):
     is_default_variant = serializers.SerializerMethodField()
     product_name = serializers.SerializerMethodField()
+    thumbnail = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductVariant
         ref_name = 'product_variant_dashboard_get'
@@ -107,12 +109,21 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             'low_stock_threshold',
             'variant_image',
             'is_default_variant',
+            'thumbnail'
         )
     def get_is_default_variant(self, obj):
         return obj.product.default_variant_id == obj.id
     
     def get_product_name(self, obj):
         return obj.product.name
+    
+    def get_thumbnail(self, obj):
+        request = self.context.get('request')
+        if obj.variant_image and obj.variant_image.image:
+            image_url = obj.variant_image.image.url
+            if request:
+                return request.build_absolute_uri(image_url)
+        return None
 
 class ProductSerializer(serializers.ModelSerializer):
     default_variant = ProductVariantSerializer(read_only=True)
@@ -167,6 +178,12 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     is_default_variant = serializers.BooleanField(default=False)
     track_inventory = serializers.BooleanField(default=False)
     allow_backorder = serializers.BooleanField(default=False)
+    variant_image = serializers.PrimaryKeyRelatedField(
+        queryset=Image.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    
 
     # def validate_sku(self, value):
     #     if ProductVariant.objects.filter(sku=value).exists():
@@ -352,7 +369,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         tags_payload = validated_data.pop('tags_payload', [])
         currency = validated_data.pop('currency', 'USD')
         tax_class = validated_data.pop('tax_class', None)
-
+        
         with transaction.atomic():
             instance = Product.objects.create(
                 **validated_data,
@@ -367,10 +384,15 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             default_variant = None
             for i, variant_payload in enumerate(variants_payload):
                 is_default_variant = variant_payload.pop('is_default_variant', False)
+                
+                variant_image = Image.objects.get(id=variant_payload['variant_image'])
+
+                variant_payload['variant_image'] = variant_image
+
                 variant = ProductVariant.objects.create(
                     product=instance,
                     currency=currency,
-                    **variant_payload
+                    **variant_payload,
                 )
                 if is_default_variant:
                     default_variant = variant
@@ -405,6 +427,10 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
         # Validate each variant using VariantCreatePayloadSerializer
         for variant_data in variants_data:
+
+            if 'variant_image' in variant_data and variant_data['variant_image']:
+                variant_data['variant_image'] = variant_data['variant_image'].id
+
             variant_serializer = VariantCreatePayloadSerializer(data=variant_data)
             if not variant_serializer.is_valid():
                 raise serializers.ValidationError(variant_serializer.errors)

@@ -323,11 +323,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
-if DEVELOPMENT_SERVER:
-    REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'].append(
-        'nxtbn.users.authentication.CsrfExemptSessionAuthentication' # WARNING: Not Secure
-    )
-
 
 AUTH_USER_MODEL = "users.User" 
   

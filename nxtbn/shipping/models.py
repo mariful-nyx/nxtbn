@@ -125,7 +125,7 @@ class ShippingRate(MonetaryMixin, AbstractBaseModel):
     )
 
     class Meta:
-        unique_together = ('shipping_method', 'country', 'region', 'city', 'weight_min', 'weight_max')
+        unique_together = ('shipping_method', 'country', 'weight_min', 'weight_max')
         verbose_name = "Shipping Rate"
         verbose_name_plural = "Shipping Rates"
 
@@ -137,7 +137,7 @@ class ShippingRate(MonetaryMixin, AbstractBaseModel):
             raise ValueError("weight_min must be less than weight_max.")
         self.validate_amount()
         
-        self.currency = settings.DEFAULT_CURRENCY
+        self.currency = settings.BASE_CURRENCY
         
         super().save(*args, **kwargs)
 

@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
+from babel.numbers import get_currency_precision, format_currency
 
 
 
@@ -263,9 +264,13 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, models.Model):
             dimensions.append(f"Depth: {self.attributes['depth']}")
         if dimensions and 'dimension_type' in self.attributes:
             parts.append(f"Dimensions: {' x '.join(dimensions)} {self.attributes['dimension_type']}")
-
         
         return " - ".join(parts)
+    
+    def humanize_total_price(self, locale='en_US'):
+        if locale:
+            return format_currency(self.price, self.currency, locale=locale)
+        return self.price
     
     def variant_thumbnail(self, request):
         """

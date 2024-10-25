@@ -10,17 +10,30 @@ from nxtbn.order.models import Address, Order, OrderLineItem
 from nxtbn.payment.api.dashboard.serializers import BasicPaymentSerializer
 from nxtbn.payment.models import Payment
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
+from nxtbn.product.models import ProductVariant
 from nxtbn.users.api.dashboard.serializers import UserSerializer
 from nxtbn.users.models import User
 
+class LineVariantSerializer(serializers.ModelSerializer):
+    variant_thumbnail = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
+    class Meta:
+        model = ProductVariant
+        fields = ['alias', 'name', 'sku', "variant_thumbnail", "price",]
+
+    def get_variant_thumbnail(self, obj):
+        return obj.variant_thumbnail(self.context.get('request'))
+    
+    def get_price(self, obj):
+        return obj.humanize_total_price()
 
 class OrderLineItemSerializer(serializers.ModelSerializer):
-    # variant = ProductVariantSerializer(read_only=True)
+    variant = LineVariantSerializer()
     total_price = serializers.SerializerMethodField()
     price_per_unit = serializers.SerializerMethodField()
     class Meta:
         model = OrderLineItem
-        fields = ('id', 'quantity', 'price_per_unit', 'total_price',)
+        fields = ('id', 'quantity', 'price_per_unit', 'total_price', "variant",)
 
     def get_total_price(self, obj):
         return obj.humanize_total_price()
@@ -55,6 +68,8 @@ class OrderSerializer(serializers.ModelSerializer):
             'promo_code',
             'gift_card',
             'line_items',
+            'note',
+            'comment',
         )
 
 class OrderListSerializer(serializers.ModelSerializer):
@@ -226,7 +241,7 @@ class OrderStatusUpdateSerializer(serializers.ModelSerializer):
             if current_status in [OrderStatus.DELIVERED]:
                 raise serializers.ValidationError(_("Order is already delivered."))
             if current_status != OrderStatus.SHIPPED:
-                raise serializers.ValidationError(_("Order must be shipped before it can be delivered."))
+                raise serializers.ValidationError(_("Order must be shipped before mark it as delivered."))
         
         return attrs
     

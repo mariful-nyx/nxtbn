@@ -68,6 +68,8 @@ class OrderSerializer(serializers.ModelSerializer):
             'promo_code',
             'gift_card',
             'line_items',
+            'note',
+            'comment',
         )
 
 class OrderListSerializer(serializers.ModelSerializer):

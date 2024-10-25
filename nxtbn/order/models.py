@@ -225,6 +225,8 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         default=PaymentMethod.CASH_ON_DELIVERY,
         help_text="Preferred payment method for this order. The actual payment method may differ when the order is initiated or paid."
     )
+    note = models.TextField(blank=True, null=True, max_length=255) # filled by customer
+    comment = models.TextField(blank=True, null=True, max_length=500) # filled by admin
 
     def get_payment_method(self):
         if self.payments.exists():

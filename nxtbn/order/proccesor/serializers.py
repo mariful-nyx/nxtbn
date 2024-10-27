@@ -19,6 +19,10 @@ class ShippingAddressSerializer(serializers.Serializer):
 
 class OrderEstimateSerializer(serializers.Serializer):
     shipping_address = ShippingAddressSerializer(required=False)
+    billing_address = ShippingAddressSerializer(required=False)
+    shipping_address_id = serializers.IntegerField(required=False)
+    billing_address_id = serializers.IntegerField(required=False)
+
     shipping_method_id = serializers.IntegerField(required=False)
     custom_shipping_amount = PriceAndNameSerializer(required=False)
 

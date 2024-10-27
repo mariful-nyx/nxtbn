@@ -257,9 +257,25 @@ class OrderCreator:
         Also creates corresponding OrderLineItems.
         """
         with transaction.atomic():
+            shipping_address = self.validated_data.get('shipping_address', {})
+            billing_address = self.validated_data.get('billing_address', {})
+        
             custom_discount_amount = self.validated_data.get('custom_discount_amount')
             promocode = self.get_promocode_instance(self.validated_data.get('promocode'))
             shipping_method_id = self.validated_data.get('shipping_method_id', '')
+
+            shipping_address_id = self.validated_data.get('shipping_address_id', None)
+            billing_address_id = self.validated_data.get('billing_address_id', None)
+
+            if not shipping_address_id:
+                if shipping_address:
+                    shipping_address_id = self.get_or_create_address(shipping_address).id
+            if not billing_address_id:
+                if billing_address:
+                    billing_address_id = self.get_or_create_address(billing_address).id
+                else:
+                    billing_address_id = shipping_address_id
+
             shipping_address = self.validated_data.get('shipping_address', {})
             billing_address = self.validated_data.get('billing_address', {})
 
@@ -268,8 +284,10 @@ class OrderCreator:
             order_data = {
                 "user_id": self.customer,
                 "supplier": self.validated_data.get('supplier'),
+
                 "shipping_address": self.get_or_create_address(shipping_address),
                 "billing_address": self.get_or_create_address(billing_address),
+
                 "currency": self.validated_data.get('currency', CurrencyTypes.USD),
                 "total_price": int(self.total * 100),  #  total is in units, convert to cents/subunits
                 "customer_currency": self.validated_data.get('customer_currency', CurrencyTypes.USD),

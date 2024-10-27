@@ -217,7 +217,7 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         choices=PaymentTerms.choices,
         help_text="Represents the payment terms for the order."
     )
-    due_date = models.DateTimeField(null=True, blank=True) # if payment_term is FIXED_DATE
+    due_date = models.DateField(null=True, blank=True) # if payment_term is FIXED_DATE
 
     preferred_payment_method = models.CharField(
         max_length=32,
@@ -310,7 +310,7 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
             return to_currency_unit(due_in_subunits, self.currency, locale='en_US')
         
     def is_overdue(self):
-        if self.due_date and self.due_date < timezone.now():
+        if self.due_date and self.due_date < timezone.now().date():
             return True
         return False
     

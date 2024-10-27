@@ -1,10 +1,11 @@
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from rest_framework import serializers
 from django.db import transaction
 
 
 from nxtbn.discount.api.dashboard.serializers import PromoCodeBasicSerializer
-from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus
+from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus, PaymentTerms
 from nxtbn.order.api.storefront.serializers import AddressSerializer
 from nxtbn.order.models import Address, Order, OrderLineItem
 from nxtbn.payment.api.dashboard.serializers import BasicPaymentSerializer
@@ -245,6 +246,50 @@ class OrderStatusUpdateSerializer(serializers.ModelSerializer):
         
         return attrs
     
+
+
+
+class OrderPaymentUpdateSerializer(serializers.ModelSerializer):
+    payment_term = serializers.ChoiceField(choices=PaymentTerms.choices, required=False)
+    due_date = serializers.DateField(required=False, write_only=True)
+    date_within = serializers.IntegerField(required=False, write_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['payment_term', 'due_date', 'date_within']
+
+    def validate(self, attrs):
+        order = self.instance
+        if order.charge_status != OrderChargeStatus.DUE:
+            raise serializers.ValidationError(_("Cannot change payment term for orders with charged funds."))
+        return attrs
+    
+    def validate_due_date(self, value):
+        if value and value < timezone.now().date():
+            raise serializers.ValidationError(_("Due date cannot be in the past."))
+        return value
+    
+    
+    def update(self, instance, validated_data):
+        payment_term = validated_data.get('payment_term')
+        due_date = validated_data.get('due_date')
+        date_within = validated_data.get('date_within')
+        
+        if payment_term:
+            instance.payment_term = payment_term
+
+        if date_within:
+            # Ensure the calculated due date is explicitly converted to a `date` object
+            instance.due_date = (timezone.now() + timezone.timedelta(days=date_within)).date()
+            instance.payment_term = PaymentTerms.FIXED_DATE
+
+        if due_date:
+            instance.due_date = due_date
+            instance.payment_term = PaymentTerms.FIXED_DATE
+
+        instance.save()
+        return instance
+
 
 class OrderPaymentMethodSerializer(serializers.ModelSerializer):
         preferred_payment_method = serializers.CharField()

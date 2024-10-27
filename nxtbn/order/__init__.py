@@ -40,6 +40,7 @@ class OrderStatus(models.TextChoices):
     """
 
     PENDING = "PENDING", _("Pending")
+    APPROVED = "APPROVED", _("Approved")
     PROCESSING = "PROCESSING", _("Processing")
     SHIPPED = "SHIPPED", _("Shipped")
     DELIVERED = "DELIVERED", _("Delivered")

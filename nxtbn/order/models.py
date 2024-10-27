@@ -228,11 +228,6 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
     note = models.TextField(blank=True, null=True, max_length=255) # filled by customer
     comment = models.TextField(blank=True, null=True, max_length=500) # filled by admin
 
-    def get_payment_method(self):
-        if self.payments.exists():
-            return self.payments.first().payment_method
-        return 'AWAITING_SELECTION'
-
     class Meta:
         ordering = ('-created_at',) # Most recent orders first
         permissions = [
@@ -253,6 +248,25 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         super().clean()
 
     
+
+    def get_payment_method(self):
+        if self.payments.exists():
+            return self.payments.first().payment_method
+        return 'AWAITING_SELECTION'
+    
+    def total_piad_amount(self):
+        precision = get_currency_precision(self.currency)
+        total_in_subunits = self.payments.filter(is_successful=True).aggregate(models.Sum('payment_amount'))['payment_amount__sum']
+        if total_in_subunits is None:
+            return 0
+        total_in_unit = total_in_subunits / (10 ** precision)
+        return total_in_unit
+    
+    def humanize_total_paid_amount(self, locale='en_US'):
+        if locale:
+            return format_currency(self.total_piad_amount(), self.currency, locale=locale)
+        return self.total_piad_amount()
+       
 
     def total_in_units(self): #subunit -to-unit 
         precision = get_currency_precision(self.currency)

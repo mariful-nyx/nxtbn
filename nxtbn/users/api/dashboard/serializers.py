@@ -24,11 +24,18 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CustomerSerializer(serializers.ModelSerializer):
     default_shipping_address = serializers.SerializerMethodField()
+    default_billing_address = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'role', 'default_shipping_address']
+        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'role', 'default_shipping_address', 'default_billing_address']
 
     def get_default_shipping_address(self, obj):
+        address = obj.addresses.filter(
+            Q(address_type=AddressType.DSA) | Q(address_type=AddressType.DSA_DBA)
+        ).first()
+        return AddressSerializer(address).data if address else None
+    
+    def get_default_billing_address(self, obj):
         address = obj.addresses.filter(
             Q(address_type=AddressType.DSA) | Q(address_type=AddressType.DSA_DBA)
         ).first()

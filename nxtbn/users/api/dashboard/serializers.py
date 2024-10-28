@@ -10,6 +10,7 @@ from nxtbn.users import UserRole
 from nxtbn.users.admin import User
 from django.utils.crypto import get_random_string
 from allauth.utils import  generate_unique_username
+from nxtbn.order.models import Address
 
 class DashboardLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
@@ -40,6 +41,25 @@ class CustomerSerializer(serializers.ModelSerializer):
             Q(address_type=AddressType.DSA) | Q(address_type=AddressType.DSA_DBA)
         ).first()
         return AddressSerializer(address).data if address else None
+
+
+class CustomerUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+        read_only_fields = ('username', 'password')
+
+
+class CustomerWithAddressSerializer(serializers.ModelSerializer):
+    address = serializers.SerializerMethodField()
+    class Meta:
+        model = User
+        fields =  ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'role', 'address']
+
+    def get_address(self, obj):
+        user = User.objects.get(id=obj.id)
+        address = obj.addresses.filter(user=user)
+        return AddressSerializer(address, many=True).data if address else None
 
 
 class PasswordChangeSerializer(serializers.Serializer):
@@ -117,3 +137,12 @@ class UserMututionalSerializer(serializers.ModelSerializer):
         
         instance.save()
         return instance
+
+
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        ref_name = 'address_customer_get'
+        fields = '__all__'

@@ -8,13 +8,15 @@ from django.contrib.auth import authenticate
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.users import UserRole
 from nxtbn.users.models import User
-from nxtbn.users.api.dashboard.serializers import CustomerSerializer, DashboardLoginSerializer, UserMututionalSerializer, UserSerializer
+from nxtbn.users.api.dashboard.serializers import CustomerSerializer, DashboardLoginSerializer, UserMututionalSerializer, UserSerializer, CustomerWithAddressSerializer, CustomerUpdateSerializer
 from nxtbn.users.api.dashboard.serializers import DashboardLoginSerializer, PasswordChangeSerializer
 from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
 from nxtbn.users.api.storefront.views import TokenRefreshView
 from nxtbn.users.utils.jwt_utils import JWTManager
 from nxtbn.users.models import User
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
+from nxtbn.order.models import Address
+from nxtbn.users.api.dashboard.serializers import AddressSerializer
 
 from rest_framework import filters as drf_filters
 import django_filters
@@ -84,6 +86,22 @@ class CustomerListAPIView(generics.ListAPIView):
         return User.objects.filter(role=UserRole.CUSTOMER)
 
 
+class CustomerRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
+    serializer_class = CustomerUpdateSerializer
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        return User.objects.filter(role=UserRole.CUSTOMER)
+    
+
+class CustomerWithAddressView(generics.RetrieveAPIView):
+    serializer_class = CustomerWithAddressSerializer
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        return User.objects.filter(role=UserRole.CUSTOMER)
+
+
 class UserListAPIView(generics.ListAPIView):
     """
     API view to retrieve the list of all users.
@@ -125,3 +143,14 @@ class UserViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save()
+
+
+class AddressCreateAPIView(generics.CreateAPIView):
+    serializer_class = AddressSerializer
+    queryset = Address.objects.all()
+    
+
+class AddressRetriveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = AddressSerializer
+    queryset = Address.objects.all()
+    lookup_field = 'id'

@@ -149,6 +149,7 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
     payment_method = serializers.CharField(source='get_payment_method')
     promo_code = PromoCodeBasicSerializer()
     payments = BasicPaymentSerializer(many=True)
+    total_paid_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -181,6 +182,7 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'payments',
             'preferred_payment_method',
             'is_overdue',
+            'total_paid_amount',
         )
 
     def get_total_price(self, obj):
@@ -200,6 +202,9 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
 
     def get_total_price_in_customer_currency(self, obj):
         return obj.total_price_in_customer_currency
+    
+    def get_total_paid_amount(self, obj):
+        return obj.humanize_total_paid_amount()
     
     def get_due(self, obj):
         return obj.get_due()

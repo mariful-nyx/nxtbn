@@ -72,3 +72,4 @@ class PromoCodeCustomertListAPIView(generics.ListAPIView):
 class PromoCodeUsageListAPIView(generics.ListAPIView):
     queryset = PromoCodeUsage.objects.all()
     serializer_class = PromoCodeUsageSerializer
+    pagination_class = NxtbnPagination

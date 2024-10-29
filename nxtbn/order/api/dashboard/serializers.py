@@ -97,7 +97,8 @@ class OrderLineItemCreateSerializer(serializers.ModelSerializer):
 class AddressMutationalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = ['street_address', 'city', 'state', 'postal_code', 'country', 'phone_number', 'first_name', 'last_name']
+        fields = ['id', 'street_address', 'city', 'state', 'postal_code', 'country', 'phone_number', 'first_name', 'last_name', 'user']
+        write_only_fields = ['user']
 
 class CustomerCreateSerializer(serializers.ModelSerializer):
     address = AddressMutationalSerializer(write_only=True)

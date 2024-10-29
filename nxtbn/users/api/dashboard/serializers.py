@@ -7,7 +7,7 @@ from django.db.models import Q
 from nxtbn.order import AddressType
 from nxtbn.order.api.dashboard.serializers import AddressMutationalSerializer
 from nxtbn.users import UserRole
-from nxtbn.users.admin import User
+from nxtbn.users.models import User
 from django.utils.crypto import get_random_string
 from allauth.utils import  generate_unique_username
 from nxtbn.order.models import Address
@@ -28,7 +28,19 @@ class CustomerSerializer(serializers.ModelSerializer):
     default_billing_address = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'role', 'default_shipping_address', 'default_billing_address']
+        fields = [
+            'id',
+            'avatar',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'full_name',
+            'role',
+            'default_shipping_address',
+            'default_billing_address',
+            'total_spent',
+        ]
 
     def get_default_shipping_address(self, obj):
         address = obj.addresses.filter(
@@ -41,6 +53,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             Q(address_type=AddressType.DSA) | Q(address_type=AddressType.DSA_DBA)
         ).first()
         return AddressMutationalSerializer(address).data if address else None
+    
 
 
 class CustomerUpdateSerializer(serializers.ModelSerializer):

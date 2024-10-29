@@ -49,7 +49,7 @@ class CustomerUpdateSerializer(serializers.ModelSerializer):
         fields =  ['id', 'avatar', 'email', 'first_name', 'last_name', 'phone_number']
 
 class CustomerWithAddressSerializer(serializers.ModelSerializer):
-    addresses = AddressMutationalSerializer()
+    addresses = AddressMutationalSerializer(many=True)
     class Meta:
         model = User
         fields =  ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'addresses']

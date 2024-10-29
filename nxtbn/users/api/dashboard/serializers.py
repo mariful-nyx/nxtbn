@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from django.db import transaction
 from django.contrib.auth.password_validation import validate_password
-from django.db.models import Q
+from django.db.models import Q, Sum, Count
 
 from nxtbn.order import AddressType
 from nxtbn.order.api.dashboard.serializers import AddressMutationalSerializer
@@ -10,7 +10,7 @@ from nxtbn.users import UserRole
 from nxtbn.users.admin import User
 from django.utils.crypto import get_random_string
 from allauth.utils import  generate_unique_username
-from nxtbn.order.models import Address
+from nxtbn.order.models import Address, Order
 
 class DashboardLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
@@ -26,9 +26,12 @@ class UserSerializer(serializers.ModelSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
     default_shipping_address = serializers.SerializerMethodField()
     default_billing_address = serializers.SerializerMethodField()
+    orders = serializers.SerializerMethodField()
+    spent = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'role', 'default_shipping_address', 'default_billing_address']
+        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'role', 'default_shipping_address', 'default_billing_address', 'orders', 'spent']
 
     def get_default_shipping_address(self, obj):
         address = obj.addresses.filter(
@@ -42,6 +45,18 @@ class CustomerSerializer(serializers.ModelSerializer):
         ).first()
         return AddressMutationalSerializer(address).data if address else None
 
+    def get_orders(self, obj):
+        user_with_order_count = User.objects.annotate(
+        delivered_orders_count=Count('orders', filter=Q(orders__status='DELIVERED'))
+        ).get(id=obj.id)
+        return user_with_order_count.delivered_orders_count
+
+    def get_spent(self, obj):
+        user_with_total_spent = User.objects.annotate(
+        total_spent=Sum('orders__total_price', filter=Q(orders__status='DELIVERED'))
+        ).get(id=obj.id)
+        return user_with_total_spent.total_spent if user_with_total_spent.total_spent else 0
+    
 
 class CustomerUpdateSerializer(serializers.ModelSerializer):
     class Meta:

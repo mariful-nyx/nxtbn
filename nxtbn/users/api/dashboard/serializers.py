@@ -10,6 +10,7 @@ from nxtbn.users import UserRole
 from nxtbn.users.admin import User
 from django.utils.crypto import get_random_string
 from allauth.utils import  generate_unique_username
+from nxtbn.order.models import Address
 
 class DashboardLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
@@ -42,11 +43,21 @@ class CustomerSerializer(serializers.ModelSerializer):
         return AddressSerializer(address).data if address else None
 
 
+class CustomerUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields =  ['id', 'avatar', 'username', 'email', 'first_name', 'last_name',]
+
+class CustomerWithAddressSerializer(serializers.ModelSerializer):
+    addresses = AddressSerializer()
+    class Meta:
+        model = User
+        fields =  ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'addresses']
+
+
 class PasswordChangeSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True, 
-                                         #validators=[validate_password]
-                                        )
+    new_password = serializers.CharField(required=True)
 
     def validate_old_password(self, value):
         user = self.context["request"].user

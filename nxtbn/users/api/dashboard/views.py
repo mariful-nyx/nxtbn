@@ -16,7 +16,7 @@ from nxtbn.users.utils.jwt_utils import JWTManager
 from nxtbn.users.models import User
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
 from nxtbn.order.models import Address
-from nxtbn.users.api.dashboard.serializers import AddressSerializer
+from nxtbn.users.api.dashboard.serializers import AddressMutationalSerializer
 
 from rest_framework import filters as drf_filters
 import django_filters
@@ -146,11 +146,11 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class AddressCreateAPIView(generics.CreateAPIView):
-    serializer_class = AddressSerializer
+    serializer_class = AddressMutationalSerializer
     queryset = Address.objects.all()
     
 
 class AddressRetriveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = AddressSerializer
+    serializer_class = AddressMutationalSerializer
     queryset = Address.objects.all()
     lookup_field = 'id'

@@ -12,7 +12,6 @@ from nxtbn.payment.api.dashboard.serializers import BasicPaymentSerializer
 from nxtbn.payment.models import Payment
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
 from nxtbn.product.models import ProductVariant
-from nxtbn.users.api.dashboard.serializers import UserSerializer
 from nxtbn.users.models import User
 
 class LineVariantSerializer(serializers.ModelSerializer):
@@ -95,13 +94,13 @@ class OrderLineItemCreateSerializer(serializers.ModelSerializer):
 
 
 
-class AddressCreateSerializer(serializers.ModelSerializer):
+class AddressMutationalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ['street_address', 'city', 'state', 'postal_code', 'country', 'phone_number', 'first_name', 'last_name']
 
 class CustomerCreateSerializer(serializers.ModelSerializer):
-    address = AddressCreateSerializer(write_only=True)
+    address = AddressMutationalSerializer(write_only=True)
 
     class Meta:
         model = User
@@ -145,7 +144,6 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
     due = serializers.SerializerMethodField()
     overcharged_amount = serializers.CharField(source='get_overcharged_amount')
     total_price_in_customer_currency = serializers.SerializerMethodField()
-    user = UserSerializer()
     payment_method = serializers.CharField(source='get_payment_method')
     promo_code = PromoCodeBasicSerializer()
     payments = BasicPaymentSerializer(many=True)

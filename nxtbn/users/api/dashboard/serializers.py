@@ -5,7 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.db.models import Q
 
 from nxtbn.order import AddressType
-from nxtbn.order.api.storefront.serializers import AddressSerializer
+from nxtbn.order.api.dashboard.serializers import AddressMutationalSerializer
 from nxtbn.users import UserRole
 from nxtbn.users.admin import User
 from django.utils.crypto import get_random_string
@@ -34,22 +34,22 @@ class CustomerSerializer(serializers.ModelSerializer):
         address = obj.addresses.filter(
             Q(address_type=AddressType.DSA) | Q(address_type=AddressType.DSA_DBA)
         ).first()
-        return AddressSerializer(address).data if address else None
+        return AddressMutationalSerializer(address).data if address else None
     
     def get_default_billing_address(self, obj):
         address = obj.addresses.filter(
             Q(address_type=AddressType.DSA) | Q(address_type=AddressType.DSA_DBA)
         ).first()
-        return AddressSerializer(address).data if address else None
+        return AddressMutationalSerializer(address).data if address else None
 
 
 class CustomerUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields =  ['id', 'avatar', 'username', 'email', 'first_name', 'last_name',]
+        fields =  ['id', 'avatar', 'email', 'first_name', 'last_name', 'phone_number']
 
 class CustomerWithAddressSerializer(serializers.ModelSerializer):
-    addresses = AddressSerializer()
+    addresses = AddressMutationalSerializer()
     class Meta:
         model = User
         fields =  ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'addresses']

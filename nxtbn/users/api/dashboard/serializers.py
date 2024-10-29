@@ -46,27 +46,18 @@ class CustomerSerializer(serializers.ModelSerializer):
 class CustomerUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
-        read_only_fields = ('username', 'password')
-
+        fields =  ['id', 'avatar', 'username', 'email', 'first_name', 'last_name',]
 
 class CustomerWithAddressSerializer(serializers.ModelSerializer):
-    address = serializers.SerializerMethodField()
+    addresses = AddressSerializer()
     class Meta:
         model = User
-        fields =  ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'role', 'address']
-
-    def get_address(self, obj):
-        user = User.objects.get(id=obj.id)
-        address = obj.addresses.filter(user=user)
-        return AddressSerializer(address, many=True).data if address else None
+        fields =  ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'full_name', 'addresses']
 
 
 class PasswordChangeSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True, 
-                                         #validators=[validate_password]
-                                        )
+    new_password = serializers.CharField(required=True)
 
     def validate_old_password(self, value):
         user = self.context["request"].user
@@ -137,12 +128,3 @@ class UserMututionalSerializer(serializers.ModelSerializer):
         
         instance.save()
         return instance
-
-
-
-
-class AddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Address
-        ref_name = 'address_customer_get'
-        fields = '__all__'

@@ -17,7 +17,7 @@ from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus
 from nxtbn.payment import PaymentMethod
 from nxtbn.product.models import ProductVariant
 from nxtbn.users import UserRole
-from nxtbn.users.admin import User
+from nxtbn.users.models import User
 from nxtbn.product.models import Supplier
 
 from money.money import Currency, Money

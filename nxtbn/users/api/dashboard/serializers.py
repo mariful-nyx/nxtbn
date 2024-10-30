@@ -40,6 +40,8 @@ class CustomerSerializer(serializers.ModelSerializer):
             'default_shipping_address',
             'default_billing_address',
             'total_spent',
+            'total_order_count',
+            'total_pending_order_count',
         ]
 
     def get_default_shipping_address(self, obj):

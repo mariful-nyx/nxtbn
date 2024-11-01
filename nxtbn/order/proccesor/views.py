@@ -308,6 +308,7 @@ class OrderCreator:
                 "total_discounted_amount": int(self.discount * 100),  # Convert to cents
                 "total_tax": int(self.estimated_tax * 100),  # Convert to cents
                 'order_source': self.order_source,
+                'note': self.validated_data.get('note', ''),
             }
 
             # Create Order instance

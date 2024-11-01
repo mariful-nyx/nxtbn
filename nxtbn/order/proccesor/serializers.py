@@ -30,6 +30,7 @@ class OrderEstimateSerializer(serializers.Serializer):
     promocode = serializers.CharField(required=False)
     variants = serializers.ListSerializer(child=VariantQuantitySerializer(), required=True)
     customer_id = serializers.IntegerField(required=False)
+    note = serializers.CharField(required=False)
 
     def validate_variants(self, value):
         if len(value) == 0:

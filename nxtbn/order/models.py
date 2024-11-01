@@ -13,7 +13,7 @@ from nxtbn.core.models import AbstractAddressModels, AbstractBaseModel, Abstract
 from nxtbn.core.utils import build_currency_amount, to_currency_unit
 from nxtbn.discount.models import PromoCode
 from nxtbn.gift_card.models import GiftCard
-from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, PaymentTerms, ReturnStatus
+from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, PaymentTerms, ReturnReason, ReturnStatus
 from nxtbn.payment import PaymentMethod
 from nxtbn.product.models import ProductVariant
 from nxtbn.users import UserRole
@@ -418,7 +418,13 @@ class ReturnRequest(AbstractBaseUUIDModel):
         default=ReturnStatus.REQUESTED,
         verbose_name="Return Status",
     )
-    reason = models.TextField(help_text="Reason for the return")
+    reason_details = models.TextField(help_text="Reason for the return")
+    reason = models.CharField(
+        max_length=100,
+        help_text="Reason for the return",
+        choices=ReturnReason.choices,
+        default=ReturnReason.NO_REASON
+    )
     approved_at = models.DateTimeField(null=True, blank=True)
     rejected_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -428,7 +434,13 @@ class ReturnLineItem(models.Model):
     return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE, related_name="line_items")
     order_line_item = models.ForeignKey(OrderLineItem, on_delete=models.CASCADE, related_name="return_line_items")
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    reason = models.TextField(help_text="Reason for returning this specific item")
+    reason = models.CharField(
+        max_length=100,
+        help_text="Reason for the return",
+        choices=ReturnReason.choices,
+        default=ReturnReason.NO_REASON
+    )
+    reason_details = models.TextField(help_text="Reason for returning this specific item")
     refunded_amount = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True,
         help_text="Amount refunded for this line item"

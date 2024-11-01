@@ -31,9 +31,10 @@ class OrderLineItemSerializer(serializers.ModelSerializer):
     variant = LineVariantSerializer()
     total_price = serializers.SerializerMethodField()
     price_per_unit = serializers.SerializerMethodField()
+    name = serializers.CharField(source='variant.get_descriptive_name')
     class Meta:
         model = OrderLineItem
-        fields = ('id', 'quantity', 'price_per_unit', 'total_price', "variant",)
+        fields = ('id', 'quantity', 'price_per_unit', 'total_price', "variant", 'name',)
 
     def get_total_price(self, obj):
         return obj.humanize_total_price()
@@ -318,19 +319,21 @@ class OrderPaymentMethodSerializer(serializers.ModelSerializer):
 
 
 class ReturnLineItemSerializer(serializers.ModelSerializer):
+    reason_details = serializers.CharField(required=False)
     class Meta:
         model = ReturnLineItem
-        fields = ['order_line_item', 'quantity', 'reason', 'refunded_amount']
+        fields = ['order_line_item', 'quantity', 'reason', 'reason_details', 'refunded_amount']
         read_only_fields = ['refunded_amount']
 
 class ReturnRequestSerializer(serializers.ModelSerializer):
     line_items = ReturnLineItemSerializer(many=True, write_only=True)
+    reason_details = serializers.CharField(required=False)
 
     class Meta:
         model = ReturnRequest
         fields = [
             'intiated_by', 'reviewed_by', 'approved_by', 'order', 
-            'status', 'reason', 'approved_at', 'rejected_at', 
+            'status', 'reason', 'reason_details', 'approved_at', 'rejected_at', 
             'completed_at', 'cancelled_at', 'line_items'
         ]
         read_only_fields = [

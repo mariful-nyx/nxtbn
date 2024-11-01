@@ -7,7 +7,7 @@ from django.db import transaction
 from nxtbn.discount.api.dashboard.serializers import PromoCodeBasicSerializer
 from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus, PaymentTerms
 from nxtbn.order.api.storefront.serializers import AddressSerializer
-from nxtbn.order.models import Address, Order, OrderDeviceMeta, OrderLineItem
+from nxtbn.order.models import Address, Order, OrderDeviceMeta, OrderLineItem, ReturnLineItem, ReturnRequest
 from nxtbn.payment.api.dashboard.serializers import BasicPaymentSerializer
 from nxtbn.payment.models import Payment
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
@@ -313,3 +313,36 @@ class OrderPaymentMethodSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(_("Cannot change payment method for orders with charged funds."))
               
             return attrs
+        
+
+
+
+class ReturnLineItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReturnLineItem
+        fields = ['order_line_item', 'quantity', 'reason', 'refunded_amount']
+        read_only_fields = ['refunded_amount']
+
+class ReturnRequestSerializer(serializers.ModelSerializer):
+    line_items = ReturnLineItemSerializer(many=True, write_only=True)
+
+    class Meta:
+        model = ReturnRequest
+        fields = [
+            'intiated_by', 'reviewed_by', 'approved_by', 'order', 
+            'status', 'reason', 'approved_at', 'rejected_at', 
+            'completed_at', 'cancelled_at', 'line_items'
+        ]
+        read_only_fields = [
+            'intiated_by', 'reviewed_by', 'approved_by', 
+            'approved_at', 'rejected_at', 'completed_at', 'cancelled_at', 'status'
+        ]
+    
+    def create(self, validated_data):
+        line_items_data = validated_data.pop('line_items')
+        # Set intiated_by to the current user
+        validated_data['intiated_by'] = self.context['request'].user
+        return_request = ReturnRequest.objects.create(**validated_data)
+        for line_item_data in line_items_data:
+            ReturnLineItem.objects.create(return_request=return_request, **line_item_data)
+        return return_request

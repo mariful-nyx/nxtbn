@@ -409,8 +409,9 @@ class OrderLineItem(MonetaryMixin, models.Model):
 
 class ReturnRequest(AbstractBaseUUIDModel):
     intiated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="returns")
+    reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviewed_returns", null=True, blank=True)
+    approved_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="approved_returns", null=True, blank=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="returns")
-    requested_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=20,
         choices=ReturnStatus.choices,

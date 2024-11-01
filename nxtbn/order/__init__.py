@@ -94,4 +94,5 @@ class ReturnStatus(models.TextChoices):
     REJECTED = 'REJECTED', _('Rejected')
     COMPLETED = 'COMPLETED', _('Completed')
     CANCELLED = 'CANCELLED', _('Cancelled')
+    REVIEWED = 'REVIEWED', _('Reviewed')
 

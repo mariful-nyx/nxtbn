@@ -5,4 +5,5 @@ urlpatterns = [
     path('orders/', order_views.OrderListView.as_view(), name='order-list'),
     path('eastimate/', order_views.OrderEastimateAPIView.as_view(), name='order-eastimate'),
     path('create/', order_views.OrderCreateAPIView.as_view(), name='order-create'),
+    path('orders/return-request/', order_views.OrderReturnRequestAPIView.as_view(), name='return-request'),
 ]

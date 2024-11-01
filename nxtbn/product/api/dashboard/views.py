@@ -12,6 +12,7 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
+from nxtbn.core import PublishableStatus
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
 from nxtbn.product.api.dashboard.serializers import (
@@ -101,7 +102,7 @@ class ProductMinimalListView(ProductFilterMixin, generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         # Get the filtered queryset first
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset()).filter(status=PublishableStatus.PUBLISHED)
 
         # Limit the results to a maximum of 10
         limited_queryset = queryset[:10]
@@ -113,6 +114,9 @@ class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
     permission_classes = (NxtbnAdminPermission,)
     serializer_class = ProductWithVariantSerializer
     pagination_class = NxtbnPagination
+
+    def get_queryset(self):
+        return Product.objects.filter(status=PublishableStatus.PUBLISHED)
 
     
 

@@ -10,7 +10,7 @@ from nxtbn.discount import PromoCodeType
 from nxtbn.discount.models import PromoCode
 from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
 from nxtbn.order.proccesor.serializers import OrderEstimateSerializer
-from nxtbn.order.models import Address, Order, OrderLineItem
+from nxtbn.order.models import Address, Order, OrderDeviceMeta, OrderLineItem
 from nxtbn.product.models import Product, ProductVariant
 from decimal import Decimal, InvalidOperation
 
@@ -22,7 +22,9 @@ from rest_framework import serializers
 from nxtbn.core.currency.backend import currency_Backend
 
 from nxtbn.core.signal_initiators import order_created
+from nxtbn.users import UserRole
 
+from nxtbn.order.utils import parse_user_agent
 class ShippingFeeCalculator:
     def get_shipping_rate_instance(self, shipping_method_id, address):
         if not shipping_method_id:
@@ -267,6 +269,12 @@ class OrderCreator:
             shipping_address_id = self.validated_data.get('shipping_address_id', None)
             billing_address_id = self.validated_data.get('billing_address_id', None)
 
+            if self.request.user.role == UserRole.CUSTOMER:
+                if shipping_address:
+                    shipping_address['user_id'] = self.request.user.id
+                if billing_address:
+                    billing_address['user_id'] = self.request.user.id
+
             if not shipping_address_id:
                 if shipping_address:
                     shipping_address_id = self.get_or_create_address(shipping_address).id
@@ -299,6 +307,7 @@ class OrderCreator:
                 "total_shipping_cost": int(self.shipping_fee * 100),  # Convert to cents
                 "total_discounted_amount": int(self.discount * 100),  # Convert to cents
                 "total_tax": int(self.estimated_tax * 100),  # Convert to cents
+                'order_source': self.order_source,
             }
 
             # Create Order instance
@@ -318,6 +327,15 @@ class OrderCreator:
                     tax_rate=self.get_tax_rate(variant['tax_class'], shipping_address).rate if self.get_tax_rate(variant['tax_class'], shipping_address) else Decimal('0.00'),
                 )
 
+            print(self.collect_user_agent, self.request.user.username)
+
+            if self.collect_user_agent:
+                try:
+                    user_agent_data = parse_user_agent(self.request)
+                    OrderDeviceMeta.objects.create(order=order, **user_agent_data)
+                except Exception as e:
+                    pass
+                
             return order
 
     def get_or_create_address(self, address_data):
@@ -344,9 +362,11 @@ class OrderCreator:
         return address
 
 class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator, OrderCreator):
-    def __init__(self, validated_data, create_order=False, request=None):
+    def __init__(self, validated_data, order_source, create_order=False, collect_user_agent=False, request=None):
         self.validated_data = validated_data
         self.create_order = create_order
+        self.order_source = order_source
+        self.collect_user_agent = collect_user_agent
         self.request = request
         self.customer = self.validated_data.get('customer_id', None)
         self.variants = self.get_variants()
@@ -437,6 +457,8 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
 class OrderProccessorAPIView(generics.GenericAPIView):
     create_order = False
     broadcast_on_order_create = False
+    order_source = 'admin' # options: 'admin', 'storefront', 'mobile
+    collect_user_agent = False
 
     serializer_class = OrderEstimateSerializer
 
@@ -446,7 +468,13 @@ class OrderProccessorAPIView(generics.GenericAPIView):
 
 
         try:
-            order_calculation = OrderCalculation(serializer.validated_data, create_order=self.create_order, request=request)
+            order_calculation = OrderCalculation(
+                serializer.validated_data,
+                order_source=self.order_source,
+                create_order=self.create_order,
+                collect_user_agent=self.collect_user_agent,
+                request=request
+            )
             response = order_calculation.get_response()
 
             if self.create_order:

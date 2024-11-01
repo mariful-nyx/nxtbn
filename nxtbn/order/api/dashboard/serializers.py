@@ -7,7 +7,7 @@ from django.db import transaction
 from nxtbn.discount.api.dashboard.serializers import PromoCodeBasicSerializer
 from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus, PaymentTerms
 from nxtbn.order.api.storefront.serializers import AddressSerializer
-from nxtbn.order.models import Address, Order, OrderLineItem
+from nxtbn.order.models import Address, Order, OrderDeviceMeta, OrderLineItem
 from nxtbn.payment.api.dashboard.serializers import BasicPaymentSerializer
 from nxtbn.payment.models import Payment
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
@@ -132,7 +132,10 @@ class CustomerCreateSerializer(serializers.ModelSerializer):
         return value
     
 
-
+class OrderDeviceMetaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderDeviceMeta
+        exclude = ('id', 'order',)
 class OrderDetailsSerializer(serializers.ModelSerializer):
     line_items = OrderLineItemSerializer(many=True, read_only=True)
     shipping_address = AddressSerializer()
@@ -149,6 +152,7 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
     promo_code = PromoCodeBasicSerializer()
     payments = BasicPaymentSerializer(many=True)
     total_paid_amount = serializers.SerializerMethodField()
+    device_meta = OrderDeviceMetaSerializer()
 
     class Meta:
         model = Order
@@ -182,6 +186,7 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'preferred_payment_method',
             'is_overdue',
             'total_paid_amount',
+            'device_meta',
         )
 
     def get_total_price(self, obj):

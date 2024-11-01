@@ -137,7 +137,11 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         blank=True,
         limit_choices_to={'role': UserRole.CUSTOMER}
     )
-    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    order_source = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+    )
     supplier = models.ForeignKey(Supplier, null=True, blank=True, on_delete=models.SET_NULL)
     shipping_address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL, related_name="shipping_orders")
     billing_address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL, related_name="billing_orders")
@@ -428,3 +432,48 @@ class ReturnLineItem(models.Model):
         max_digits=12, decimal_places=2, null=True, blank=True,
         help_text="Amount refunded for this line item"
     )
+
+
+
+class OrderDeviceMeta(models.Model):
+    """
+    Stores device metadata for an order, capturing the IP address, browser,
+    and other device information to enhance security tracking.
+    """
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="device_meta",
+        help_text="Related order for which this device metadata is recorded."
+    )
+    ip_address = models.GenericIPAddressField(
+        null=True, blank=True,
+        help_text="IP address of the user when placing the order."
+    )
+    user_agent = models.TextField(
+        null=True, blank=True,
+        help_text="Browser's user-agent string for identifying the browser and device."
+    )
+    browser = models.CharField(
+        max_length=100, blank=True, null=True,
+        help_text="Browser name extracted from the user-agent."
+    )
+    browser_version = models.CharField(
+        max_length=50, blank=True, null=True,
+        help_text="Browser version extracted from the user-agent."
+    )
+    operating_system = models.CharField(
+        max_length=100, blank=True, null=True,
+        help_text="Operating system of the device."
+    )
+    device_type = models.CharField(
+        max_length=50, blank=True, null=True,
+        help_text="Device type (e.g., Mobile, Desktop, Tablet)."
+    )
+
+    class Meta:
+        verbose_name = "Order Device Metadata"
+        verbose_name_plural = "Order Device Metadata"
+
+    def __str__(self):
+        return f"Device Meta for Order {self.order.id}"

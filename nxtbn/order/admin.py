@@ -1,5 +1,5 @@
 from django.contrib import admin
-from nxtbn.order.models import Address,Order,OrderLineItem
+from nxtbn.order.models import Address,Order, OrderDeviceMeta,OrderLineItem
 
 # Register your models here.
 
@@ -28,3 +28,5 @@ class OrderLineItemAdmin(admin.ModelAdmin):
 
 
 admin.site.register(OrderLineItem, OrderLineItemAdmin)
+
+admin.site.register(OrderDeviceMeta)

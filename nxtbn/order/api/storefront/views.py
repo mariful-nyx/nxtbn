@@ -39,3 +39,5 @@ class OrderCreateAPIView(OrderProccessorAPIView):
     permission_classes = [AllowAny]
     create_order = True # Eastimate and Create Order with eastimated result
     broadcast_on_order_create = True # Broadcast order created signal
+    order_source = 'storefront'
+    collect_user_agent = True

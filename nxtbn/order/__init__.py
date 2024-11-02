@@ -92,9 +92,10 @@ class ReturnStatus(models.TextChoices):
     REQUESTED = 'REQUESTED', _('Requested')
     APPROVED = 'APPROVED', _('Approved')
     REJECTED = 'REJECTED', _('Rejected')
+    REVIEWED = 'REVIEWED', _('Reviewed')
     COMPLETED = 'COMPLETED', _('Completed')
     CANCELLED = 'CANCELLED', _('Cancelled')
-    REVIEWED = 'REVIEWED', _('Reviewed')
+
 
 
 class ReturnReason(models.TextChoices):
@@ -119,3 +120,8 @@ class ReturnReason(models.TextChoices):
     NOT_AS_EXPECTED = 'NOT_AS_EXPECTED', _('Not as Expected')
     NO_REASON = 'NO_REASON', _('No Reason')
     OTHER = 'OTHER', _('Other')
+
+class ReturnReceiveStatus(models.TextChoices):
+    NOT_RECEIVED = 'not_received', _('Not Received')
+    RECEIVED = 'received', _('Received')
+    RECEIVED_WITH_ISSUES = 'received_with_issues', _('Received with Issues')

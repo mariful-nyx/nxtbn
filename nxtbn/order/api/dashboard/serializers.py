@@ -332,13 +332,30 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReturnRequest
         fields = [
-            'intiated_by', 'reviewed_by', 'approved_by', 'order', 
-            'status', 'reason', 'reason_details', 'approved_at', 'rejected_at', 
-            'completed_at', 'cancelled_at', 'line_items'
+            'id',
+            'intiated_by',
+            'reviewed_by',
+            'approved_by',
+            'order', 
+            'status',
+            'reason',
+            'reason_details',
+            'approved_at',
+            'rejected_at', 
+            'completed_at',
+            'cancelled_at',
+            'line_items'
         ]
         read_only_fields = [
-            'intiated_by', 'reviewed_by', 'approved_by', 
-            'approved_at', 'rejected_at', 'completed_at', 'cancelled_at', 'status'
+            'id',
+            'intiated_by',
+            'reviewed_by',
+            'approved_by', 
+            'approved_at',
+            'rejected_at',
+            'completed_at',
+            'cancelled_at',
+            'status'
         ]
     
     def create(self, validated_data):
@@ -346,6 +363,9 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
         # Set intiated_by to the current user
         validated_data['intiated_by'] = self.context['request'].user
         return_request = ReturnRequest.objects.create(**validated_data)
+        order = validated_data.get('order')
+        order.status = OrderStatus.PENDING_RETURN
+        order.save()
         for line_item_data in line_items_data:
             ReturnLineItem.objects.create(return_request=return_request, **line_item_data)
         return return_request

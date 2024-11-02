@@ -9,6 +9,7 @@ from rest_framework.exceptions import APIException
 from rest_framework.views import APIView
 
 from nxtbn.core.paginator import NxtbnPagination
+from nxtbn.order.api.dashboard.views import ReturnRequestAPIView
 from nxtbn.order.api.storefront.serializers import  OrderSerializer
 from nxtbn.order.models import Order
 from nxtbn.order import OrderStatus
@@ -41,3 +42,8 @@ class OrderCreateAPIView(OrderProccessorAPIView):
     broadcast_on_order_create = True # Broadcast order created signal
     order_source = 'storefront'
     collect_user_agent = True
+
+
+class OrderReturnRequestAPIView(ReturnRequestAPIView):
+    def get_queryset(self):
+        return super().get_queryset().filter(order__order_user=self.request.user)

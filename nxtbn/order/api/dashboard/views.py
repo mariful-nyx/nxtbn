@@ -20,12 +20,12 @@ from django_filters import rest_framework as filters
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
 from nxtbn.order.proccesor.views import OrderProccessorAPIView
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
-from nxtbn.order.models import Order, OrderLineItem
+from nxtbn.order.models import Order, OrderLineItem, ReturnRequest
 from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 from nxtbn.product.models import ProductVariant
 from nxtbn.users.admin import User
-from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderPaymentUpdateSerializer, OrderSerializer, OrderStatusUpdateSerializer, OrderPaymentMethodSerializer
+from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderPaymentUpdateSerializer, OrderSerializer, OrderStatusUpdateSerializer, OrderPaymentMethodSerializer, ReturnLineItemSerializer, ReturnRequestSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 from babel.numbers import get_currency_precision
@@ -172,3 +172,9 @@ class OrderPaymentMethodUpdateAPIView(generics.UpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderPaymentMethodSerializer
     lookup_field = 'alias'
+
+
+class ReturnRequestAPIView(generics.ListCreateAPIView):
+    queryset = ReturnRequest.objects.all()
+    serializer_class = ReturnRequestSerializer
+    

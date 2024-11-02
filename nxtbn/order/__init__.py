@@ -92,6 +92,36 @@ class ReturnStatus(models.TextChoices):
     REQUESTED = 'REQUESTED', _('Requested')
     APPROVED = 'APPROVED', _('Approved')
     REJECTED = 'REJECTED', _('Rejected')
+    REVIEWED = 'REVIEWED', _('Reviewed')
     COMPLETED = 'COMPLETED', _('Completed')
     CANCELLED = 'CANCELLED', _('Cancelled')
 
+
+
+class ReturnReason(models.TextChoices):
+    """Defines the reasons for returning an order.
+
+    - 'DAMAGED': The product was damaged upon arrival.
+    - 'DEFECTIVE': The product is defective or not functioning as intended.
+    - 'WRONG_PRODUCT': The wrong product was delivered.
+    - 'WRONG_SIZE': The product is the wrong size.
+    - 'WRONG_COLOR': The product is the wrong color.
+    - 'WRONG_VARIANT': The product is the wrong variant.
+    - 'NOT_AS_EXPECTED': The product did not meet the customer's expectations.
+    - 'NO_REASON': No specific reason provided for the return.
+    - 'OTHER': Another reason not listed here but with description.
+    """
+    DAMAGED = 'DAMAGED', _('Damaged')
+    DEFECTIVE = 'DEFECTIVE', _('Defective')
+    WRONG_PRODUCT = 'WRONG_PRODUCT', _('Wrong Product')
+    WRONG_SIZE = 'WRONG_SIZE', _('Wrong Size')
+    WRONG_COLOR = 'WRONG_COLOR', _('Wrong Color')
+    WRONG_VARIANT = 'WRONG_VARIANT', _('Wrong Variant')
+    NOT_AS_EXPECTED = 'NOT_AS_EXPECTED', _('Not as Expected')
+    NO_REASON = 'NO_REASON', _('No Reason')
+    OTHER = 'OTHER', _('Other')
+
+class ReturnReceiveStatus(models.TextChoices):
+    NOT_RECEIVED = 'not_received', _('Not Received')
+    RECEIVED = 'received', _('Received')
+    RECEIVED_WITH_ISSUES = 'received_with_issues', _('Received with Issues')

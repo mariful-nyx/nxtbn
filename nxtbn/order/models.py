@@ -440,17 +440,11 @@ class ReturnLineItem(models.Model):
     return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE, related_name="line_items")
     order_line_item = models.ForeignKey(OrderLineItem, on_delete=models.CASCADE, related_name="return_line_items")
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    reason = models.CharField(
-        max_length=100,
-        help_text="Reason for the return",
-        choices=ReturnReason.choices,
-        default=ReturnReason.NO_REASON
-    )
-    reason_details = models.TextField(help_text="Reason for returning this specific item")
     refunded_amount = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True,
         help_text="Amount refunded for this line item"
     )
+    receving_status = models.CharField(choices=ReturnReceiveStatus.choices, default=ReturnReceiveStatus.NOT_RECEIVED, max_length=20)
 
     def get_descriptive_name(self):
         return self.order_line_item.get_descriptive_name()

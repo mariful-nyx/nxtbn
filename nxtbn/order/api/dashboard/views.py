@@ -25,7 +25,7 @@ from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 from nxtbn.product.models import ProductVariant
 from nxtbn.users.admin import User
-from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderPaymentUpdateSerializer, OrderStatusUpdateSerializer, OrderPaymentMethodSerializer, ReturnLineItemSerializer, ReturnRequestDetailsSerializer, ReturnRequestSerializer
+from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderPaymentUpdateSerializer, OrderStatusUpdateSerializer, OrderPaymentMethodSerializer, ReturnLineItemSerializer, ReturnRequestDetailsSerializer, ReturnRequestSerializer, ReturnRequestStatusUpdateSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 from babel.numbers import get_currency_precision
@@ -178,7 +178,12 @@ class ReturnRequestAPIView(generics.ListCreateAPIView):
     queryset = ReturnRequest.objects.all()
     serializer_class = ReturnRequestSerializer
     
-class ReturnRequestDetailAPIView(generics.RetrieveAPIView):
+class ReturnRequestDetailAPIView(generics.RetrieveUpdateAPIView):
     queryset = ReturnRequest.objects.all()
     serializer_class = ReturnRequestDetailsSerializer
     lookup_field = 'id'
+
+    def get_serializer_class(self):
+        if self.request.method in ['PATCH', 'PUT']:
+            return ReturnRequestStatusUpdateSerializer
+        return self.serializer_class

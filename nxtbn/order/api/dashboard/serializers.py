@@ -292,7 +292,7 @@ class ReturnLineItemSerializer(serializers.ModelSerializer):
     reason_details = serializers.CharField(required=False)
     class Meta:
         model = ReturnLineItem
-        fields = ['id', 'order_line_item', 'quantity', 'reason', 'reason_details', 'refunded_amount']
+        fields = ['id', 'order_line_item', 'quantity', 'refunded_amount']
         read_only_fields = ['refunded_amount']
 
 class ReturnRequestSerializer(serializers.ModelSerializer):
@@ -362,11 +362,10 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
 
 
 class ReturnLineItemDetailsSerializer(serializers.ModelSerializer):
-    reason_details = serializers.CharField(required=False)
     order_line_item = OrderLineItemSerializer()
     class Meta:
         model = ReturnLineItem
-        fields = ['id', 'order_line_item', 'quantity', 'reason', 'reason_details', 'refunded_amount']
+        fields = ['id', 'order_line_item', 'quantity', 'refunded_amount']
         read_only_fields = ['refunded_amount']
 class ReturnRequestDetailsSerializer(serializers.ModelSerializer):
     line_items = ReturnLineItemDetailsSerializer(many=True)
@@ -394,3 +393,14 @@ class ReturnRequestDetailsSerializer(serializers.ModelSerializer):
             'line_items'
         ]
         
+class ReturnRequestStatusUpdateSerializer(serializers.ModelSerializer):
+    status = serializers.ChoiceField(choices=ReturnStatus.choices)
+
+    class Meta:
+        model = ReturnRequest
+        fields = ['status']
+    
+    def validate_status(self, value):
+        if self.instance.status == ReturnStatus.COMPLETED:
+            raise serializers.ValidationError(_("Completed return requests cannot be updated."))
+        return value

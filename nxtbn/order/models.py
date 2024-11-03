@@ -400,6 +400,9 @@ class OrderLineItem(MonetaryMixin, models.Model):
             str: The formatted price per unit with the currency symbol.
         """
         return format_currency(self.price_per_unit, self.currency, locale='en_US')
+    
+    def get_descriptive_name(self):
+        return self.variant.get_descriptive_name()
 
 
     def __str__(self):
@@ -448,6 +451,9 @@ class ReturnLineItem(models.Model):
         max_digits=12, decimal_places=2, null=True, blank=True,
         help_text="Amount refunded for this line item"
     )
+
+    def get_descriptive_name(self):
+        return self.order_line_item.get_descriptive_name()
 
 
 class OrderDeviceMeta(models.Model):

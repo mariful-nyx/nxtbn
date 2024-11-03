@@ -5,7 +5,7 @@ from django.db import transaction
 
 
 from nxtbn.discount.api.dashboard.serializers import PromoCodeBasicSerializer
-from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus, PaymentTerms
+from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus, PaymentTerms, ReturnStatus
 from nxtbn.order.api.storefront.serializers import AddressSerializer
 from nxtbn.order.models import Address, Order, OrderDeviceMeta, OrderLineItem, ReturnLineItem, ReturnRequest
 from nxtbn.payment.api.dashboard.serializers import BasicPaymentSerializer
@@ -332,6 +332,21 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
             'status',
             'order_alias'
         ]
+
+    def validate_line_items(self, line_items):
+        """Validate each line item to ensure no active return request already exists."""
+        for line_item_data in line_items:
+            order_line_item = line_item_data['order_line_item']
+            # Check for existing return requests regardless of status
+            existing_return = ReturnLineItem.objects.filter(
+                order_line_item=order_line_item
+            ).exists()
+            
+            if existing_return:
+                raise serializers.ValidationError(
+                    f"A return request for the product '{order_line_item.get_descriptive_name()}' is already initiated or resolved."
+                )
+        return line_items
     
     def create(self, validated_data):
         line_items_data = validated_data.pop('line_items')

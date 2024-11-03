@@ -430,6 +430,9 @@ class ReturnRequest(AbstractBaseUUIDModel):
     completed_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        ordering = ('-created_at',)
+
 class ReturnLineItem(models.Model):
     return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE, related_name="line_items")
     order_line_item = models.ForeignKey(OrderLineItem, on_delete=models.CASCADE, related_name="return_line_items")
@@ -446,28 +449,6 @@ class ReturnLineItem(models.Model):
         help_text="Amount refunded for this line item"
     )
 
-    
-    class ReturnLineItem(models.Model):
-        return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE, related_name="line_items")
-        order_line_item = models.ForeignKey(OrderLineItem, on_delete=models.CASCADE, related_name="return_line_items")
-        quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-        reason = models.CharField(
-            max_length=100,
-            help_text="Reason for the return",
-            choices=ReturnReason.choices,
-            default=ReturnReason.NO_REASON
-        )
-        reason_details = models.TextField(help_text="Reason for returning this specific item")
-        refunded_amount = models.DecimalField(
-            max_digits=12, decimal_places=2, null=True, blank=True,
-            help_text="Amount refunded for this line item"
-        )
-        receive_status = models.CharField(
-            max_length=20,
-            choices=ReturnReceiveStatus.choices,
-            default=ReturnReceiveStatus.NOT_RECEIVED,
-            help_text="Status indicating whether the returned item has been received and if it was received as expected."
-        )
 
 class OrderDeviceMeta(models.Model):
     """

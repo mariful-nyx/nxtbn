@@ -120,8 +120,11 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         return obj.product.name
 
 class ProductSerializer(serializers.ModelSerializer):
-    default_variant = ProductVariantSerializer(read_only=True)
     product_thumbnail = serializers.SerializerMethodField()
+    category = serializers.StringRelatedField()
+    product_price_range = serializers.SerializerMethodField()
+    total_variant = serializers.SerializerMethodField()
+    product_type = serializers.StringRelatedField()
 
     class Meta:
         model = Product 
@@ -129,23 +132,22 @@ class ProductSerializer(serializers.ModelSerializer):
         fields =  (
             'id',
             'name',
-            'summary',
-            'description',
-            'images',
             'category',
-            'supplier',
-            'brand',
-            'product_type',
-            'related_to',
-            'default_variant',
-            'collections',
+            'status',
             'product_thumbnail',
-            'colors',
-            'tax_class'
+            'product_price_range',
+            'total_variant',
+            'product_type',
         )
+
+    def get_product_price_range(self, obj):
+        return obj.product_price_range_humanized()
     
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
+    
+    def get_total_variant(self, obj):
+        return obj.variants.count()
     
 
 class ProductMinimalSerializer(serializers.ModelSerializer):

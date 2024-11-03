@@ -14,6 +14,10 @@ class User(AbstractUser):
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     phone_number = models.CharField(max_length=255, null=True, blank=True)
 
+    def __str__(self):
+        parts = [self.get_full_name(), self.username, self.email, self.get_role_display()]
+        return " - ".join(part for part in parts if part)
+
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
     

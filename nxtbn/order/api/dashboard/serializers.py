@@ -43,36 +43,6 @@ class OrderLineItemSerializer(serializers.ModelSerializer):
         return obj.humanize_price_per_unit()
 
 
-class OrderSerializer(serializers.ModelSerializer):
-    line_items = OrderLineItemSerializer(many=True, read_only=True)
-    user = serializers.StringRelatedField()
-    supplier = serializers.StringRelatedField(allow_null=True)
-    shipping_address = serializers.StringRelatedField(allow_null=True)
-    billing_address = serializers.StringRelatedField(allow_null=True)
-    gift_card = serializers.StringRelatedField(allow_null=True)
-    payment_method = serializers.CharField(source='get_payment_method')
-
-    class Meta:
-        model = Order
-        fields = (
-            'id',
-            'alias',
-            'user',
-            'supplier',
-            'payment_method',
-            'shipping_address',
-            'billing_address',
-            'total_price',
-            'status',
-            'authorize_status',
-            'charge_status',
-            'promo_code',
-            'gift_card',
-            'line_items',
-            'note',
-            'comment',
-        )
-
 class OrderListSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
     payment_method = serializers.CharField(source='get_payment_method')
@@ -322,18 +292,21 @@ class ReturnLineItemSerializer(serializers.ModelSerializer):
     reason_details = serializers.CharField(required=False)
     class Meta:
         model = ReturnLineItem
-        fields = ['order_line_item', 'quantity', 'reason', 'reason_details', 'refunded_amount']
+        fields = ['id', 'order_line_item', 'quantity', 'reason', 'reason_details', 'refunded_amount']
         read_only_fields = ['refunded_amount']
 
 class ReturnRequestSerializer(serializers.ModelSerializer):
     line_items = ReturnLineItemSerializer(many=True, write_only=True)
     reason_details = serializers.CharField(required=False)
     order_alias = serializers.CharField(source='order.alias', read_only=True)
+    approved_by = serializers.StringRelatedField(read_only=True)
+    reviewed_by = serializers.StringRelatedField(read_only=True)
+    initiated_by = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = ReturnRequest
         fields = [
             'id',
-            'intiated_by',
+            'initiated_by',
             'reviewed_by',
             'approved_by',
             'order',
@@ -349,7 +322,7 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             'id',
-            'intiated_by',
+            'initiated_by',
             'reviewed_by',
             'approved_by', 
             'approved_at',
@@ -363,7 +336,7 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         line_items_data = validated_data.pop('line_items')
         # Set intiated_by to the current user
-        validated_data['intiated_by'] = self.context['request'].user
+        validated_data['initiated_by'] = self.context['request'].user
         return_request = ReturnRequest.objects.create(**validated_data)
         order = validated_data.get('order')
         order.status = OrderStatus.PENDING_RETURN
@@ -371,3 +344,38 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
         for line_item_data in line_items_data:
             ReturnLineItem.objects.create(return_request=return_request, **line_item_data)
         return return_request
+
+
+class ReturnLineItemDetailsSerializer(serializers.ModelSerializer):
+    reason_details = serializers.CharField(required=False)
+    order_line_item = OrderLineItemSerializer()
+    class Meta:
+        model = ReturnLineItem
+        fields = ['id', 'order_line_item', 'quantity', 'reason', 'reason_details', 'refunded_amount']
+        read_only_fields = ['refunded_amount']
+class ReturnRequestDetailsSerializer(serializers.ModelSerializer):
+    line_items = ReturnLineItemDetailsSerializer(many=True)
+    reason_details = serializers.CharField(required=False)
+    order_alias = serializers.CharField(source='order.alias', read_only=True)
+    approved_by = serializers.StringRelatedField(read_only=True)
+    reviewed_by = serializers.StringRelatedField(read_only=True)
+    initiated_by = serializers.StringRelatedField(read_only=True)
+    class Meta:
+        model = ReturnRequest
+        fields = [
+            'id',
+            'initiated_by',
+            'reviewed_by',
+            'approved_by',
+            'order',
+            'order_alias',
+            'status',
+            'reason',
+            'reason_details',
+            'approved_at',
+            'rejected_at', 
+            'completed_at',
+            'cancelled_at',
+            'line_items'
+        ]
+        

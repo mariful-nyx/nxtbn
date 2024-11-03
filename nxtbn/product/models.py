@@ -115,6 +115,21 @@ class ProductType(models.Model):
         blank=True,
         null=True
     )
+
+    def __str__(self):
+        fields = [self.name]
+        if self.taxable:
+            fields.append("Taxable")
+        if self.physical_product:
+            fields.append("Physical Product")
+        if self.track_stock:
+            fields.append("Track Stock")
+        if self.has_variant:
+            fields.append("Has Variant")
+        if self.weight_unit:
+            fields.append(f"Weight Unit: {self.weight_unit}")
+        return " | ".join(fields)
+    
     # TO DO: class Meta: # Handle unique together with each field except name
 
 class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
@@ -170,6 +185,28 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     
     def get_stock(self):
         return self.variants.aggregate(stock=models.Sum('stock'))['stock']
+    
+    def product_price_range(self):
+        """
+        Returns the price range of the product variants.
+        """
+        price_range = self.variants.aggregate(min_price=models.Min('price'), max_price=models.Max('price'))
+        return price_range
+    
+    def product_price_range_humanized(self, locale='en_US'):
+        """
+        Returns the price range of the product variants in a human-readable format.
+        """
+        price_range = self.product_price_range()
+        min_price = price_range['min_price']
+        max_price = price_range['max_price']
+        
+        if min_price == max_price:
+            min_price = Decimal('0.00')
+        
+        if locale:
+            return f"{format_currency(min_price, self.default_variant.currency, locale=locale)} - {format_currency(max_price, self.default_variant.currency, locale=locale)}"
+        return f"{min_price} - {max_price}"
 
     def __str__(self):
         return self.name

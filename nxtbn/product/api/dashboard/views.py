@@ -58,6 +58,7 @@ class ProductFilter(filters.FilterSet):
             'tags',
             'created_at',
             'promo_code',
+            'status',
         ]
 
 

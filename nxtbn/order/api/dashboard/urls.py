@@ -13,5 +13,6 @@ urlpatterns = [
     path('orders/payment-term/update/<uuid:alias>/', order_views.OrderPaymentTermUpdateAPIView.as_view(), name='order-payment-term-update'),
     path('orders/payment-method/update/<uuid:alias>/', order_views.OrderPaymentMethodUpdateAPIView.as_view(), name='order-payment-method-update'),
     path('orders/return-request/', order_views.ReturnRequestAPIView.as_view(), name='return-request'),
+    path('orders/return-request/<int:id>/', order_views.ReturnRequestDetailAPIView.as_view(), name='return-request-detail'),
     path('stats/', order_views.BasicStatsView.as_view(), name='basic-stats'),
 ]

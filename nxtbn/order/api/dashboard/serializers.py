@@ -328,7 +328,7 @@ class ReturnLineItemSerializer(serializers.ModelSerializer):
 class ReturnRequestSerializer(serializers.ModelSerializer):
     line_items = ReturnLineItemSerializer(many=True, write_only=True)
     reason_details = serializers.CharField(required=False)
-
+    order_alias = serializers.CharField(source='order.alias', read_only=True)
     class Meta:
         model = ReturnRequest
         fields = [
@@ -336,7 +336,8 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
             'intiated_by',
             'reviewed_by',
             'approved_by',
-            'order', 
+            'order',
+            'order_alias',
             'status',
             'reason',
             'reason_details',
@@ -355,7 +356,8 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
             'rejected_at',
             'completed_at',
             'cancelled_at',
-            'status'
+            'status',
+            'order_alias'
         ]
     
     def create(self, validated_data):

@@ -414,6 +414,7 @@ class ReturnRequest(AbstractBaseUUIDModel):
     initiated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="returns")
     reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviewed_returns", null=True, blank=True)
     approved_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="approved_returns", null=True, blank=True)
+    completed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="resolved_returns", null=True, blank=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="returns")
     status = models.CharField(
         max_length=20,

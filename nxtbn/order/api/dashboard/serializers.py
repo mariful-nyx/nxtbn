@@ -401,9 +401,30 @@ class ReturnRequestStatusUpdateSerializer(serializers.ModelSerializer):
         fields = ['status']
     
     def validate_status(self, value):
-        if self.instance.status == ReturnStatus.COMPLETED:
-            raise serializers.ValidationError(_("Completed return requests cannot be updated."))
+        if self.instance.status in [ReturnStatus.COMPLETED, ReturnStatus.CANCELLED]:
+            raise serializers.ValidationError(_("Cannot update status of a resolved return request."))
         return value
+    
+    def update(self, instance, validated_data):
+        status = validated_data.get('status')
+        if status == ReturnStatus.APPROVED:
+            instance.approved_by = self.context['request'].user
+            instance.approved_at = timezone.now()
+        elif status == ReturnStatus.REJECTED:
+            instance.rejected_at = timezone.now()
+        elif status == ReturnStatus.COMPLETED:
+            instance.completed_at = timezone.now()
+            order = instance.order
+            order.status = OrderStatus.RETURNED
+            order.save()
+        elif status == ReturnStatus.CANCELLED:
+            instance.cancelled_at = timezone.now()
+        elif status == ReturnStatus.REVIEWED:
+            instance.reviewed_by = self.context['request'].user
+
+        instance.status = status
+        instance.save()
+        return instance
     
 
 class ReturnLineItemStatusUpdateSerializer(serializers.Serializer):

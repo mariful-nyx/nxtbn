@@ -19,7 +19,8 @@ from nxtbn.product.api.dashboard.views import (
     ProductMinimalListView,
     ProductListDetailVariantView,
     TaxClassView,
-    BulkProductStatusUpdateAPIView
+    BulkProductStatusUpdateAPIView,
+    BulkProductDeleteAPIView
 
 )
 
@@ -47,5 +48,6 @@ urlpatterns = [
     path('categories-by-parent/<id_or_none:id>/', CategoryByParentView.as_view(), name='category-by-parent'),
     path('tax-class/', TaxClassView.as_view(), name='tax-class'),
     path('products/update/bulk/', BulkProductStatusUpdateAPIView.as_view(), name='bulk-product-status-update'),
+    path('products/delete/bulk/', BulkProductDeleteAPIView.as_view(), name='bulk-product-status-delete'),
 ]
 

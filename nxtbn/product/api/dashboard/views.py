@@ -24,6 +24,7 @@ from nxtbn.product.api.dashboard.serializers import (
     ProductSerializer,
     CategorySerializer,
     CollectionSerializer,
+    ProductStatusDeleteBulkSerializer,
     ProductStatusUpdateBulkSerializer,
     ProductTagSerializer,
     ProductTypeSerializer,
@@ -240,4 +241,18 @@ class BulkProductStatusUpdateAPIView(generics.UpdateAPIView):
         product_ids = serializer.validated_data['product_ids']
 
         Product.objects.filter(id__in=product_ids).update(status=product_status)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+class BulkProductDeleteAPIView(generics.DestroyAPIView):
+    permission_classes = (NxtbnAdminPermission,)
+    queryset = Product.objects.all()
+    serializer_class = ProductStatusDeleteBulkSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        product_ids = serializer.validated_data['product_ids']
+        Product.objects.filter(id__in=product_ids).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

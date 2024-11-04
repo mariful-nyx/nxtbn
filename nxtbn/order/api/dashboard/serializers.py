@@ -289,7 +289,6 @@ class OrderPaymentMethodSerializer(serializers.ModelSerializer):
 
 
 class ReturnLineItemSerializer(serializers.ModelSerializer):
-    reason_details = serializers.CharField(required=False)
     class Meta:
         model = ReturnLineItem
         fields = ['id', 'order_line_item', 'quantity', 'refunded_amount']
@@ -347,6 +346,11 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
                     f"A return request for the product '{order_line_item.get_descriptive_name()}' is already initiated or resolved."
                 )
         return line_items
+    
+    def validate_order(self, value):
+        if value.status != OrderStatus.DELIVERED:
+            raise serializers.ValidationError("Return requests can only be initiated for delivered orders.")
+        return value
     
     def create(self, validated_data):
         line_items_data = validated_data.pop('line_items')

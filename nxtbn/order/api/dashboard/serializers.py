@@ -5,7 +5,7 @@ from django.db import transaction
 
 
 from nxtbn.discount.api.dashboard.serializers import PromoCodeBasicSerializer
-from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus, PaymentTerms
+from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus, PaymentTerms, ReturnReceiveStatus, ReturnStatus
 from nxtbn.order.api.storefront.serializers import AddressSerializer
 from nxtbn.order.models import Address, Order, OrderDeviceMeta, OrderLineItem, ReturnLineItem, ReturnRequest
 from nxtbn.payment.api.dashboard.serializers import BasicPaymentSerializer
@@ -292,7 +292,7 @@ class ReturnLineItemSerializer(serializers.ModelSerializer):
     reason_details = serializers.CharField(required=False)
     class Meta:
         model = ReturnLineItem
-        fields = ['id', 'order_line_item', 'quantity', 'reason', 'reason_details', 'refunded_amount']
+        fields = ['id', 'order_line_item', 'quantity', 'refunded_amount']
         read_only_fields = ['refunded_amount']
 
 class ReturnRequestSerializer(serializers.ModelSerializer):
@@ -332,6 +332,21 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
             'status',
             'order_alias'
         ]
+
+    def validate_line_items(self, line_items):
+        """Validate each line item to ensure no active return request already exists."""
+        for line_item_data in line_items:
+            order_line_item = line_item_data['order_line_item']
+            # Check for existing return requests regardless of status
+            existing_return = ReturnLineItem.objects.filter(
+                order_line_item=order_line_item
+            ).exists()
+            
+            if existing_return:
+                raise serializers.ValidationError(
+                    f"A return request for the product '{order_line_item.get_descriptive_name()}' is already initiated or resolved."
+                )
+        return line_items
     
     def create(self, validated_data):
         line_items_data = validated_data.pop('line_items')
@@ -347,11 +362,10 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
 
 
 class ReturnLineItemDetailsSerializer(serializers.ModelSerializer):
-    reason_details = serializers.CharField(required=False)
     order_line_item = OrderLineItemSerializer()
     class Meta:
         model = ReturnLineItem
-        fields = ['id', 'order_line_item', 'quantity', 'reason', 'reason_details', 'refunded_amount']
+        fields = ['id', 'order_line_item', 'quantity', 'refunded_amount', 'receiving_status']
         read_only_fields = ['refunded_amount']
 class ReturnRequestDetailsSerializer(serializers.ModelSerializer):
     line_items = ReturnLineItemDetailsSerializer(many=True)
@@ -379,3 +393,63 @@ class ReturnRequestDetailsSerializer(serializers.ModelSerializer):
             'line_items'
         ]
         
+class ReturnRequestStatusUpdateSerializer(serializers.ModelSerializer):
+    status = serializers.ChoiceField(choices=ReturnStatus.choices)
+
+    class Meta:
+        model = ReturnRequest
+        fields = ['status']
+    
+    def validate_status(self, value):
+        if self.instance.status in [ReturnStatus.COMPLETED, ReturnStatus.CANCELLED]:
+            raise serializers.ValidationError(_("Cannot update status of a resolved return request."))
+        return value
+    
+    def update(self, instance, validated_data):
+        status = validated_data.get('status')
+        if status == ReturnStatus.APPROVED:
+            instance.approved_by = self.context['request'].user
+            instance.approved_at = timezone.now()
+        elif status == ReturnStatus.REJECTED:
+            instance.rejected_at = timezone.now()
+        elif status == ReturnStatus.COMPLETED:
+            instance.completed_at = timezone.now()
+            order = instance.order
+            order.status = OrderStatus.RETURNED
+            order.save()
+        elif status == ReturnStatus.CANCELLED:
+            instance.cancelled_at = timezone.now()
+        elif status == ReturnStatus.REVIEWED:
+            instance.reviewed_by = self.context['request'].user
+
+        instance.status = status
+        instance.save()
+        return instance
+    
+
+class ReturnLineItemStatusUpdateSerializer(serializers.Serializer):
+    receiving_status = serializers.ChoiceField(choices=ReturnReceiveStatus.choices)
+    line_item_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        allow_empty=False,
+        help_text="List of ReturnLineItem IDs to update"
+    )
+
+class ReturnRequestBulkUpdateSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=ReturnStatus.choices)
+    request_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        allow_empty=False,
+        help_text="List of ReturnRequest IDs to update"
+    )
+
+    def validate_request_ids(self, value):
+        if ReturnRequest.objects.filter(id__in=value).count() != len(value):
+            raise serializers.ValidationError("One or more return requests do not exist.")
+        
+        completed_requests = ReturnRequest.objects.filter(id__in=value, status=ReturnStatus.COMPLETED)
+        if completed_requests.exists():
+            raise serializers.ValidationError("One or more return requests are completed and cannot be updated.")
+        
+        return value
+   

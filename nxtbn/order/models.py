@@ -400,6 +400,9 @@ class OrderLineItem(MonetaryMixin, models.Model):
             str: The formatted price per unit with the currency symbol.
         """
         return format_currency(self.price_per_unit, self.currency, locale='en_US')
+    
+    def get_descriptive_name(self):
+        return self.variant.get_descriptive_name()
 
 
     def __str__(self):
@@ -411,6 +414,7 @@ class ReturnRequest(AbstractBaseUUIDModel):
     initiated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="returns")
     reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviewed_returns", null=True, blank=True)
     approved_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="approved_returns", null=True, blank=True)
+    completed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="resolved_returns", null=True, blank=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="returns")
     status = models.CharField(
         max_length=20,
@@ -430,44 +434,22 @@ class ReturnRequest(AbstractBaseUUIDModel):
     completed_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        ordering = ('-created_at',)
+
 class ReturnLineItem(models.Model):
     return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE, related_name="line_items")
     order_line_item = models.ForeignKey(OrderLineItem, on_delete=models.CASCADE, related_name="return_line_items")
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    reason = models.CharField(
-        max_length=100,
-        help_text="Reason for the return",
-        choices=ReturnReason.choices,
-        default=ReturnReason.NO_REASON
-    )
-    reason_details = models.TextField(help_text="Reason for returning this specific item")
     refunded_amount = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True,
         help_text="Amount refunded for this line item"
     )
+    receiving_status = models.CharField(choices=ReturnReceiveStatus.choices, default=ReturnReceiveStatus.NOT_RECEIVED, max_length=20)
 
-    
-    class ReturnLineItem(models.Model):
-        return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE, related_name="line_items")
-        order_line_item = models.ForeignKey(OrderLineItem, on_delete=models.CASCADE, related_name="return_line_items")
-        quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-        reason = models.CharField(
-            max_length=100,
-            help_text="Reason for the return",
-            choices=ReturnReason.choices,
-            default=ReturnReason.NO_REASON
-        )
-        reason_details = models.TextField(help_text="Reason for returning this specific item")
-        refunded_amount = models.DecimalField(
-            max_digits=12, decimal_places=2, null=True, blank=True,
-            help_text="Amount refunded for this line item"
-        )
-        receive_status = models.CharField(
-            max_length=20,
-            choices=ReturnReceiveStatus.choices,
-            default=ReturnReceiveStatus.NOT_RECEIVED,
-            help_text="Status indicating whether the returned item has been received and if it was received as expected."
-        )
+    def get_descriptive_name(self):
+        return self.order_line_item.get_descriptive_name()
+
 
 class OrderDeviceMeta(models.Model):
     """

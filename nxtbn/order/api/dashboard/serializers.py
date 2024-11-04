@@ -5,7 +5,7 @@ from django.db import transaction
 
 
 from nxtbn.discount.api.dashboard.serializers import PromoCodeBasicSerializer
-from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus, PaymentTerms, ReturnStatus
+from nxtbn.order import AddressType, OrderChargeStatus, OrderStatus, PaymentTerms, ReturnReceiveStatus, ReturnStatus
 from nxtbn.order.api.storefront.serializers import AddressSerializer
 from nxtbn.order.models import Address, Order, OrderDeviceMeta, OrderLineItem, ReturnLineItem, ReturnRequest
 from nxtbn.payment.api.dashboard.serializers import BasicPaymentSerializer
@@ -365,7 +365,7 @@ class ReturnLineItemDetailsSerializer(serializers.ModelSerializer):
     order_line_item = OrderLineItemSerializer()
     class Meta:
         model = ReturnLineItem
-        fields = ['id', 'order_line_item', 'quantity', 'refunded_amount']
+        fields = ['id', 'order_line_item', 'quantity', 'refunded_amount', 'receiving_status']
         read_only_fields = ['refunded_amount']
 class ReturnRequestDetailsSerializer(serializers.ModelSerializer):
     line_items = ReturnLineItemDetailsSerializer(many=True)
@@ -404,3 +404,12 @@ class ReturnRequestStatusUpdateSerializer(serializers.ModelSerializer):
         if self.instance.status == ReturnStatus.COMPLETED:
             raise serializers.ValidationError(_("Completed return requests cannot be updated."))
         return value
+    
+
+class ReturnLineItemStatusUpdateSerializer(serializers.Serializer):
+    receiving_status = serializers.ChoiceField(choices=ReturnReceiveStatus.choices)
+    line_item_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        allow_empty=False,
+        help_text="List of ReturnLineItem IDs to update"
+    )

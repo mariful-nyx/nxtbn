@@ -122,6 +122,6 @@ class ReturnReason(models.TextChoices):
     OTHER = 'OTHER', _('Other')
 
 class ReturnReceiveStatus(models.TextChoices):
-    NOT_RECEIVED = 'not_received', _('Not Received')
-    RECEIVED = 'received', _('Received')
-    RECEIVED_WITH_ISSUES = 'received_with_issues', _('Received with Issues')
+    NOT_RECEIVED = 'NOT_RECEIVED', _('Not Received')
+    RECEIVED = 'RECEIVED', _('Received')
+    RECEIVED_WITH_ISSUES = 'RECEIVED_WITH_ISSUES', _('Received with Issues')

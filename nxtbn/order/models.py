@@ -444,7 +444,7 @@ class ReturnLineItem(models.Model):
         max_digits=12, decimal_places=2, null=True, blank=True,
         help_text="Amount refunded for this line item"
     )
-    receving_status = models.CharField(choices=ReturnReceiveStatus.choices, default=ReturnReceiveStatus.NOT_RECEIVED, max_length=20)
+    receiving_status = models.CharField(choices=ReturnReceiveStatus.choices, default=ReturnReceiveStatus.NOT_RECEIVED, max_length=20)
 
     def get_descriptive_name(self):
         return self.order_line_item.get_descriptive_name()

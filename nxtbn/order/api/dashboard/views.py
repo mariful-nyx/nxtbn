@@ -20,12 +20,12 @@ from django_filters import rest_framework as filters
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
 from nxtbn.order.proccesor.views import OrderProccessorAPIView
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus
-from nxtbn.order.models import Order, OrderLineItem, ReturnRequest
+from nxtbn.order.models import Order, OrderLineItem, ReturnLineItem, ReturnRequest
 from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 from nxtbn.product.models import ProductVariant
 from nxtbn.users.admin import User
-from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderPaymentUpdateSerializer, OrderStatusUpdateSerializer, OrderPaymentMethodSerializer, ReturnLineItemSerializer, ReturnRequestDetailsSerializer, ReturnRequestSerializer, ReturnRequestStatusUpdateSerializer
+from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderPaymentUpdateSerializer, OrderStatusUpdateSerializer, OrderPaymentMethodSerializer, ReturnLineItemSerializer, ReturnLineItemStatusUpdateSerializer, ReturnRequestDetailsSerializer, ReturnRequestSerializer, ReturnRequestStatusUpdateSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 from babel.numbers import get_currency_precision
@@ -187,3 +187,29 @@ class ReturnRequestDetailAPIView(generics.RetrieveUpdateAPIView):
         if self.request.method in ['PATCH', 'PUT']:
             return ReturnRequestStatusUpdateSerializer
         return self.serializer_class
+
+class ReturnLineItemStatusUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = ReturnLineItemStatusUpdateSerializer
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        receiving_status = serializer.validated_data['receiving_status']
+        line_item_ids = serializer.validated_data['line_item_ids']
+
+        # Update the receiving status for the specified line items
+        line_items = ReturnLineItem.objects.filter(id__in=line_item_ids)
+
+        if line_items.count() != len(line_item_ids):
+            return Response(
+                {"error": "Some line items were not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        line_items.update(receiving_status=receiving_status)
+
+        return Response(
+            {"message": "Receiving status updated successfully."},
+            status=status.HTTP_200_OK
+        )

@@ -434,3 +434,22 @@ class ReturnLineItemStatusUpdateSerializer(serializers.Serializer):
         allow_empty=False,
         help_text="List of ReturnLineItem IDs to update"
     )
+
+class ReturnRequestBulkUpdateSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=ReturnStatus.choices)
+    request_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        allow_empty=False,
+        help_text="List of ReturnRequest IDs to update"
+    )
+
+    def validate_request_ids(self, value):
+        if ReturnRequest.objects.filter(id__in=value).count() != len(value):
+            raise serializers.ValidationError("One or more return requests do not exist.")
+        
+        completed_requests = ReturnRequest.objects.filter(id__in=value, status=ReturnStatus.COMPLETED)
+        if completed_requests.exists():
+            raise serializers.ValidationError("One or more return requests are completed and cannot be updated.")
+        
+        return value
+   

@@ -15,5 +15,6 @@ urlpatterns = [
     path('orders/return-request/', order_views.ReturnRequestAPIView.as_view(), name='return-request'),
     path('orders/return-request/<int:id>/', order_views.ReturnRequestDetailAPIView.as_view(), name='return-request-detail'),
     path('orders/return-line-item/receiving-status/update/', order_views.ReturnLineItemStatusUpdateAPIView.as_view(), name='return-line-item-status-update'),
+    path('orders/return-request/status/bulk-update/', order_views.ReturnRequestBulkUpdateAPIView.as_view(), name='return-request-status-update'),
     path('stats/', order_views.BasicStatsView.as_view(), name='basic-stats'),
 ]

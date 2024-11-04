@@ -89,12 +89,27 @@ class AddressType(models.TextChoices):
 
 
 class ReturnStatus(models.TextChoices):
+    """
+    ReturnStatus is an enumeration of possible statuses for a return order.
+
+    Attributes:
+        REQUESTED: The return has been requested by the customer.
+        APPROVED: The return request has been approved.
+        REJECTED: The return request has been rejected.
+        REVIEWED: The return request has been reviewed.
+        CANCELLED: The return process has been cancelled.
+        COMPLETED: The return process has been completed.
+
+    Differences between REJECTED and CANCELLED:
+        - REJECTED: The return request has been evaluated and denied.
+        - CANCELLED: The return process has been stopped, possibly by the customer or due to other reasons, before completion.
+    """
     REQUESTED = 'REQUESTED', _('Requested')
     APPROVED = 'APPROVED', _('Approved')
     REJECTED = 'REJECTED', _('Rejected')
     REVIEWED = 'REVIEWED', _('Reviewed')
     CANCELLED = 'CANCELLED', _('Cancelled')
-    COMPLETED = 'COMPLETED', _('Resolved')
+    COMPLETED = 'COMPLETED', _('Completed')
 
 
 

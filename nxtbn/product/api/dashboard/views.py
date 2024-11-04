@@ -24,6 +24,7 @@ from nxtbn.product.api.dashboard.serializers import (
     ProductSerializer,
     CategorySerializer,
     CollectionSerializer,
+    ProductStatusUpdateBulkSerializer,
     ProductTagSerializer,
     ProductTypeSerializer,
     ProductWithVariantSerializer,
@@ -225,3 +226,18 @@ class TaxClassView(generics.ListCreateAPIView):
     serializer_class = TaxClassSerializer
     permission_classes = (NxtbnAdminPermission,)
     pagination_class = None
+
+
+class BulkProductStatusUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = ProductStatusUpdateBulkSerializer
+    permission_classes = (NxtbnAdminPermission,)
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        product_status = serializer.validated_data['status']
+        product_ids = serializer.validated_data['product_ids']
+
+        Product.objects.filter(id__in=product_ids).update(status=product_status)
+        return Response(status=status.HTTP_204_NO_CONTENT)

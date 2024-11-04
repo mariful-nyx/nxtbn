@@ -467,3 +467,13 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
         # Access the request from the context, if available
         request = self.context.get('request')
         return obj.product_thumbnail(request) if request else None
+    
+
+
+class ProductStatusUpdateBulkSerializer(serializers.Serializer):
+    product_ids = serializers.ListField(child=serializers.IntegerField(), required=True)
+    status = serializers.ChoiceField(choices=PublishableStatus.choices, required=True)
+
+
+class ProductStatusDeleteBulkSerializer(serializers.Serializer):
+    product_ids = serializers.ListField(child=serializers.IntegerField(), required=True)

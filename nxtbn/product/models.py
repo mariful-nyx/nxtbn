@@ -147,7 +147,6 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name='+', null=True, blank=True)
     brand = models.CharField(max_length=100, blank=True, null=True)
     product_type = models.ForeignKey(ProductType, related_name='product', on_delete=models.PROTECT, help_text="The type of product.")
-    related_to = models.ManyToManyField("self", blank=True)
     default_variant = models.OneToOneField(
         "ProductVariant",
         blank=True,
@@ -158,6 +157,16 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     collections = models.ManyToManyField(Collection, blank=True, related_name='products_in_collection')
     tags = models.ManyToManyField(ProductTag, blank=True)
     tax_class = models.ForeignKey(TaxClass, on_delete=models.PROTECT, related_name='products', null=True, blank=True) # null for tax exempt products
+    related_to = models.ManyToManyField(
+        "self",
+        blank=True,
+        help_text=(
+            "Related products. For example, if you have a product that is a t-shirt, "
+            "each product can have variants by size and color. In this case, you can "
+            "relate all the products by color. This field is not intended for "
+            "recommendation engines."
+        )
+    )
 
     class Meta:
         ordering = ('name',)
@@ -220,7 +229,7 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
         return reverse("product_detail", args=[self.slug])
 
 
-class ProductVariant(MonetaryMixin, AbstractUUIDModel, models.Model):
+class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.Model):
     money_validator_map = {
         "price": {
             "currency_field": "currency",
@@ -272,13 +281,7 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, models.Model):
         null=True,
         blank=True
     )
-    attributes = models.JSONField(
-        blank=True,
-        null=True,
-        default=dict,
-        validators=[no_nested_values],
-        help_text="A JSON field to store custom attributes for the variant. Primary attributes include color code, dimension, and weight value. Weight value and dimension are used for shipping calculations. This field allows adding as many custom attributes as needed."
-    )
+    
 
     def get_descriptive_name(self):
         parts = [self.product.name]
@@ -293,14 +296,14 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, models.Model):
             parts.append(f"Weight: {self.weight_value} {self.weight_unit}")
         
         dimensions = []
-        if 'height' in self.attributes:
-            dimensions.append(f"Height: {self.attributes['height']}")
-        if 'width' in self.attributes:
-            dimensions.append(f"Width: {self.attributes['width']}")
-        if 'depth' in self.attributes:
-            dimensions.append(f"Depth: {self.attributes['depth']}")
-        if dimensions and 'dimension_type' in self.attributes:
-            parts.append(f"Dimensions: {' x '.join(dimensions)} {self.attributes['dimension_type']}")
+        if 'height' in self.metadata:
+            dimensions.append(f"Height: {self.metadata['height']}")
+        if 'width' in self.metadata:
+            dimensions.append(f"Width: {self.metadata['width']}")
+        if 'depth' in self.metadata:
+            dimensions.append(f"Depth: {self.metadata['depth']}")
+        if dimensions and 'dimension_type' in self.metadata:
+            parts.append(f"Dimensions: {' x '.join(dimensions)} {self.metadata['dimension_type']}")
         
         return " - ".join(parts)
     

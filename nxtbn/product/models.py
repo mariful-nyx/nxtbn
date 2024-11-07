@@ -239,7 +239,7 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
     }
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
-    variant_image = models.ForeignKey(Image, blank=True, null=True, on_delete=models.SET_NULL)
+    variant_image = models.ForeignKey(Image, blank=True, null=True, on_delete=models.SET_NULL) # TO DO: Remove this field, unnecessary, Decided with critically analyze. Can handle with product.related_to field
     name = models.CharField(max_length=255, blank=True, null=True)
 
     compare_at_price = models.DecimalField(max_digits=12, decimal_places=3, validators=[MinValueValidator(Decimal('0.01'))], null=True, blank=True)
@@ -267,7 +267,7 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
     sku = models.CharField(max_length=50, unique=True)
 
 
-    color_code = models.CharField(max_length=7, null=True, blank=True)
+    color_code = models.CharField(max_length=7, null=True, blank=True)  # TO DO: Remove this field, unnecessary, Decided with critically analyze. Can handle with product.related_to field
     # Weight and dimensions are also types of attributes, but we created these fields separately for shipping rate calculation purposes.
     weight_unit = models.CharField(
         max_length=5,
@@ -281,6 +281,8 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
         null=True,
         blank=True
     )
+    is_preorder = models.BooleanField(default=False)
+    purchase_limit_per_order = models.PositiveIntegerField(null=True, blank=True, help_text="Maximum number of units that can be purchased in a single order.")
     
 
     def get_descriptive_name(self):

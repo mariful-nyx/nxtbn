@@ -74,11 +74,18 @@ class ProductWithDefaultVariantSerializer(serializers.ModelSerializer):
 
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
+    
+class ProductSlugSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ('id', 'slug', 'name', 'product_thumbnail',)
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True)
     default_variant = ProductVariantSerializer(read_only=True)
+    related_to = ProductSlugSerializer(many=True, read_only=True)
+
     class Meta:
         model = Product
         fields = (
@@ -93,4 +100,5 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'created_by',
             'default_variant',
             'variants',
+            'related_to',
         )

@@ -4,4 +4,5 @@ from nxtbn.core.api.dashboard.status import views as status_views
 
 urlpatterns = [
     path('system-status/', status_views.SystemStatusAPIView.as_view(), name='system-status'),
+    path('db-tables-details/', status_views.DatabaseTableInfoAPIView.as_view(), name='db-details'),
 ]

@@ -158,3 +158,104 @@ class SystemStatusAPIView(RetrieveAPIView):
    
     def get(self, request, *args, **kwargs):
         return Response(get_system_status())
+
+def get_dtails_db_table_info():
+    table_info = []
+    total_db_size = 0
+    db_engine = connection.settings_dict['ENGINE']
+    
+    with connection.cursor() as cursor:
+        if 'postgresql' in db_engine:
+            try:
+                # Query for PostgreSQL to fetch table info
+                cursor.execute("""
+                    SELECT
+                        table_name,
+                        pg_total_relation_size(table_name::regclass) AS total_size,
+                        pg_relation_size(table_name::regclass) AS table_size,
+                        pg_indexes_size(table_name::regclass) AS indexes_size
+                    FROM
+                        information_schema.tables
+                    WHERE
+                        table_schema = 'public'
+                        AND table_type = 'BASE TABLE';
+                """)
+                rows = cursor.fetchall()
+
+                # Loop over the PostgreSQL table rows
+                for row in rows:
+                    table_info.append({
+                        "table_name": row[0],
+                        "total_size": bytes_to_human_readable(row[1]),
+                        "table_size": bytes_to_human_readable(row[2]),
+                        "indexes_size": bytes_to_human_readable(row[3]),
+                    })
+
+                # Get total database size for PostgreSQL
+                cursor.execute("SELECT pg_database_size(current_database());")
+                total_db_size = cursor.fetchone()[0]
+
+            except Exception as e:
+                print(f"Error fetching PostgreSQL table sizes: {e}")
+                table_info.append({
+                    "table_name": "Error",
+                    "total_size": "N/A",
+                    "table_size": "N/A",
+                    "indexes_size": "N/A",
+                })
+
+        elif 'sqlite' in db_engine:
+            try:
+                # Query for SQLite to fetch table info
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                tables = cursor.fetchall()
+
+                # Loop over the SQLite table rows
+                for table in tables:
+                    table_name = table[0]
+                    # Fetch table size for SQLite (SQLite doesn't have indexes size like PostgreSQL)
+                    cursor.execute(f"PRAGMA table_info({table_name});")
+                    table_info.append({
+                        "table_name": table_name,
+                        "total_size": "N/A",  # SQLite doesn't have direct table size query
+                        "table_size": "N/A",  # Placeholder for now
+                        "indexes_size": "N/A",  # SQLite doesn't separate index size
+                    })
+                
+                # Get total database size for SQLite
+                import os
+                db_file_path = connection.settings_dict['NAME']
+                db_file_size = os.path.getsize(db_file_path)
+                total_db_size = db_file_size
+
+            except Exception as e:
+                print(f"Error fetching SQLite table sizes: {e}")
+                table_info.append({
+                    "table_name": "Error",
+                    "total_size": "N/A",
+                    "table_size": "N/A",
+                    "indexes_size": "N/A",
+                })
+
+        else:
+            table_info.append({
+                "table_name": "Unknown DB Engine",
+                "total_size": "N/A",
+                "table_size": "N/A",
+                "indexes_size": "N/A",
+            })
+
+    return {
+        "tables": table_info,
+        "total_db_size": bytes_to_human_readable(total_db_size),
+    }
+
+class DatabaseTableInfoAPIView(RetrieveAPIView):
+    """
+    API View that returns the detailed information of the database tables including
+    their size, index size, and total size.
+    """
+    
+    def get(self, request, *args, **kwargs):
+        table_info = get_dtails_db_table_info()
+        return Response(table_info)

@@ -27,6 +27,7 @@ django-celery-beat = "2.6.0"
 redis = "*"
 django-countries = "*"
 pymemcache = "4.0.0"
+psutil = "*"
 
 [dev-packages]
 coverage = "*"

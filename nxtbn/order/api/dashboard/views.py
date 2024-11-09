@@ -18,6 +18,7 @@ import django_filters
 from django_filters import rest_framework as filters
 
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
+from nxtbn.core.utils import to_currency_unit
 from nxtbn.order.proccesor.views import OrderProccessorAPIView
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, ReturnStatus
 from nxtbn.order.models import Order, OrderLineItem, ReturnLineItem, ReturnRequest
@@ -27,6 +28,7 @@ from nxtbn.product.models import ProductVariant
 from nxtbn.users.admin import User
 from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderPaymentUpdateSerializer, OrderStatusUpdateSerializer, OrderPaymentMethodSerializer, ReturnLineItemSerializer, ReturnLineItemStatusUpdateSerializer, ReturnRequestBulkUpdateSerializer, ReturnRequestDetailsSerializer, ReturnRequestSerializer, ReturnRequestStatusUpdateSerializer
 from nxtbn.core.paginator import NxtbnPagination
+from datetime import datetime
 
 from babel.numbers import get_currency_precision
 
@@ -102,50 +104,83 @@ class OrderDetailView(generics.RetrieveAPIView):
     lookup_field = 'alias'
 
     
-
 class BasicStatsView(APIView):
 
     def get(self, request):
-        today = timezone.now()
-        last_week = today - timedelta(days=7)
+        # Get start and end dates from query parameters
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+
+        # Parse dates if provided, or default to all-time if not provided
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d") if start_date_str else None
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) if end_date_str else timezone.now() + timedelta(days=1) # Add 1 day to adjust for end date as inclusive
+
+
+        # Set a previous period for calculating percentage change
+        if start_date and end_date:
+            previous_start_date = start_date - (end_date - start_date)
+            previous_end_date = start_date
+        else:
+            previous_end_date = end_date - timedelta(days=7)
+            previous_start_date = previous_end_date - timedelta(days=7)
+
+        # Filter current period orders
+        orders_queryset = Order.objects.all()
+        if start_date:
+            orders_queryset = orders_queryset.filter(created_at__gte=start_date)
+        if end_date:
+            orders_queryset = orders_queryset.filter(created_at__lte=end_date)
 
         # Total Orders
-        total_orders = Order.objects.count()
-        orders_last_week = Order.objects.filter(created_at__gte=last_week).count()
-        orders_last_week_percentage_change = (orders_last_week / total_orders) * 100 if total_orders > 0 else 0
-
-        # Total Variants
-        total_variants = ProductVariant.objects.count()
+        total_orders = orders_queryset.count()
 
         # Total Sale (sum of total_price in Orders)
-        total_sale = Order.objects.aggregate(total=Sum(F('total_price') / Decimal(100)))['total'] or Decimal(0)
-        sales_last_week = Order.objects.filter(created_at__gte=last_week).aggregate(total=Sum(F('total_price') / Decimal(100)))['total'] or Decimal(0)
-        sales_last_week_percentage_change = (sales_last_week / total_sale) * 100 if total_sale > 0 else 0
+        total_sale = orders_queryset.aggregate(total=Sum(F('total_price')))['total'] or 0
 
-        # Net Sales (sum of payment_amount in Payments)
-        net_sales = Payment.objects.aggregate(net_total=Sum(F('payment_amount') / Decimal(100)))['net_total'] or Decimal(0)
-        net_sales_last_week = Payment.objects.filter(created_at__gte=last_week).aggregate(net_total=Sum(F('payment_amount') / Decimal(100)))['net_total'] or Decimal(0)
-        net_sales_last_week_percentage_change = (net_sales_last_week / net_sales) * 100 if net_sales > 0 else 0
+        # Net Sales (sum of payment_amount in Payments, filtered by the same date range)
+        payments_queryset = Payment.objects.all()
+        if start_date:
+            payments_queryset = payments_queryset.filter(created_at__gte=start_date)
+        if end_date:
+            payments_queryset = payments_queryset.filter(created_at__lte=end_date)
+
+        net_sales = payments_queryset.aggregate(net_total=Sum(F('payment_amount')))['net_total'] or 0
+
+        # Calculate totals for the previous period
+        previous_orders_queryset = Order.objects.filter(created_at__gte=previous_start_date, created_at__lte=previous_end_date)
+        previous_total_orders = previous_orders_queryset.count()
+        previous_total_sale = previous_orders_queryset.aggregate(total=Sum(F('total_price')))['total'] or 0
+
+        previous_payments_queryset = Payment.objects.filter(created_at__gte=previous_start_date, created_at__lte=previous_end_date)
+        previous_net_sales = previous_payments_queryset.aggregate(net_total=Sum(F('payment_amount')))['net_total'] or 0
+
+        # Calculate percentage changes
+        orders_last_percentage_change = ((total_orders - previous_total_orders) / previous_total_orders * 100) if previous_total_orders > 0 else 0
+        sales_last_percentage_change = ((total_sale - previous_total_sale) / previous_total_sale * 100) if previous_total_sale > 0 else 0
+        net_sales_last_percentage_change = ((net_sales - previous_net_sales) / previous_net_sales * 100) if previous_net_sales > 0 else 0
+
+        # Total Variants (not date-dependent)
+        total_variants = ProductVariant.objects.count()
 
         # Prepare the response data
         data = {
             'sales': {
-                'amount': total_sale,
-                'last_percentage_change': sales_last_week_percentage_change
+                'amount': to_currency_unit(total_sale, settings.BASE_CURRENCY, locale='en_US'),
+                'last_percentage_change': sales_last_percentage_change
             },
             'orders': {
                 'amount': total_orders,
-                'last_percentage_change': orders_last_week_percentage_change
+                'last_percentage_change': orders_last_percentage_change
             },
             'variants': {
                 'amount': total_variants,
             },
             'net_sales': {
-                'amount': net_sales,
-                'last_percentage_change': net_sales_last_week_percentage_change
+                'amount': to_currency_unit(net_sales, settings.BASE_CURRENCY, locale='en_US'),
+                'last_percentage_change': net_sales_last_percentage_change
             }
         }
-        
+
         return Response(data)
     
 

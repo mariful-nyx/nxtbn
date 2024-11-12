@@ -103,7 +103,7 @@ class OrderDetailView(generics.RetrieveAPIView):
     serializer_class = OrderDetailsSerializer
     lookup_field = 'alias'
 
-    
+
 class BasicStatsView(APIView):
 
     def get(self, request):
@@ -164,6 +164,17 @@ class BasicStatsView(APIView):
 
         # Prepare the response data
         data = {
+            'filter_period':  {
+                'start_date': start_date_str,
+                'end_date': end_date_str,
+                'end_date_inclusive': end_date
+            },
+            'previous_period':  {
+                'start_date': previous_start_date.strftime("%Y-%m-%d"),
+                'end_date': previous_end_date.strftime("%Y-%m-%d"),
+                'end_date_inclusive': previous_end_date
+            },
+            # 'compare_preiod_name': humanize_period(previous_start_date, previous_end_date),
             'sales': {
                 'amount': to_currency_unit(total_sale, settings.BASE_CURRENCY, locale='en_US'),
                 'last_percentage_change': sales_last_percentage_change

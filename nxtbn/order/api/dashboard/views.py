@@ -110,6 +110,7 @@ class BasicStatsView(APIView):
         # Get start and end dates from query parameters
         start_date_str = request.query_params.get('start_date')
         end_date_str = request.query_params.get('end_date')
+        range_name = request.query_params.get('range_name', None)
 
         # Parse dates if provided, or default to all-time if not provided
         start_date = datetime.strptime(start_date_str, "%Y-%m-%d") if start_date_str else None
@@ -145,52 +146,56 @@ class BasicStatsView(APIView):
             payments_queryset = payments_queryset.filter(created_at__lte=end_date)
 
         net_sales = payments_queryset.aggregate(net_total=Sum(F('payment_amount')))['net_total'] or 0
-
-        # Calculate totals for the previous period
-        previous_orders_queryset = Order.objects.filter(created_at__gte=previous_start_date, created_at__lte=previous_end_date)
-        previous_total_orders = previous_orders_queryset.count()
-        previous_total_sale = previous_orders_queryset.aggregate(total=Sum(F('total_price')))['total'] or 0
-
-        previous_payments_queryset = Payment.objects.filter(created_at__gte=previous_start_date, created_at__lte=previous_end_date)
-        previous_net_sales = previous_payments_queryset.aggregate(net_total=Sum(F('payment_amount')))['net_total'] or 0
-
-        # Calculate percentage changes
-        orders_last_percentage_change = round(((total_orders - previous_total_orders) / previous_total_orders * 100), 2) if previous_total_orders > 0 else 0
-        sales_last_percentage_change = round(((total_sale - previous_total_sale) / previous_total_sale * 100), 2) if previous_total_sale > 0 else 0
-        net_sales_last_percentage_change = round(((net_sales - previous_net_sales) / previous_net_sales * 100), 2) if previous_net_sales > 0 else 0
-
-        # Total Variants (not date-dependent)
         total_variants = ProductVariant.objects.count()
 
-        # Prepare the response data
         data = {
-            'filter_period':  {
-                'start_date': start_date_str,
-                'end_date': end_date_str,
-                'end_date_inclusive': end_date
-            },
-            'previous_period':  {
-                'start_date': previous_start_date.strftime("%Y-%m-%d"),
-                'end_date': previous_end_date.strftime("%Y-%m-%d"),
-                'end_date_inclusive': previous_end_date
-            },
-            # 'compare_preiod_name': humanize_period(previous_start_date, previous_end_date),
+            'percetage_change_preiod_title': '',
             'sales': {
                 'amount': to_currency_unit(total_sale, settings.BASE_CURRENCY, locale='en_US'),
-                'last_percentage_change': sales_last_percentage_change
+                'last_percentage_change': ''
             },
             'orders': {
                 'amount': total_orders,
-                'last_percentage_change': orders_last_percentage_change
+                'last_percentage_change': ''
             },
             'variants': {
                 'amount': total_variants,
             },
             'net_sales': {
                 'amount': to_currency_unit(net_sales, settings.BASE_CURRENCY, locale='en_US'),
-                'last_percentage_change': net_sales_last_percentage_change
+                'last_percentage_change': ''
             }
         }
+
+        comparables = ['today', 'this week', 'this month', 'this year',]
+
+        # Calculate totals for the previous period
+        if range_name and  range_name.lower() in comparables:
+            previous_orders_queryset = Order.objects.filter(created_at__gte=previous_start_date, created_at__lte=previous_end_date)
+            previous_total_orders = previous_orders_queryset.count()
+            previous_total_sale = previous_orders_queryset.aggregate(total=Sum(F('total_price')))['total'] or 0
+
+            previous_payments_queryset = Payment.objects.filter(created_at__gte=previous_start_date, created_at__lte=previous_end_date)
+            previous_net_sales = previous_payments_queryset.aggregate(net_total=Sum(F('payment_amount')))['net_total'] or 0
+
+            # Calculate percentage changes
+            orders_last_percentage_change = round(((total_orders - previous_total_orders) / previous_total_orders * 100), 2) if previous_total_orders > 0 else 0
+            sales_last_percentage_change = round(((total_sale - previous_total_sale) / previous_total_sale * 100), 2) if previous_total_sale > 0 else 0
+            net_sales_last_percentage_change = round(((net_sales - previous_net_sales) / previous_net_sales * 100), 2) if previous_net_sales > 0 else 0
+
+            data['sales']['last_percentage_change'] = sales_last_percentage_change
+            data['orders']['last_percentage_change'] = orders_last_percentage_change
+            data['net_sales']['last_percentage_change'] = net_sales_last_percentage_change
+
+
+            compare_title = {
+                'today': _('Yesterday'),
+                'this week': _('Last Week'),
+                'this month': _('Last Month'),
+                'this year': _('Last Year'),
+            }
+            data['percetage_change_preiod_title'] = compare_title[range_name.lower()]
+        
 
         return Response(data)
     

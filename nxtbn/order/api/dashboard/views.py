@@ -155,9 +155,9 @@ class BasicStatsView(APIView):
         previous_net_sales = previous_payments_queryset.aggregate(net_total=Sum(F('payment_amount')))['net_total'] or 0
 
         # Calculate percentage changes
-        orders_last_percentage_change = ((total_orders - previous_total_orders) / previous_total_orders * 100) if previous_total_orders > 0 else 0
-        sales_last_percentage_change = ((total_sale - previous_total_sale) / previous_total_sale * 100) if previous_total_sale > 0 else 0
-        net_sales_last_percentage_change = ((net_sales - previous_net_sales) / previous_net_sales * 100) if previous_net_sales > 0 else 0
+        orders_last_percentage_change = round(((total_orders - previous_total_orders) / previous_total_orders * 100), 2) if previous_total_orders > 0 else 0
+        sales_last_percentage_change = round(((total_sale - previous_total_sale) / previous_total_sale * 100), 2) if previous_total_sale > 0 else 0
+        net_sales_last_percentage_change = round(((net_sales - previous_net_sales) / previous_net_sales * 100), 2) if previous_net_sales > 0 else 0
 
         # Total Variants (not date-dependent)
         total_variants = ProductVariant.objects.count()

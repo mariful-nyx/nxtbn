@@ -5,8 +5,12 @@ from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from rest_framework.permissions  import AllowAny
 from rest_framework.exceptions import APIException
+from rest_framework.exceptions import ValidationError
+
 from rest_framework.views import APIView
 from django.db.models import Sum, Count, F
+from django.db.models.functions import TruncMonth, TruncDay, TruncWeek, TruncHour
+
 from django.utils import timezone
 
 from datetime import timedelta
@@ -32,6 +36,7 @@ from datetime import datetime
 
 from babel.numbers import get_currency_precision
 
+from calendar import monthrange, day_name
 
 
 class OrderFilter(filters.FilterSet):
@@ -279,9 +284,86 @@ class OrderOverviewStatsView(APIView):
 
         return Response(data)
 
-        
-        
 
+class OrderSummaryAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        time_period = request.query_params.get('time_period')  # 'year', 'month', 'week', 'day'
+        current_date = datetime.now()
+
+        if not time_period:
+            raise ValidationError({"error": "time_period query parameter is required."})
+
+        if time_period not in ['year', 'month', 'week', 'day']:
+            raise ValidationError({"error": "Invalid time_period. Choose from 'year', 'month', 'week', or 'day'."})
+
+        queryset = Order.objects.all()
+
+        # Default to current year
+        year = int(request.query_params.get('year', current_date.year))
+        queryset = queryset.filter(created_at__year=year)
+
+        if time_period == 'year':
+            # Yearly data by month
+            data = queryset.annotate(month=TruncMonth('created_at')) \
+                           .values('month') \
+                           .annotate(total=Sum('total_price')) \
+                           .order_by('month')
+
+            formatted_data = [
+                [datetime(year, i, 1).strftime('%B'), next((d['total'] for d in data if d['month'].month == i), 0)]
+                for i in range(1, 13)
+            ]
+
+        elif time_period == 'month':
+            # Monthly data by day
+            month = int(request.query_params.get('month', current_date.month))
+            queryset = queryset.filter(created_at__month=month)
+            days_in_month = monthrange(year, month)[1]
+
+            data = queryset.annotate(day=TruncDay('created_at')) \
+                           .values('day') \
+                           .annotate(total=Sum('total_price')) \
+                           .order_by('day')
+
+            formatted_data = [
+                [f'{datetime(year, month, day).strftime("%B")} {day}', next((d['total'] for d in data if d['day'].day == day), 0)]
+                for day in range(1, days_in_month + 1)
+            ]
+
+        elif time_period == 'week':
+            # Weekly data by day of the week
+            week_start = current_date - timedelta(days=current_date.weekday())
+            week_end = week_start + timedelta(days=6)
+
+            queryset = queryset.filter(created_at__date__range=[week_start.date(), week_end.date()])
+
+            data = queryset.annotate(day=TruncDay('created_at')) \
+                           .values('day') \
+                           .annotate(total=Sum('total_price')) \
+                           .order_by('day')
+
+            formatted_data = [
+                [day_name[(week_start + timedelta(days=i)).weekday()], 
+                 next((d['total'] for d in data if d['day'].date() == (week_start + timedelta(days=i)).date()), 0)]
+                for i in range(7)
+            ]
+
+        elif time_period == 'day':
+            # Daily data by hour
+            queryset = queryset.filter(created_at__date=current_date.date())
+
+            data = queryset.annotate(hour=TruncHour('created_at')) \
+                           .values('hour') \
+                           .annotate(total=Sum('total_price')) \
+                           .order_by('hour')
+
+            formatted_data = [
+                [datetime(2022, 1, 1, hour).strftime('%I %p'), 
+                 next((d['total'] for d in data if d['hour'].hour == hour), 0)]
+                for hour in range(24)
+            ]
+
+        return Response(formatted_data)
 class OrderEastimateView(OrderProccessorAPIView):
     create_order = False # Eastimate order
 

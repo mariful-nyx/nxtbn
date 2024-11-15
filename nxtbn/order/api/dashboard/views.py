@@ -104,6 +104,23 @@ class OrderDetailView(generics.RetrieveAPIView):
     lookup_field = 'alias'
 
 
+comparables = ['today', 'this week', 'this month', 'this year',]
+
+compare_opposite_title_tr = {
+    'today': _('Yesterday'),
+    'this week': _('Last Week'),
+    'this month': _('Last Month'),
+    'this year': _('Last Year'),
+}
+
+compare_opposite_title = {
+    'today': 'Yesterday',
+    'this week': 'Last Week',
+    'this month': 'Last Month',
+    'this year': 'Last Year',
+}
+
+
 class BasicStatsView(APIView):
 
     def get(self, request):
@@ -167,7 +184,6 @@ class BasicStatsView(APIView):
             }
         }
 
-        comparables = ['today', 'this week', 'this month', 'this year',]
 
         # Calculate totals for the previous period
         if range_name and  range_name.lower() in comparables:
@@ -188,17 +204,83 @@ class BasicStatsView(APIView):
             data['net_sales']['last_percentage_change'] = net_sales_last_percentage_change
 
 
-            compare_title = {
-                'today': _('Yesterday'),
-                'this week': _('Last Week'),
-                'this month': _('Last Month'),
-                'this year': _('Last Year'),
-            }
-            data['percetage_change_preiod_title'] = compare_title[range_name.lower()]
+            
+            data['percetage_change_preiod_title'] = compare_opposite_title_tr[range_name.lower()]
         
 
         return Response(data)
-    
+
+
+class OrderOverviewStatsView(APIView):
+    """
+    View to provide an overview of order statistics within a specified date range.
+    Methods:
+    -------
+    get(request):
+        Handles GET requests to retrieve order statistics such as pending, delivered, returned, and cancelled orders.
+        Query Parameters:
+            - start_date (str): The start date for the statistics in 'YYYY-MM-DD' format.
+            - end_date (str): The end date for the statistics in 'YYYY-MM-DD' format.
+            - range_name (str, optional): The name of the date range.
+    """
+      
+
+    def get(self, request):
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        range_name = request.query_params.get('range_name', None)
+
+        # Parse dates if provided, or default to all-time if not provided
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d") if start_date_str else None
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) if end_date_str else timezone.now() + timedelta(days=1) # Add 1 day to adjust for end date as inclusive
+
+        order_pending = Order.objects.filter(status=OrderStatus.PENDING).count()
+
+        all_orders_in_period = Order.objects.filter(created_at__gte=start_date, created_at__lte=end_date)
+        order_delivered = all_orders_in_period.filter(status=OrderStatus.DELIVERED).aggregate(total=Sum(F('total_price')))['total'] or 0
+        order_returned = all_orders_in_period.filter(status=OrderStatus.RETURNED).aggregate(total=Sum(F('total_price')))['total'] or 0
+        order_cancelled = all_orders_in_period.filter(status=OrderStatus.CANCELLED).aggregate(total=Sum(F('total_price')))['total'] or 0
+
+        data = {
+            'order_pending': {
+                'amount': order_pending,
+                'last_order': Order.objects.all().last().created_at
+            },
+            'order_delivered': {
+                'amount': to_currency_unit(order_delivered, settings.BASE_CURRENCY, locale='en_US'),
+                'last_percentage_change': ''
+            },
+            'order_returned': {
+                'amount': to_currency_unit(order_returned, settings.BASE_CURRENCY, locale='en_US'),
+                'last_percentage_change': ''
+            },
+            'order_cancelled': {
+                'amount': to_currency_unit(order_cancelled, settings.BASE_CURRENCY, locale='en_US'),
+                'last_percentage_change': ''
+            }
+        }
+
+        today = timezone.now().date()
+        if range_name and range_name.lower() in comparables:
+            if compare_opposite_title[range_name.lower()] == 'Yesterday':
+                previous_start_date = today - timedelta(days=1)
+                previous_end_date = today - timedelta(days=1)
+            elif compare_opposite_title[range_name.lower()] == 'Last Week':
+                previous_start_date = today - timedelta(days=today.weekday() + 7)
+                previous_end_date = previous_start_date + timedelta(days=6)
+            elif compare_opposite_title[range_name.lower()] == 'Last Month':
+                previous_start_date = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
+                previous_end_date = today.replace(day=1) - timedelta(days=1)
+            elif compare_opposite_title[range_name.lower()] == 'Last Year':
+                previous_start_date = today.replace(year=today.year - 1, month=1, day=1)
+                previous_end_date = today.replace(year=today.year - 1, month=12, day=31)
+
+        data['percetage_change_preiod_title'] = compare_opposite_title_tr[range_name.lower()]
+
+        return Response(data)
+
+        
+        
 
 class OrderEastimateView(OrderProccessorAPIView):
     create_order = False # Eastimate order

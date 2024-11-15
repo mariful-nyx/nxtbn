@@ -10,3 +10,4 @@ class CurrencyMiddleware(MiddlewareMixin):
             currency = settings.BASE_CURRENCY # Fallback to base currency if not allowed
         # Store the currency in the request object
         request.currency = currency
+        # request.locale = request.headers.get('Accept-Language', settings.LANGUAGE_CODE) # TODO: Implement locale, docs: https://docs.nxtbn.com/locale

@@ -310,7 +310,8 @@ class OrderSummaryAPIView(APIView):
                            .order_by('month')
 
             formatted_data = [
-                [datetime(year, i, 1).strftime('%B'), next((d['total'] for d in data if d['month'].month == i), 0)]
+                [datetime(year, i, 1).strftime('%B'), 
+                 to_currency_unit(next((d['total'] for d in data if d['month'].month == i), 0), settings.BASE_CURRENCY)]
                 for i in range(1, 13)
             ]
 
@@ -326,7 +327,8 @@ class OrderSummaryAPIView(APIView):
                            .order_by('day')
 
             formatted_data = [
-                [f'{datetime(year, month, day).strftime("%B")} {day}', next((d['total'] for d in data if d['day'].day == day), 0)]
+                [f'{datetime(year, month, day).strftime("%B")} {day}', 
+                 to_currency_unit(next((d['total'] for d in data if d['day'].day == day), 0), settings.BASE_CURRENCY)]
                 for day in range(1, days_in_month + 1)
             ]
 
@@ -344,7 +346,7 @@ class OrderSummaryAPIView(APIView):
 
             formatted_data = [
                 [day_name[(week_start + timedelta(days=i)).weekday()], 
-                 next((d['total'] for d in data if d['day'].date() == (week_start + timedelta(days=i)).date()), 0)]
+                 to_currency_unit(next((d['total'] for d in data if d['day'].date() == (week_start + timedelta(days=i)).date()), 0), settings.BASE_CURRENCY)]
                 for i in range(7)
             ]
 
@@ -359,7 +361,7 @@ class OrderSummaryAPIView(APIView):
 
             formatted_data = [
                 [datetime(2022, 1, 1, hour).strftime('%I %p'), 
-                 next((d['total'] for d in data if d['hour'].hour == hour), 0)]
+                 to_currency_unit(next((d['total'] for d in data if d['hour'].hour == hour), 0), settings.BASE_CURRENCY)]
                 for hour in range(24)
             ]
 

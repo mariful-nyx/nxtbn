@@ -25,6 +25,9 @@ class RoleBasedPermission(BasePermission):
         # Ensure user is authenticated
         if not user.is_authenticated:
             return False
+        
+        if user.role == UserRole.ADMIN:
+            return True
 
         # Get the action from URL
         action = view.kwargs.get('action') or view.action

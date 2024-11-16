@@ -32,8 +32,9 @@ from nxtbn.product.api.dashboard.serializers import (
     RecursiveCategorySerializer,
     TaxClassSerializer
 )
-from nxtbn.core.admin_permissions import NxtbnAdminPermission
+from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
 from nxtbn.tax.models import TaxClass
+from nxtbn.users import UserRole
 
 
 class ProductFilter(filters.FilterSet):
@@ -71,7 +72,14 @@ class ProductFilterMixin:
         drf_filters.SearchFilter,
         drf_filters.OrderingFilter
     ] 
-    search_fields = ['name', 'brand']
+    search_fields = [
+        'name',
+        'brand',
+        'supplier__name',
+        'category__name',
+        'product_type__name',
+        'collections__name',
+    ]
     ordering_fields = [
         'name',
         'created_at',
@@ -114,10 +122,18 @@ class ProductMinimalListView(ProductFilterMixin, generics.ListAPIView):
 
     
 class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     serializer_class = ProductWithVariantSerializer
     pagination_class = NxtbnPagination
 
+    permission_classes = (RoleBasedPermission,)
+    ROLE_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"list",},
+        UserRole.ORDER_PROCESSOR: {"list",},
+        UserRole.CUSTOMER_SUPPORT_AGENT: {"list",},
+        UserRole.MARKETING_MANAGER: {"list",},
+    }
+    action = 'list'
+        
     def get_queryset(self):
         return Product.objects.filter(status=PublishableStatus.PUBLISHED)
 

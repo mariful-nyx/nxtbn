@@ -105,7 +105,6 @@ class UserMututionalSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'is_staff': {'read_only': True},
             'is_superuser': {'read_only': True},
-            'role': {'read_only': True},
             'username': {'read_only': True}
 
         }

@@ -14,7 +14,7 @@ from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
 from nxtbn.users.api.storefront.views import TokenRefreshView
 from nxtbn.users.utils.jwt_utils import JWTManager
 from nxtbn.users.models import User
-from nxtbn.core.admin_permissions import NxtbnAdminPermission
+from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
 from nxtbn.order.models import Address
 from nxtbn.users.api.dashboard.serializers import AddressMutationalSerializer
 
@@ -108,9 +108,14 @@ class UserListAPIView(generics.ListAPIView):
     """
     serializer_class = UserSerializer
     pagination_class = NxtbnPagination
+    permission_classes = (RoleBasedPermission,)
+    ROLE_PERMISSIONS = {
+        UserRole.ADMIN: {"all"},
+        UserRole.STORE_MANAGER: {"read-only",},
+    }
 
     def get_queryset(self):
-        return User.objects.all()
+        return User.objects.exclude(role=UserRole.CUSTOMER)
 
 class PasswordChangeView(generics.UpdateAPIView):
     serializer_class = PasswordChangeSerializer
@@ -139,6 +144,12 @@ class PasswordChangeView(generics.UpdateAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserMututionalSerializer
+    permission_classes = (RoleBasedPermission,)
+    ROLE_PERMISSIONS = {
+        UserRole.ADMIN: {"all"},
+        UserRole.STORE_MANAGER: {"read-only",},
+    }
+    
 
     def perform_destroy(self, instance):
         instance.is_active = False

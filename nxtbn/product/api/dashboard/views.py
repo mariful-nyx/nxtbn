@@ -32,23 +32,28 @@ from nxtbn.product.api.dashboard.serializers import (
     RecursiveCategorySerializer,
     TaxClassSerializer
 )
-from nxtbn.core.admin_permissions import NxtbnAdminPermission
+from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
 from nxtbn.tax.models import TaxClass
+from nxtbn.users import UserRole
 
 
 class ProductFilter(filters.FilterSet):
     currency = filters.CharFilter(field_name='currency', lookup_expr='iexact')
     variant_alias = filters.CharFilter(field_name='variants__alias', lookup_expr='iexact')
+    variant_id = filters.NumberFilter(field_name='variants__id')
     variant_sku = filters.CharFilter(field_name='variants__sku', lookup_expr='iexact')
     created_at = filters.DateFromToRangeFilter(field_name='created_at') # eg. ?created_at_after=2023-09-01&created_at_before=2023-09-12
     promo_code = filters.CharFilter(field_name='promo_codes__code', lookup_expr='iexact')
+    name = filters.CharFilter(field_name='name', lookup_expr='icontains')
 
     class Meta:
         model = Product
         fields = [
             'id',
             'alias',
+            'name',
             'variant_alias',
+            'variant_id',
             'variant_sku',
             'name',
             'currency',
@@ -71,7 +76,14 @@ class ProductFilterMixin:
         drf_filters.SearchFilter,
         drf_filters.OrderingFilter
     ] 
-    search_fields = ['name', 'brand']
+    search_fields = [
+        'name',
+        'brand',
+        'supplier__name',
+        'category__name',
+        'product_type__name',
+        'collections__name',
+    ]
     ordering_fields = [
         'name',
         'created_at',
@@ -114,10 +126,18 @@ class ProductMinimalListView(ProductFilterMixin, generics.ListAPIView):
 
     
 class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     serializer_class = ProductWithVariantSerializer
     pagination_class = NxtbnPagination
 
+    permission_classes = (RoleBasedPermission,)
+    ROLE_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"list",},
+        UserRole.ORDER_PROCESSOR: {"list",},
+        UserRole.CUSTOMER_SUPPORT_AGENT: {"list",},
+        UserRole.MARKETING_MANAGER: {"list",},
+    }
+    action = 'list'
+        
     def get_queryset(self):
         return Product.objects.filter(status=PublishableStatus.PUBLISHED)
 

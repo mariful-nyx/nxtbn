@@ -1,5 +1,6 @@
 from django.conf import settings
 from rest_framework import generics, status
+from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
@@ -102,20 +103,7 @@ class CustomerWithAddressView(generics.RetrieveAPIView):
         return User.objects.filter(role=UserRole.CUSTOMER)
 
 
-class UserListAPIView(generics.ListAPIView):
-    """
-    API view to retrieve the list of all users.
-    """
-    serializer_class = UserSerializer
-    pagination_class = NxtbnPagination
-    permission_classes = (RoleBasedPermission,)
-    ROLE_PERMISSIONS = {
-        UserRole.ADMIN: {"all"},
-        UserRole.STORE_MANAGER: {"read-only",},
-    }
-
-    def get_queryset(self):
-        return User.objects.exclude(role=UserRole.CUSTOMER)
+    
 
 class PasswordChangeView(generics.UpdateAPIView):
     serializer_class = PasswordChangeSerializer
@@ -142,18 +130,27 @@ class PasswordChangeView(generics.UpdateAPIView):
 # ==========================
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
     serializer_class = UserMututionalSerializer
     permission_classes = (RoleBasedPermission,)
+    pagination_class = NxtbnPagination
     ROLE_PERMISSIONS = {
         UserRole.ADMIN: {"all"},
         UserRole.STORE_MANAGER: {"read-only",},
     }
     
-
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save()
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return UserSerializer
+        return UserMututionalSerializer
+    
+    def get_queryset(self):
+        return User.objects.exclude(role=UserRole.CUSTOMER)
+    
+
 
 
 class AddressCreateAPIView(generics.CreateAPIView):

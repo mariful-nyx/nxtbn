@@ -17,30 +17,28 @@ class NxtbnAdminPermission(BasePermission):
 
 class RoleBasedPermission(BasePermission):
     """
-    Generic permission class that checks role-based permissions
-    defined at the view level in ROLE_PERMISSIONS.
+    Custom permission that grants or denies access based on the role and action.
     """
     def has_permission(self, request, view):
         user = request.user
 
-        # Ensure the user is authenticated
+        # Ensure user is authenticated
         if not user.is_authenticated:
             return False
 
-        # Retrieve role-based permissions from the view
-        role_permissions = getattr(view, 'ROLE_PERMISSIONS', {})
+        # Get the action from URL
+        action = view.kwargs.get('action') or view.action
 
-        # Get the user's role
-        user_role = getattr(user, 'role', None)
 
-        # Determine allowed permissions for the role
-        allowed_permissions = role_permissions.get(user_role, set())
 
-        # Check for full access or read-only access
-        if "all" in allowed_permissions:
-            return True
-        if "read-only" in allowed_permissions and request.method in SAFE_METHODS:
+        # Check if action exists in the permissions for the user's role
+        role_permissions = view.ROLE_PERMISSIONS.get(user.role, set())
+
+        if "all" in role_permissions:
             return True
 
-        # Deny access otherwise
+        # Grant permission if the action is allowed for the user's role
+        if action in role_permissions:
+            return True
+
         return False

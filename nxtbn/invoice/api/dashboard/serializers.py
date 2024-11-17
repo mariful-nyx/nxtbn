@@ -23,6 +23,7 @@ class OrderInvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
+            'id',
             'alias',
             'billing_address',
             'shipping_address',

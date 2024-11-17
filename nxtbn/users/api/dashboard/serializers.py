@@ -137,6 +137,8 @@ class UserMututionalSerializer(serializers.ModelSerializer):
                 ]
             ),
             is_superuser = False,
+            is_active = True,
+            is_staff = False,
             **validated_data
         )
         

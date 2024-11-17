@@ -135,7 +135,7 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = NxtbnPagination
     ROLE_PERMISSIONS = {
         UserRole.ADMIN: {"all"},
-        UserRole.STORE_MANAGER: {"read-only",},
+        UserRole.STORE_MANAGER: {"list",},
     }
     
     def perform_destroy(self, instance):

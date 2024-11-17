@@ -101,7 +101,22 @@ class UserMututionalSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'role', 'avatar', 'phone_number', 'is_active', 'is_staff', 'is_superuser', 'full_name', 'password', 'role']
+        fields = [
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'role',
+            'avatar',
+            'phone_number',
+            'is_active',
+            'is_staff',
+            'is_superuser',
+            'full_name',
+            'password',
+            'role'
+        ]
         extra_kwargs = {
             'is_staff': {'read_only': True},
             'is_superuser': {'read_only': True},
@@ -122,6 +137,8 @@ class UserMututionalSerializer(serializers.ModelSerializer):
                 ]
             ),
             is_superuser = False,
+            is_active = True,
+            is_staff = False,
             **validated_data
         )
         

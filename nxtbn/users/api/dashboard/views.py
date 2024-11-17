@@ -134,8 +134,7 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (RoleBasedPermission,)
     pagination_class = NxtbnPagination
     ROLE_PERMISSIONS = {
-        UserRole.ADMIN: {"all"},
-        UserRole.STORE_MANAGER: {"read-only",},
+        UserRole.STORE_MANAGER: {"list", "deactivate", "retrieve"},
     }
     
     def perform_destroy(self, instance):
@@ -149,6 +148,16 @@ class UserViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         return User.objects.exclude(role=UserRole.CUSTOMER)
+    
+    @action(detail=True, methods=['put'])
+    def deactivate(self, request, pk=None):
+        """
+        Deactivates a user by setting is_active to False.
+        """
+        user = self.get_object()
+        user.is_active = False
+        user.save()
+        return Response({'status': 'user deactivated'}, status=status.HTTP_200_OK)
     
 
 

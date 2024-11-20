@@ -142,7 +142,9 @@ class TokenRefreshView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        refresh_token = request.data.get("refresh_token")
+        print(request.COOKIES, '==============================================')
+
+        refresh_token = request.data.get("refresh_token") or request.COOKIES.get(self.jwt_manager.refresh_token_cookie_name)
 
         if not refresh_token:
             return Response(

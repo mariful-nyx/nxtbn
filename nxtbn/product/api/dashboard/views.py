@@ -106,7 +106,6 @@ class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
     pagination_class = NxtbnPagination
 
     def get_serializer_class(self):
-        print(self.request.COOKIES)
         if self.request.method == 'POST':
             return ProductCreateSerializer
         return ProductSerializer

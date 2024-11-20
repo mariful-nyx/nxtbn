@@ -38,7 +38,6 @@ from nxtbn.users import UserRole
 
 
 class ProductFilter(filters.FilterSet):
-    currency = filters.CharFilter(field_name='currency', lookup_expr='iexact')
     variant_alias = filters.CharFilter(field_name='variants__alias', lookup_expr='iexact')
     variant_id = filters.NumberFilter(field_name='variants__id')
     variant_sku = filters.CharFilter(field_name='variants__sku', lookup_expr='iexact')
@@ -56,7 +55,6 @@ class ProductFilter(filters.FilterSet):
             'variant_id',
             'variant_sku',
             'name',
-            'currency',
             'category',
             'supplier',
             'brand',

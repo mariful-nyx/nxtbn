@@ -48,3 +48,7 @@ class JWTManager:
                 return None
         except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, ObjectDoesNotExist):
             return None
+        
+
+    def revoke_refresh_token(self, token): # When you want, implement this method
+        """Revoke a refresh token."""

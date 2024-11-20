@@ -1,6 +1,7 @@
 from django.conf import settings
 from rest_framework import generics, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
@@ -105,6 +106,7 @@ class LoginView(generics.GenericAPIView):
                     "token": {
                         "access": access_token,
                         "refresh": refresh_token,
+                        "expires_in": self.jwt_manager.access_token_expiration_seconds,
                     },
                 },
                 status=status.HTTP_200_OK,
@@ -142,8 +144,6 @@ class TokenRefreshView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        print(request.COOKIES, '==============================================')
-
         refresh_token = request.data.get("refresh_token") or request.COOKIES.get(self.jwt_manager.refresh_token_cookie_name)
 
         if not refresh_token:
@@ -178,3 +178,29 @@ class TokenRefreshView(generics.GenericAPIView):
             {"detail": _("Invalid or expired refresh token.")},
             status=status.HTTP_401_UNAUTHORIZED,
         )
+
+
+
+class LogoutView(APIView):
+    permission_classes = (AllowAny,)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.jwt_manager = JWTManager()
+
+    def post(self, request):
+        """
+        Logout the user by clearing the JWT cookies.
+        """
+        response = Response({"detail": _("Logged out successfully.")}, status=status.HTTP_200_OK)
+
+        # Clear the JWT cookies
+        response.delete_cookie(self.jwt_manager.access_token_cookie_name)
+        response.delete_cookie(self.jwt_manager.refresh_token_cookie_name)
+
+        # Optional: Revoke the refresh token if your JWTManager supports revocation
+        refresh_token = request.COOKIES.get(self.jwt_manager.refresh_token_cookie_name)
+        if refresh_token:
+            self.jwt_manager.revoke_refresh_token(refresh_token)
+
+        return response

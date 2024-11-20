@@ -11,6 +11,8 @@ class JWTManager:
         self.algorithm = settings.NXTBN_JWT_SETTINGS['ALGORITHM']
         self.access_token_expiration_seconds = settings.NXTBN_JWT_SETTINGS['ACCESS_TOKEN_EXPIRATION_SECONDS']
         self.refresh_token_expiration_seconds = settings.NXTBN_JWT_SETTINGS['REFRESH_TOKEN_EXPIRATION_SECONDS']
+        self.access_token_cookie_name = settings.NXTBN_JWT_SETTINGS['ACCESS_TOKEN_COOKIE_NAME']
+        self.refresh_token_cookie_name = settings.NXTBN_JWT_SETTINGS['REFRESH_TOKEN_COOKIE_NAME']
 
     def _generate_jwt_token(self, user, expiration_timedelta):
         """Generate a JWT token for a given user with specified expiration."""
@@ -46,3 +48,7 @@ class JWTManager:
                 return None
         except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, ObjectDoesNotExist):
             return None
+        
+
+    def revoke_refresh_token(self, token): # When you want, implement this method
+        """Revoke a refresh token."""

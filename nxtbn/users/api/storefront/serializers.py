@@ -79,4 +79,4 @@ class LoginRequestSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, required=True)
 
 class RefreshSerializer(serializers.Serializer):
-    refresh_token = serializers.CharField(write_only=True, required=True)
+    refresh_token = serializers.CharField(write_only=True, required=False)

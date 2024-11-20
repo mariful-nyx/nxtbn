@@ -12,7 +12,7 @@ from nxtbn.users.models import User
 from nxtbn.users.api.dashboard.serializers import CustomerSerializer, DashboardLoginSerializer, UserMututionalSerializer, UserSerializer, CustomerWithAddressSerializer, CustomerUpdateSerializer
 from nxtbn.users.api.dashboard.serializers import DashboardLoginSerializer, PasswordChangeSerializer
 from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
-from nxtbn.users.api.storefront.views import TokenRefreshView
+from nxtbn.users.api.storefront.views import LogoutView, TokenRefreshView
 from nxtbn.users.utils.jwt_utils import JWTManager
 from nxtbn.users.models import User
 from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
@@ -47,7 +47,8 @@ class LoginView(generics.GenericAPIView):
             refresh_token = self.jwt_manager.generate_refresh_token(user)
 
             user_data = JwtBasicUserSerializer(user).data
-            return Response(
+
+            response =  Response(
                 {
                     "user": user_data,
                     'store_url': settings.STORE_URL,
@@ -59,12 +60,33 @@ class LoginView(generics.GenericAPIView):
                 status=status.HTTP_200_OK,
             )
 
+            response.set_cookie(
+                key=self.jwt_manager.access_token_cookie_name,
+                value=access_token,
+                httponly=True,  # Make in-accessible via JavaScript (recommended)
+                secure=True,
+                samesite="None",  # Options: 'Strict', 'Lax', 'None'
+                max_age=self.jwt_manager.access_token_expiration_seconds,
+            )
+            response.set_cookie(
+                key=self.jwt_manager.refresh_token_cookie_name,
+                value=refresh_token,
+                httponly=True,  # Make in-accessible via JavaScript (recommended)
+                secure=True,
+                samesite="None",  # Options: 'Strict', 'Lax', 'None'
+                max_age=self.jwt_manager.refresh_token_expiration_seconds,
+            )
+
+            return response
+
         return Response({"detail": _("Invalid credentials")}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DashboardTokenRefreshView(TokenRefreshView):
     pass
 
+class DashboardLogoutView(LogoutView):
+    pass
 
 #=========================================
 # Authentication related views end here

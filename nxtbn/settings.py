@@ -392,6 +392,8 @@ NXTBN_JWT_SETTINGS = {
     'ALGORITHM': 'HS256',
     'ACCESS_TOKEN_EXPIRATION_SECONDS': timedelta(hours=1),  # Default to 1 hour
     'REFRESH_TOKEN_EXPIRATION_SECONDS': timedelta(days=1),  # 1 day for refresh token
+    'ACCESS_TOKEN_COOKIE_NAME': 'access_token',
+    'REFRESH_TOKEN_COOKIE_NAME': 'refresh_token',
 }
 
 

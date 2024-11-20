@@ -47,7 +47,24 @@ class SignupView(generics.CreateAPIView):
                 },
             }
 
-        return Response(response_data, status=status.HTTP_201_CREATED)
+        response = Response(response_data, status=status.HTTP_201_CREATED)
+        response.set_cookie(
+            key=self.jwt_manager.access_token_cookie_name,
+            value=access_token,
+            httponly=True,  # Make in-accessible via JavaScript (recommended)
+            secure=True,
+            samesite="None",  # Options: 'Strict', 'Lax', 'None'
+            max_age=self.jwt_manager.access_token_expiration_seconds,
+        )
+        response.set_cookie(
+            key=self.jwt_manager.refresh_token_cookie_name,
+            value=refresh_token,
+            httponly=True,  # Make in-accessible via JavaScript (recommended)
+            secure=True,
+            samesite="None",  # Options: 'Strict', 'Lax', 'None'
+            max_age=self.jwt_manager.refresh_token_expiration_seconds,
+        )
+        return response
 
 
 class LoginView(generics.GenericAPIView):
@@ -82,7 +99,7 @@ class LoginView(generics.GenericAPIView):
             refresh_token = self.jwt_manager.generate_refresh_token(user)
 
             user_data = JwtBasicUserSerializer(user).data
-            return Response(
+            response =  Response(
                 {
                     "user": user_data,
                     "token": {
@@ -92,6 +109,23 @@ class LoginView(generics.GenericAPIView):
                 },
                 status=status.HTTP_200_OK,
             )
+            response.set_cookie(
+                key=self.jwt_manager.access_token_cookie_name,
+                value=access_token,
+                httponly=True,  # Make in-accessible via JavaScript (recommended)
+                secure=True,
+                samesite="None",  # Options: 'Strict', 'Lax', 'None'
+                max_age=self.jwt_manager.access_token_expiration_seconds,
+            )
+            response.set_cookie(
+                key=self.jwt_manager.refresh_token_cookie_name,
+                value=refresh_token,
+                httponly=True,  # Make in-accessible via JavaScript (recommended)
+                secure=True,
+                samesite="None",  # Options: 'Strict', 'Lax', 'None'
+                max_age=self.jwt_manager.refresh_token_expiration_seconds,
+            )
+            return response
 
         return Response({"detail": _("Invalid credentials")}, status=status.HTTP_400_BAD_REQUEST)
 

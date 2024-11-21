@@ -9,10 +9,21 @@ class JWTManager:
     def __init__(self):
         self.secret_key = settings.NXTBN_JWT_SETTINGS['SECRET_KEY']
         self.algorithm = settings.NXTBN_JWT_SETTINGS['ALGORITHM']
-        self.access_token_expiration_seconds = settings.NXTBN_JWT_SETTINGS['ACCESS_TOKEN_EXPIRATION_SECONDS']
-        self.refresh_token_expiration_seconds = settings.NXTBN_JWT_SETTINGS['REFRESH_TOKEN_EXPIRATION_SECONDS']
+        self.access_token_expiration = settings.NXTBN_JWT_SETTINGS['ACCESS_TOKEN_EXPIRATION']
+        self.refresh_token_expiration = settings.NXTBN_JWT_SETTINGS['REFRESH_TOKEN_EXPIRATION']
         self.access_token_cookie_name = settings.NXTBN_JWT_SETTINGS['ACCESS_TOKEN_COOKIE_NAME']
         self.refresh_token_cookie_name = settings.NXTBN_JWT_SETTINGS['REFRESH_TOKEN_COOKIE_NAME']
+
+        # convert timedelta to seconds
+        if isinstance(self.access_token_expiration, timedelta):
+            self.access_token_expiration_seconds = int(self.access_token_expiration.total_seconds())
+        else:
+            self.access_token_expiration_seconds = self.access_token_expiration
+
+        if isinstance(self.refresh_token_expiration, timedelta):
+            self.refresh_token_expiration_seconds = int(self.refresh_token_expiration.total_seconds())
+        else:
+            self.refresh_token_expiration_seconds = self.refresh_token_expiration
 
     def _generate_jwt_token(self, user, expiration_timedelta):
         """Generate a JWT token for a given user with specified expiration."""
@@ -32,10 +43,10 @@ class JWTManager:
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
     def generate_access_token(self, user):
-        return self._generate_jwt_token(user, self.access_token_expiration_seconds)
+        return self._generate_jwt_token(user, self.access_token_expiration)
 
     def generate_refresh_token(self, user):
-        return self._generate_jwt_token(user, self.refresh_token_expiration_seconds)
+        return self._generate_jwt_token(user, self.refresh_token_expiration)
 
     def verify_jwt_token(self, token):
         """Verify a JWT token and return the associated user."""

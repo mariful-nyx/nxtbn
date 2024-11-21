@@ -1,5 +1,5 @@
 from django.forms import ValidationError
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Count
 
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -38,13 +38,13 @@ from nxtbn.users import UserRole
 
 
 class ProductFilter(filters.FilterSet):
-    currency = filters.CharFilter(field_name='currency', lookup_expr='iexact')
     variant_alias = filters.CharFilter(field_name='variants__alias', lookup_expr='iexact')
     variant_id = filters.NumberFilter(field_name='variants__id')
     variant_sku = filters.CharFilter(field_name='variants__sku', lookup_expr='iexact')
     created_at = filters.DateFromToRangeFilter(field_name='created_at') # eg. ?created_at_after=2023-09-01&created_at_before=2023-09-12
     promo_code = filters.CharFilter(field_name='promo_codes__code', lookup_expr='iexact')
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
+    is_multi_variant = filters.BooleanFilter(method='filter_is_multi_variant') 
 
     class Meta:
         model = Product
@@ -56,7 +56,6 @@ class ProductFilter(filters.FilterSet):
             'variant_id',
             'variant_sku',
             'name',
-            'currency',
             'category',
             'supplier',
             'brand',
@@ -66,7 +65,16 @@ class ProductFilter(filters.FilterSet):
             'created_at',
             'promo_code',
             'status',
+            'is_multi_variant',
         ]
+    def filter_is_multi_variant(self, queryset, name, value):
+        """
+        Filters products based on whether they have multiple variants.
+        """
+        if value:  # True - filter products with more than one variant
+            return queryset.annotate(variant_count=Count('variants')).filter(variant_count__gt=1)
+        else:  # False - filter products with one or no variants
+            return queryset.annotate(variant_count=Count('variants')).filter(variant_count__lte=1)
 
 
 
@@ -106,7 +114,6 @@ class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
     pagination_class = NxtbnPagination
 
     def get_serializer_class(self):
-        print(self.request.COOKIES)
         if self.request.method == 'POST':
             return ProductCreateSerializer
         return ProductSerializer

@@ -7,6 +7,7 @@ import psutil
 from django.db import connection
 from datetime import datetime, timedelta
 from rest_framework.generics import RetrieveAPIView
+from rest_framework.views import APIView
 from rest_framework.response import Response
 
 
@@ -154,7 +155,7 @@ def get_system_status():
     }
 
 
-class SystemStatusAPIView(RetrieveAPIView):
+class SystemStatusAPIView(APIView):
    
     def get(self, request, *args, **kwargs):
         return Response(get_system_status())
@@ -250,7 +251,7 @@ def get_dtails_db_table_info():
         "total_db_size": bytes_to_human_readable(total_db_size),
     }
 
-class DatabaseTableInfoAPIView(RetrieveAPIView):
+class DatabaseTableInfoAPIView(APIView):
     """
     API View that returns the detailed information of the database tables including
     their size, index size, and total size.

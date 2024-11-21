@@ -9,7 +9,45 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
-class PromoCodeListCreateAPIView(generics.ListCreateAPIView):
+
+class PromocodeFilter(filters.FilterSet):
+    username = filters.CharFilter(field_name='username', lookup_expr='icontains')
+    date_joined = filters.DateFromToRangeFilter(field_name='date_joined')
+    expiration_date = filters.DateFromToRangeFilter(field_name='expiration_date')
+
+    class Meta:
+        model = PromoCode
+        fields = [
+            'id',
+            'code',
+            'value',
+            'expiration_date',
+            'is_active',
+        ]
+
+
+class PromocodeFilterMixin:
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+        drf_filters.OrderingFilter
+    ] 
+    search_fields = [
+        'id',
+        'code',
+        'value',
+
+    ]
+    ordering_fields = [
+        'code',
+        'expiration_date',
+    ]
+    filterset_class = PromocodeFilter
+
+    def get_queryset(self):
+        return PromoCode.objects.all()
+    
+class PromoCodeListCreateAPIView(PromocodeFilterMixin, generics.ListCreateAPIView):
     pagination_class = NxtbnPagination
     queryset = PromoCode.objects.all()
     serializer_class = PromoCodeCountedSerializer

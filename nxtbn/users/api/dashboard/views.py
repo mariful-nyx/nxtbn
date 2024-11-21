@@ -23,6 +23,48 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
+
+class UserFilter(filters.FilterSet):
+    username = filters.CharFilter(field_name='username', lookup_expr='icontains')
+    date_joined = filters.DateFromToRangeFilter(field_name='date_joined')
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'date_joined',
+            'role',
+            'is_active',
+            'is_staff',
+            'is_superuser',
+        ]
+
+
+class UserFilterMixin:
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+        drf_filters.OrderingFilter
+    ] 
+    search_fields = [
+        'id',
+        'first_name',
+        'last_name',
+        'username',
+        'email',
+        'role',
+    ]
+    ordering_fields = [
+        'username',
+        'date_joined',
+    ]
+    filterset_class = UserFilter
+
+    def get_queryset(self):
+        return User.objects.all()
+    
+
 class LoginView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = DashboardLoginSerializer
@@ -153,7 +195,7 @@ class PasswordChangeView(generics.UpdateAPIView):
 # User related views end here
 # ==========================
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(UserFilterMixin, viewsets.ModelViewSet):
     serializer_class = UserMututionalSerializer
     permission_classes = (RoleBasedPermission,)
     pagination_class = NxtbnPagination

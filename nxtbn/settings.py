@@ -390,8 +390,8 @@ PLUGIN_BASE_DIR = 'nxtbn.plugins.sources'
 NXTBN_JWT_SETTINGS = {
     'SECRET_KEY': get_env_var("JWT_SECRET_KEY", SECRET_KEY), # default django's secret key
     'ALGORITHM': 'HS256',
-    'ACCESS_TOKEN_EXPIRATION_SECONDS': timedelta(hours=1),  # Default to 1 hour
-    'REFRESH_TOKEN_EXPIRATION_SECONDS': timedelta(days=1),  # 1 day for refresh token
+    'ACCESS_TOKEN_EXPIRATION': timedelta(hours=1),  # Either in seconds or timedelta
+    'REFRESH_TOKEN_EXPIRATION': timedelta(days=1),  # Either in seconds or timedelta
     'ACCESS_TOKEN_COOKIE_NAME': 'access_token',
     'REFRESH_TOKEN_COOKIE_NAME': 'refresh_token',
 }

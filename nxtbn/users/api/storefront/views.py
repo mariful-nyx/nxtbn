@@ -45,6 +45,8 @@ class SignupView(generics.CreateAPIView):
                 "token": {
                     "access": access_token,
                     "refresh": refresh_token,
+                    "expires_in": self.jwt_manager.access_token_expiration_seconds,
+                    "refresh_expires_in": self.jwt_manager.refresh_token_expiration_seconds,
                 },
             }
 
@@ -55,7 +57,7 @@ class SignupView(generics.CreateAPIView):
             httponly=True,  # Make in-accessible via JavaScript (recommended)
             secure=True,
             samesite="None",  # Options: 'Strict', 'Lax', 'None'
-            max_age=self.jwt_manager.access_token_expiration_seconds,
+            max_age=self.jwt_manager.access_token_expiration,
         )
         response.set_cookie(
             key=self.jwt_manager.refresh_token_cookie_name,
@@ -63,7 +65,7 @@ class SignupView(generics.CreateAPIView):
             httponly=True,  # Make in-accessible via JavaScript (recommended)
             secure=True,
             samesite="None",  # Options: 'Strict', 'Lax', 'None'
-            max_age=self.jwt_manager.refresh_token_expiration_seconds,
+            max_age=self.jwt_manager.refresh_token_expiration,
         )
         return response
 
@@ -106,7 +108,9 @@ class LoginView(generics.GenericAPIView):
                     "token": {
                         "access": access_token,
                         "refresh": refresh_token,
+                        "expires_in": self.jwt_manager.access_token_expiration,
                         "expires_in": self.jwt_manager.access_token_expiration_seconds,
+                        "refresh_expires_in": self.jwt_manager.refresh_token_expiration_seconds,
                     },
                 },
                 status=status.HTTP_200_OK,
@@ -117,7 +121,7 @@ class LoginView(generics.GenericAPIView):
                 httponly=True,  # Make in-accessible via JavaScript (recommended)
                 secure=True,
                 samesite="None",  # Options: 'Strict', 'Lax', 'None'
-                max_age=self.jwt_manager.access_token_expiration_seconds,
+                max_age=self.jwt_manager.access_token_expiration,
             )
             response.set_cookie(
                 key=self.jwt_manager.refresh_token_cookie_name,
@@ -125,7 +129,7 @@ class LoginView(generics.GenericAPIView):
                 httponly=True,  # Make in-accessible via JavaScript (recommended)
                 secure=True,
                 samesite="None",  # Options: 'Strict', 'Lax', 'None'
-                max_age=self.jwt_manager.refresh_token_expiration_seconds,
+                max_age=self.jwt_manager.refresh_token_expiration,
             )
             return response
 
@@ -156,23 +160,36 @@ class TokenRefreshView(generics.GenericAPIView):
 
         if user:
             access_token = self.jwt_manager.generate_access_token(user)
+            new_refresh_token = self.jwt_manager.generate_refresh_token(user)
             # The refresh token generation is currently omitted to avoid additional overhead 
             # since we have not implemented a token blacklist mechanism yet. 
             # This feature may be added in the future based on business requirements.
             # new_refresh_token = self.jwt_manager.generate_refresh_token(user)
 
             user_data = JwtBasicUserSerializer(user).data
-            return Response(
+            response =  Response(
                 {
                     "user": user_data,
                     'store_url': settings.STORE_URL,
                     "token": {
                         "access": access_token,
-                        "refresh": refresh_token,
+                        "refresh": new_refresh_token,
+                        "expires_in": self.jwt_manager.access_token_expiration_seconds,
+                        "refresh_expires_in": self.jwt_manager.refresh_token_expiration_seconds,
                     },
                 },
                 status=status.HTTP_200_OK,
             )
+        
+            response.set_cookie(
+                key=self.jwt_manager.access_token_cookie_name,
+                value=access_token,
+                httponly=True,  # Make in-accessible via JavaScript (recommended)
+                secure=True,
+                samesite="None",  # Options: 'Strict', 'Lax', 'None'
+                max_age=self.jwt_manager.access_token_expiration,
+            )
+            return response
 
         return Response(
             {"detail": _("Invalid or expired refresh token.")},

@@ -55,6 +55,8 @@ class LoginView(generics.GenericAPIView):
                     "token": {
                         "access": access_token,
                         "refresh": refresh_token,
+                        "expires_in": self.jwt_manager.access_token_expiration_seconds,
+                        "refresh_expires_in": self.jwt_manager.refresh_token_expiration_seconds,
                     },
                 },
                 status=status.HTTP_200_OK,
@@ -66,7 +68,7 @@ class LoginView(generics.GenericAPIView):
                 httponly=True,  # Make in-accessible via JavaScript (recommended)
                 secure=True,
                 samesite="None",  # Options: 'Strict', 'Lax', 'None'
-                max_age=self.jwt_manager.access_token_expiration_seconds,
+                max_age=self.jwt_manager.access_token_expiration,
             )
             response.set_cookie(
                 key=self.jwt_manager.refresh_token_cookie_name,
@@ -74,7 +76,7 @@ class LoginView(generics.GenericAPIView):
                 httponly=True,  # Make in-accessible via JavaScript (recommended)
                 secure=True,
                 samesite="None",  # Options: 'Strict', 'Lax', 'None'
-                max_age=self.jwt_manager.refresh_token_expiration_seconds,
+                max_age=self.jwt_manager.refresh_token_expiration,
             )
 
             return response

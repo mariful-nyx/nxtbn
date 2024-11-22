@@ -391,9 +391,41 @@ class OrderPaymentMethodUpdateAPIView(generics.UpdateAPIView):
     lookup_field = 'alias'
 
 
-class ReturnRequestAPIView(generics.ListCreateAPIView):
+class ReturnRequestFilter(filters.FilterSet):
+    order_alias = filters.CharFilter(field_name='order__alias', lookup_expr='iexact')
+    class Meta:
+        model = ReturnRequest
+        fields = [
+            'id',
+            'status',
+            'reason',
+            'order_alias',
+        ]
+
+
+class ReturnRequestFilterMixing:
+    filter_backends = [
+        filters.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+        drf_filters.OrderingFilter,
+    ]
+    search_fields = [
+        'id',
+        'status',
+        'reason',
+        'reason_details',
+        'order__alias',
+    ]
+    ordering_fields = [
+        'order',
+    ]
+    filterset_class = ReturnRequestFilter  # Use the filter class here
+
+
+class ReturnRequestAPIView(ReturnRequestFilterMixing, generics.ListCreateAPIView):
     queryset = ReturnRequest.objects.all()
     serializer_class = ReturnRequestSerializer
+    
     
 class ReturnRequestDetailAPIView(generics.RetrieveUpdateAPIView):
     queryset = ReturnRequest.objects.all()

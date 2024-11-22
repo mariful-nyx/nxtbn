@@ -24,47 +24,6 @@ import django_filters
 from django_filters import rest_framework as filters
 
 
-class UserFilter(filters.FilterSet):
-    username = filters.CharFilter(field_name='username', lookup_expr='icontains')
-    date_joined = filters.DateFromToRangeFilter(field_name='date_joined')
-
-    class Meta:
-        model = User
-        fields = [
-            'id',
-            'username',
-            'date_joined',
-            'role',
-            'is_active',
-            'is_staff',
-            'is_superuser',
-        ]
-
-
-class UserFilterMixin:
-    filter_backends = [
-        django_filters.rest_framework.DjangoFilterBackend,
-        drf_filters.SearchFilter,
-        drf_filters.OrderingFilter
-    ] 
-    search_fields = [
-        'id',
-        'first_name',
-        'last_name',
-        'username',
-        'email',
-        'role',
-    ]
-    ordering_fields = [
-        'username',
-        'date_joined',
-    ]
-    filterset_class = UserFilter
-
-    def get_queryset(self):
-        return User.objects.all()
-    
-
 class LoginView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = DashboardLoginSerializer
@@ -136,7 +95,45 @@ class DashboardLogoutView(LogoutView):
 # Authentication related views end here
 #=========================================
 
-class CustomerListAPIView(generics.ListAPIView):
+
+
+class CustomerFilter(filters.FilterSet):
+    username = filters.CharFilter(field_name='username', lookup_expr='icontains')
+    date_joined = filters.DateFromToRangeFilter(field_name='date_joined')
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'date_joined',
+        ]
+
+
+class CustomerFilterMixin:
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+        drf_filters.OrderingFilter
+    ] 
+    search_fields = [
+        'id',
+        'first_name',
+        'last_name',
+        'username',
+        'email',
+    ]
+    ordering_fields = [
+        'username',
+        'date_joined',
+    ]
+    filterset_class = CustomerFilter
+
+    def get_queryset(self):
+        return User.objects.filter(role=UserRole.CUSTOMER)
+    
+
+class CustomerListAPIView(CustomerFilterMixin, generics.ListAPIView):
     """
     API view to retrieve the list of customers (users with role 'CUSTOMER').
     """
@@ -148,9 +145,6 @@ class CustomerListAPIView(generics.ListAPIView):
     serializer_class = CustomerSerializer
     pagination_class = NxtbnPagination
     search_fields = ['id', 'username', 'email']
-
-    def get_queryset(self):
-        return User.objects.filter(role=UserRole.CUSTOMER)
 
 
 class CustomerRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
@@ -195,6 +189,48 @@ class PasswordChangeView(generics.UpdateAPIView):
 # User related views end here
 # ==========================
 
+
+
+class UserFilter(filters.FilterSet):
+    username = filters.CharFilter(field_name='username', lookup_expr='icontains')
+    date_joined = filters.DateFromToRangeFilter(field_name='date_joined')
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'date_joined',
+            'role',
+            'is_active',
+            'is_staff',
+            'is_superuser',
+        ]
+
+
+class UserFilterMixin:
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+        drf_filters.OrderingFilter
+    ] 
+    search_fields = [
+        'id',
+        'first_name',
+        'last_name',
+        'username',
+        'email',
+        'role',
+    ]
+    ordering_fields = [
+        'username',
+        'date_joined',
+    ]
+    filterset_class = UserFilter
+
+    def get_queryset(self):
+        return User.objects.all()
+    
 class UserViewSet(UserFilterMixin, viewsets.ModelViewSet):
     serializer_class = UserMututionalSerializer
     permission_classes = (RoleBasedPermission,)

@@ -7,9 +7,7 @@ from django.db import transaction
 
 from nxtbn.core.models import SiteSettings
 
-
-
 class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteSettings
-        fields = ['company_name', 'contact_email', 'contact_phone', 'address', 'logo']
+        fields = '__all__'

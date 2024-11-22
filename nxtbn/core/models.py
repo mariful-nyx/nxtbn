@@ -157,6 +157,18 @@ class SiteSettings(models.Model):
         verbose_name = "Site Setting"
         verbose_name_plural = "Site Settings"
 
+class InvoiceSettings(models.Model): # This info will be seen in the invoice
+    site = models.OneToOneField(Site, on_delete=models.CASCADE, null=True, blank=True, help_text="The site this configuration applies to.")
+    store_name = models.CharField(max_length=100, blank=True, null=True, help_text="Name of the store.")
+    store_address = models.TextField(blank=True, null=True, help_text="Physical address of the store.")
+    city = models.CharField(max_length=100, blank=True, null=True, help_text="City of the store.")
+    country = models.CharField(max_length=100, blank=True, null=True, help_text="Country of the store.")
+    postal_code = models.CharField(max_length=20, blank=True, null=True, help_text="Postal code of the store.")
+    logo = models.ImageField(upload_to='logos/', blank=True, null=True, help_text="Logo of the site.")
+    contact_email = models.EmailField(blank=True, null=True, help_text="Contact email for site administrators.")
+    contact_phone = models.CharField(max_length=20, blank=True, null=True, help_text="Contact phone number for site administrators.")
+
+
 
 
 class CurrencyExchange(AbstractBaseModel):

@@ -60,18 +60,31 @@ class Command(BaseCommand):
                 )
 
             # Dummy Editor.js one-line content for description
-            description_json = json.dumps({
-                "time": fake.unix_time(),
-                "blocks": [
-                    {
-                        "type": "paragraph",
-                        "data": {
-                            "text": fake.sentence()  # Generating a fake one-liner content
+            description_json = json.dumps([
+                {
+                    "type": "paragraph",
+                    "children": [
+                        {"text": ""}
+                    ]
+                },
+                {
+                    "type": "code",
+                    "children": [
+                        {"text": "This is a code block."}
+                    ]
+                },
+                {
+                    "type": "bulleted-list",
+                    "children": [
+                        {
+                            "type": "list-item",
+                            "children": [
+                                {"text": "This is a bullet item."}
+                            ]
                         }
-                    }
-                ],
-                "version": "2.22.0"  # Editor.js version (example)
-            })
+                    ]
+                }
+            ])
 
             product = Product.objects.create(
                 name=fake.word(),

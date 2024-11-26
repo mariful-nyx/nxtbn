@@ -49,7 +49,6 @@ urlpatterns = [
     path('', include('nxtbn.seo.urls')),
 
     path('product/', include('nxtbn.product.urls')),
-    path('users/', include('nxtbn.users.urls')),
 
     path('accounts/', include('allauth.urls')),
     path('accounts/profile/', TemplateView.as_view(template_name='account/profile.html'), name='account_profiles'),

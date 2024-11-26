@@ -1,6 +1,6 @@
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
-from nxtbn.core.models import SiteSettings
+from nxtbn.core.models import InvoiceSettings, SiteSettings
 from django.contrib.sites.models import Site
 
 
@@ -20,3 +20,18 @@ def create_default_site_settings(sender, **kwargs):
             address="Default Address",
         )
         print("SiteSettings instance created.")
+
+    if InvoiceSettings.objects.count() == 0:
+        site, created = Site.objects.get_or_create(
+            domain="example.com", defaults={"name": "Default Site"}
+        )
+        
+        InvoiceSettings.objects.create(
+            site=site,
+            store_name="nxtbn commerce",
+            store_address="Default Store Address",
+            city="Default City",
+            country="Default Country",
+            postal_code="123456",
+            contact_email="invoice@example.com",
+        )

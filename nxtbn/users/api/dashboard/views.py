@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.users import UserRole
 from nxtbn.users.models import User
-from nxtbn.users.api.dashboard.serializers import CustomerSerializer, DashboardLoginSerializer, UserMututionalSerializer, UserSerializer, CustomerWithAddressSerializer, CustomerUpdateSerializer
+from nxtbn.users.api.dashboard.serializers import CustomerSerializer, DashboardLoginSerializer, MeSerializer, UserMututionalSerializer, UserSerializer, CustomerWithAddressSerializer, CustomerUpdateSerializer
 from nxtbn.users.api.dashboard.serializers import DashboardLoginSerializer, PasswordChangeSerializer
 from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
 from nxtbn.users.api.storefront.views import LogoutView, TokenRefreshView
@@ -273,3 +273,10 @@ class AddressRetriveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AddressMutationalSerializer
     queryset = Address.objects.all()
     lookup_field = 'id'
+
+
+class MeDetailsAPIView(generics.RetrieveUpdateAPIView):
+    serializer_class = MeSerializer
+
+    def get_object(self):
+        return self.request.user

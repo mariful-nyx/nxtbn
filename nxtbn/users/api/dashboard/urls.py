@@ -15,6 +15,7 @@ urlpatterns = [
     path('customer-with-address/<int:id>/', users_views.CustomerWithAddressView.as_view(), name='customer-with-address'),
     path('change-password/', users_views.PasswordChangeView.as_view(), name='change_password'),
     path('address/', users_views.AddressCreateAPIView.as_view(), name='address-view'),
-    path('address/<int:id>/', users_views.AddressRetriveUpdateDestroyAPIView.as_view(), name='address-view')
+    path('address/<int:id>/', users_views.AddressRetriveUpdateDestroyAPIView.as_view(), name='address-view'),
+    path('me/', users_views.MeDetailsAPIView.as_view(), name='me'),
 
 ]

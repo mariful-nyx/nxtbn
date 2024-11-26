@@ -26,7 +26,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework import serializers
 
 from nxtbn.core.api.dashboard.serializers import InvoiceSettingsSerializer, SiteSettingsSerializer
-from nxtbn.core.models import SiteSettings
+from nxtbn.core.models import InvoiceSettings, SiteSettings
 
 
 
@@ -46,12 +46,12 @@ class SiteSettingsView(generics.RetrieveUpdateAPIView):
         
 
 class InvoiceSettingsView(generics.RetrieveUpdateAPIView):
-    queryset = SiteSettings.objects.all()
+    queryset = InvoiceSettings.objects.all()
     serializer_class = InvoiceSettingsSerializer
 
     def get_object(self):
         current_site = get_current_site(self.request)
         try:
-            return SiteSettings.objects.get(site=current_site)
-        except SiteSettings.DoesNotExist:
+            return InvoiceSettings.objects.get(site=current_site)
+        except InvoiceSettings.DoesNotExist:
             raise NotFound("Site settings for the current site do not exist.")

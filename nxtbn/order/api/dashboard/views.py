@@ -246,10 +246,11 @@ class OrderOverviewStatsView(APIView):
         order_returned = all_orders_in_period.filter(status=OrderStatus.RETURNED).aggregate(total=Sum(F('total_price')))['total'] or 0
         order_cancelled = all_orders_in_period.filter(status=OrderStatus.CANCELLED).aggregate(total=Sum(F('total_price')))['total'] or 0
 
+        last_order = Order.objects.all().last()
         data = {
             'order_pending': {
                 'amount': order_pending,
-                'last_order': Order.objects.all().last().created_at
+                'last_order': last_order.created_at  if last_order else None
             },
             'order_delivered': {
                 'amount': to_currency_unit(order_delivered, settings.BASE_CURRENCY, locale='en_US'),

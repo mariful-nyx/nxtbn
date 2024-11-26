@@ -4,11 +4,11 @@ from django.http import HttpResponseRedirect
 from django.urls import path
 from django.contrib import messages
 
-from nxtbn.core.models import CurrencyExchange, SiteSettings
+from nxtbn.core.models import CurrencyExchange, InvoiceSettings, SiteSettings
 from nxtbn.core.currency.backend import currency_Backend
 
 admin.site.register(SiteSettings)
-
+admin.site.register(InvoiceSettings)
 
 
 

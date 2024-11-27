@@ -7,5 +7,6 @@ from nxtbn.home import views as home_views
 
 urlpatterns = [
     path('', home_views.home, name='home'),
-    path('admin/', home_views.index, name='index'),
+    path('admin/', home_views.nxtbn_admin, name='nxtbn_admin'),
+    path('upload-admin/', home_views.upload_admin, name='upload_admin'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

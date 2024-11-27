@@ -1,3 +1,4 @@
+import time
 import os
 from django.contrib import messages
 import zipfile
@@ -22,7 +23,13 @@ def nxtbn_admin(request):
     except TemplateDoesNotExist:
         return render(request, 'templatefailback.html')
 
+from django.template.loader import engines
 
+def reload_templates():
+    """Reloads the templates to reflect changes instantly"""
+    for engine in engines.all():
+        if hasattr(engine, 'engine'):
+            engine.engine.template_loaders = engine.engine.get_template_loaders(engine.engine.loaders)
 
 def upload_admin(request):
     if request.method == 'POST':
@@ -57,7 +64,11 @@ def upload_admin(request):
             
             # Cleanup
             os.remove(temp_file_path)
+            time.sleep(4)
             messages.success(request, 'File uploaded and extracted successfully.')
+            # Clear template cache to reflect changes instantly
+            reload_templates()
+
             return redirect('nxtbn_admin')
         except zipfile.BadZipFile:
             os.remove(temp_file_path)

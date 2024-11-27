@@ -134,23 +134,61 @@
         font-size: 1rem;
       }
     }
+
+
+    /* Messages */
+    .messages {
+      margin: 20px 0;
+    }
+
+    .alert {
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .alert-success {
+      background-color: #28a745;
+    }
+
+    .alert-error {
+      background-color: #dc3545;
+}
+
+
   </style>
 </head>
 <body>
 
   <div class="container">
+
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+
+
     <h1>Welcome to <a target="_blank" href="https://nxtbn.com/">Nxtbn</a> </h1>
     <h2>Admin Dashboard Setup</h2>
     <p>To enable the Nxtbn Admin Dashboard, upload the <strong>admin-build</strong> file or place it in your project root directory. This step is required to proceed with managing your store efficiently.</p>
 
     <!-- Upload container -->
-    <div class="upload-container">
+    <form method="POST" enctype="multipart/form-data"  action="/upload-admin/" class="upload-container">
+      {% csrf_token %}
       <h3>Upload Admin Build</h3>
       <small>Only .zip file is allowed</small>
       <input type="file" id="dashboard-upload" name="dashboard-upload">
-      <a href="#" class="btn">Upload</a>
+      <button type="submit" class="btn">Next</button>
       <p>Don't have the admin build yet? <a href="https://nxtbn.com/admin-build/" target="_blank">Download it here</a>.</p>
-    </div>
+    </form>
 
     <div class="footer">
       <p>For API documentation, visit: <a href="https://docs.nxtbn.com/" target="_blank">https://docs.nxtbn.com/</a></p>

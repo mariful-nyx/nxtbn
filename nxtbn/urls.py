@@ -44,7 +44,7 @@ admin.site.site_title = "nxtbn Admin Panel"
 admin.site.index_title = "nxtbn Admin"
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('django-admin/', admin.site.urls),
     path('', include('nxtbn.home.urls')),
     path('', include('nxtbn.seo.urls')),
 

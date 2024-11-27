@@ -10,3 +10,6 @@ def home(request):
     #     return redirect(reverse('api_playground'))
     # else:
     #     return redirect(reverse('account_login'))
+
+def index(request):
+    return render(request, 'index.html')

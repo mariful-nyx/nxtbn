@@ -134,3 +134,5 @@ dashboard_openapi.yaml
 storefront_openapi.yaml
 
 celerybeat-schedule.db
+
+admin-build/

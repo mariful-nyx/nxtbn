@@ -17,7 +17,7 @@ def home(request):
     # else:
     #     return redirect(reverse('account_login'))
 
-def nxtbn_admin(request):
+def nxtbn_dashboard(request, *args, **kwargs):
     try:
         return render(request, 'index.html')
     except TemplateDoesNotExist:
@@ -39,7 +39,7 @@ def upload_admin(request):
         uploaded_file = request.FILES['dashboard-upload']
         if not uploaded_file.name.endswith('.zip'):
             messages.error(request, 'Only .zip files are allowed.')
-            return redirect('nxtbn_admin')
+            return redirect('nxtbn_dashboard')
 
         # Define paths
         temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_uploads')
@@ -69,12 +69,12 @@ def upload_admin(request):
             # Clear template cache to reflect changes instantly
             reload_templates()
 
-            return redirect('nxtbn_admin')
+            return redirect('nxtbn_dashboard')
         except zipfile.BadZipFile:
             os.remove(temp_file_path)
             messages.error(request, 'Invalid zip file.')
-            return redirect('nxtbn_admin')
+            return redirect('nxtbn_dashboard')
         
-    return redirect('nxtbn_admin')
+    return redirect('nxtbn_dashboard')
 
 

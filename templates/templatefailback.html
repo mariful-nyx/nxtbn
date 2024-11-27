@@ -3,129 +3,169 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Nxtbn</title>
+  <title>Nxtbn Admin Setup</title>
   <style>
     /* Base styles */
     body {
       font-family: 'Nunito', sans-serif;
-      background-color: #f4f7f6; /* Light background */
-      color: #333F48; /* Base text color */
+      background: linear-gradient(to right, #f4f8fb, #eef2f6);
+      color: #333;
       margin: 0;
       padding: 0;
+      line-height: 1.6;
     }
 
     .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
+      max-width: 800px;
+      margin: 80px auto;
+      padding: 40px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      text-align: center;
     }
 
     h1 {
       font-family: 'Nunito', sans-serif;
-      font-weight: 900;
+      font-weight: 700;
       font-size: 2.5rem;
-      color: #277200; /* Primary color */
+      color: #004d3d;
       margin-bottom: 20px;
     }
 
     h2 {
       font-family: 'Nunito', sans-serif;
-      font-weight: 700;
-      font-size: 1.75rem;
-      color: #0CAF60; /* Primary color */
-      margin-bottom: 10px;
+      font-weight: 600;
+      font-size: 1.8rem;
+      color: #008f60;
+      margin-bottom: 20px;
     }
 
     p {
       font-family: 'Lato', sans-serif;
-      font-weight: 400;
-      font-size: 1rem;
-      color: #333F48; /* Base text color */
-      margin-bottom: 20px;
+      font-size: 1.125rem;
+      color: #555;
+      margin-bottom: 30px;
     }
 
-    /* Button styling */
     .btn {
       display: inline-block;
-      padding: 10px 20px;
-      background-color: #528e33; /* Primary color */
+      padding: 14px 30px;
+      background-color: #006f4f;
       color: #ffffff;
-      font-size: 1rem;
-      font-weight: 700;
+      font-size: 1.125rem;
+      font-weight: 600;
       text-decoration: none;
-      border-radius: 5px;
-      transition: background-color 0.3s;
+      border-radius: 8px;
+      transition: background-color 0.3s, transform 0.2s ease;
     }
 
     .btn:hover {
-      background-color: #277200; /* Darker shade of primary */
+      background-color: #004d3d;
+      transform: translateY(-4px);
     }
 
     .upload-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background-color: #ffffff;
+      background-color: #f9f9f9;
       border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      margin-top: 30px;
-    }
-
-    .upload-container h3 {
-      font-family: 'Nunito', sans-serif;
-      font-weight: 700;
-      font-size: 1.25rem;
-      color: #277200; /* Primary color */
-      margin-bottom: 15px;
+      padding: 30px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+      margin-top: 40px;
     }
 
     .upload-container input[type="file"] {
-      padding: 10px;
-      border: 2px solid #277200; /* Primary color */
-      border-radius: 5px;
-      margin-bottom: 15px;
+      padding: 14px;
+      border: 2px solid #006f4f;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 20px;
+    }
+
+    .upload-container small {
+      font-size: 0.9rem;
+      color: #777;
+    }
+
+    .footer {
+      margin-top: 60px;
+      padding: 20px;
+      font-size: 1rem;
+      color: #888;
+      background-color: #f1f1f1;
+      text-align: center;
+    }
+
+    .footer a {
+      color: #006f4f;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Links section */
+    .footer-links {
+      margin-top: 20px;
+    }
+
+    .footer-links a {
+      margin-right: 20px;
+      font-size: 1rem;
+      color: #006f4f;
+    }
+
+    .footer-links a:hover {
+      text-decoration: underline;
     }
 
     /* Responsive adjustments */
-    @media (max-height: 720px) {
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+      }
       h1 {
         font-size: 2rem;
       }
       h2 {
         font-size: 1.5rem;
       }
-      p {
-        font-size: 0.9rem;
-      }
-    }
-
-    @media (max-height: 500px) {
-      h1 {
-        font-size: 1.75rem;
-      }
-      h2 {
-        font-size: 1.25rem;
-      }
-      p {
-        font-size: 0.85rem;
+      p, .upload-container small {
+        font-size: 1rem;
       }
     }
   </style>
 </head>
 <body>
+
   <div class="container">
-    <h1>Welcome to Nxtbn: Next Billion Native Commerce!</h1>
-    <h2>Your store backoffice is ready</h2>
-    <p>It seems you didn't enable Nxtbn dashboard yet. You can upload the dashboard build file here or place the dashboard file in the project root directly. The file should be named <strong>admin-build</strong>.</p>
-    
+    <h1>Welcome to <a target="_blank" href="https://nxtbn.com/">Nxtbn</a> </h1>
+    <h2>Admin Dashboard Setup</h2>
+    <p>To enable the Nxtbn Admin Dashboard, upload the <strong>admin-build</strong> file or place it in your project root directory. This step is required to proceed with managing your store efficiently.</p>
+
     <!-- Upload container -->
     <div class="upload-container">
-      <h3>Upload Dashboard Build</h3>
+      <h3>Upload Admin Build</h3>
+      <small>Only .zip file is allowed</small>
       <input type="file" id="dashboard-upload" name="dashboard-upload">
       <a href="#" class="btn">Upload</a>
+      <p>Don't have the admin build yet? <a href="https://nxtbn.com/admin-build/" target="_blank">Download it here</a>.</p>
+    </div>
+
+    <div class="footer">
+      <p>For API documentation, visit: <a href="https://docs.nxtbn.com/" target="_blank">https://docs.nxtbn.com/</a></p>
+      <p><a href="https://github.com/nxtbn-com/nxtbn" target="_blank">Give Nxtbn a star</a> | <a href="https://github.com/nxtbn-com/nxtbn" target="_blank">Fork Nxtbn</a></p>
+      
+      <!-- New footer links section -->
+      <div class="footer-links">
+        <a href="https://nxtbn.com/help" target="_blank">Help</a>
+        <a href="https://nxtbn.com/contact-us" target="_blank">Contact Us</a>
+        <a href="https://nxtbn.com/report-issue" target="_blank">Report Issue</a>
+      </div>
+      
+      <p>&copy; 2024 Nxtbn. All Rights Reserved.</p>
     </div>
   </div>
+
 </body>
 </html>

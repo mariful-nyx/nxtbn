@@ -11,11 +11,7 @@ from django.http import HttpResponse
 
 
 def home(request):
-    return redirect(reverse('api_docs'))
-    # if request.user.is_authenticated:
-    #     return redirect(reverse('api_playground'))
-    # else:
-    #     return redirect(reverse('account_login'))
+    return redirect(reverse('nxtbn_dashboard'))
 
 def nxtbn_dashboard(request, *args, **kwargs):
     try:

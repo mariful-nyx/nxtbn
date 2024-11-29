@@ -83,18 +83,6 @@ Welcome to **Next Billion Native Commerce (nxtbn)**, the ultimate solution for b
 - **No-Code Management**: If you're not a technical person, that's fine—nxtbn allows you to deploy and manage your E-commerce platform without writing a single line of code. It's designed to be user-friendly and intuitive.
 - 
 
-## FAQ for Nxtbn
-
-### 1. Should I use nxtbn as a library/tool or as a boilerplate?
-It depends on your business needs. You can integrate nxtbn's API with your frontend, treating it as a backend service. This approach works well if you're building a custom frontend or a headless e-commerce solution. If you need deeper customization, you can clone the entire codebase and use it as a starting point, modifying it to suit your business.
-### 2. What types of e-commerce models does nxtbn support?
-Nxtbn is designed to support a variety of e-commerce models. You can sell physical products with inventory and stock management, digital products with secure download links, and services with subscription-based or one-time payment options.
-### 3. Can I use my preferred frontend technology with nxtbn?
-Yes, nxtbn doesn't enforce a specific frontend technology. You can use Django templates, React, Vue, or any other framework you prefer. This flexibility allows you to choose the frontend that best suits your project.
-### 6. How do I get support or report a security issue?
-For support or general feedback, please email us at [feedback@nxtbn.com](mailto:feedback@nxtbn.com). If you find a security issue, report it through our secure channel or email us at [security@nxtbn.com](mailto:security@nxtbn.com). Avoid posting security issues in public forums or GitHub issues.
-
-
 ## 📄 License
 nxtbn is licensed under the [BSD-3 License](https://github.com/nxtbn-com/nxtbn?tab=BSD-3-Clause-1-ov-file),  allowing you to use, modify, and distribute the software freely with appropriate attribution and without additional restrictions.
 

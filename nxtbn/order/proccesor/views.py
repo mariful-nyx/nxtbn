@@ -456,6 +456,11 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
     
 
 class OrderProccessorAPIView(generics.GenericAPIView):
+    """
+        View to estimate and create an order.
+        The base class for order eastimation and creation. works for both admin and customer.
+        If you test the order creation, you must comply with the following docs: https://github.com/nxtbn-com/testing-ordering 
+    """
     create_order = False
     broadcast_on_order_create = False
     order_source = 'admin' # options: 'admin', 'storefront', 'mobile

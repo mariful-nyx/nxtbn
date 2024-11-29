@@ -21,7 +21,6 @@ class CollectionSerializer(serializers.ModelSerializer):
 
 
 class ProductVariantSerializer(serializers.ModelSerializer):
-    variant_image = ImageSerializer(read_only=True)
     price = serializers.SerializerMethodField()
     class Meta:
         model = ProductVariant

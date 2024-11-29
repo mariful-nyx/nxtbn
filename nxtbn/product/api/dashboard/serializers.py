@@ -85,7 +85,6 @@ class CollectionSerializer(serializers.ModelSerializer):
 class ProductVariantSerializer(serializers.ModelSerializer):
     is_default_variant = serializers.SerializerMethodField()
     product_name = serializers.SerializerMethodField()
-    images_details = ImageSerializer(read_only=True, source='variant_image')
 
     class Meta:
         model = ProductVariant
@@ -107,11 +106,8 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             'track_inventory',
             'stock_status',
             'low_stock_threshold',
-            'variant_image',
             'is_default_variant',
-            'images_details'
         )
-        write_only_fields = ('variant_image',)
 
     def get_is_default_variant(self, obj):
         return obj.product.default_variant_id == obj.id
@@ -174,11 +170,6 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     is_default_variant = serializers.BooleanField(default=False)
     track_inventory = serializers.BooleanField(default=False)
     allow_backorder = serializers.BooleanField(default=False)
-    variant_image = serializers.PrimaryKeyRelatedField(
-        queryset=Image.objects.all(),
-        required=False,
-        allow_null=True
-    )
     # def validate_sku(self, value):
     #     if ProductVariant.objects.filter(sku=value).exists():
     #         raise serializers.ValidationError("SKU already exists.")
@@ -378,8 +369,6 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             default_variant = None
             for i, variant_payload in enumerate(variants_payload):
                 is_default_variant = variant_payload.pop('is_default_variant', False)
-                variant_image = Image.objects.get(id=variant_payload['variant_image'])
-                variant_payload['variant_image'] = variant_image
                 variant = ProductVariant.objects.create(
                     product=instance,
                     currency=currency,
@@ -418,8 +407,6 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
         # Validate each variant using VariantCreatePayloadSerializer
         for variant_data in variants_data:
-            if 'variant_image' in variant_data and variant_data['variant_image']:
-                variant_data['variant_image'] = variant_data['variant_image'].id
             variant_serializer = VariantCreatePayloadSerializer(data=variant_data)
             if not variant_serializer.is_valid():
                 raise serializers.ValidationError(variant_serializer.errors)

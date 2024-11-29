@@ -43,7 +43,7 @@ class TaxRate(AbstractBaseModel):
         return f"{self.country} - {self.state if self.state else 'N/A'}: {self.tax_class.name} {self.rate}%"
 
     class Meta:
-        unique_together = ('country', 'state', 'tax_class')
+        # unique_together = ('country', 'state', 'tax_class')
         ordering = ['country', 'state', 'tax_class']
         verbose_name = "Tax Rate"
         verbose_name_plural = "Tax Rates"

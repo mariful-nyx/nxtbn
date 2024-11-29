@@ -111,7 +111,6 @@ class Command(BaseCommand):
                 sku=fake.uuid4(),
                 weight_unit=weight_unit[0],
                 weight_value=random.uniform(1, 1000),
-                variant_image=image
             )
 
 

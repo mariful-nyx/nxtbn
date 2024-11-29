@@ -53,7 +53,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(ProductVariant)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'currency', 'price', "currency")
+    list_display = ('id', 'product', 'name', 'currency', 'price', "currency")
 
 
 class ColorAdminForm(forms.ModelForm):

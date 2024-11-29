@@ -239,7 +239,6 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
     }
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
-    variant_image = models.ForeignKey(Image, blank=True, null=True, on_delete=models.SET_NULL) # TO DO: Remove this field, unnecessary, Decided with critically analyze. Can handle with product.related_to field
     name = models.CharField(max_length=255, blank=True, null=True)
 
     compare_at_price = models.DecimalField(max_digits=12, decimal_places=3, validators=[MinValueValidator(Decimal('0.01'))], null=True, blank=True)
@@ -319,10 +318,6 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
         Returns the URL of the first image associated with the variant. 
         If no image is available, returns None.
         """
-        if self.variant_image:
-            image_url = self.variant_image.image.url
-            full_url = request.build_absolute_uri(image_url)
-            return full_url
         
         if self.product.images.exists():
             return self.product.product_thumbnail(request)

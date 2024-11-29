@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import generics
 
 from rest_framework.response import Response
@@ -287,7 +288,7 @@ class OrderCreator:
 
 
             # Prepare Order data
-            customer_currency = self.validated_data.get('customer_currency', CurrencyTypes.USD)
+            customer_currency = self.validated_data.get('customer_currency') or self.request.currency
             order_data = {
                 "user_id": self.customer,
                 "supplier": self.validated_data.get('supplier'),
@@ -295,7 +296,7 @@ class OrderCreator:
                 "shipping_address_id": shipping_address_id,
                 "billing_address_id": billing_address_id,
 
-                "currency": self.validated_data.get('currency', CurrencyTypes.USD),
+                "currency": settings.BASE_CURRENCY,
                 "total_price": int(self.total * 100),  #  total is in units, convert to cents/subunits
                 "customer_currency": self.validated_data.get('customer_currency', CurrencyTypes.USD),
                 "total_price_in_customer_currency": build_currency_amount(self.total, customer_currency),

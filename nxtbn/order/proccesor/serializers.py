@@ -15,7 +15,12 @@ class ShippingAddressSerializer(serializers.Serializer):
     city = serializers.CharField(required=False)
     postal_code = serializers.CharField(required=False)
     country = serializers.CharField(required=False)
-    region = serializers.CharField(required=False)
+    state = serializers.CharField(required=False)
+    street_address = serializers.CharField(required=False)
+    email = serializers.CharField(required=False)
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    phone_number = serializers.CharField(required=False)
 
 class OrderEstimateSerializer(serializers.Serializer):
     shipping_address = ShippingAddressSerializer(required=False)

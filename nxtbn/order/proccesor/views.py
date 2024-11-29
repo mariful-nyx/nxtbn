@@ -347,18 +347,17 @@ class OrderCreator:
             return None
 
         # Assuming address_data contains enough information to uniquely identify an address
-        address, created = Address.objects.get_or_create(
+        address = Address.objects.create(
             user_id=self.customer,
             first_name=address_data.get('first_name', ''),
             last_name=address_data.get('last_name', ''),
             phone_number=address_data.get('phone_number', ''),
-            email_address=address_data.get('email_address', ''),
+            email=address_data.get('email', ''),
             address_type=address_data.get('address_type', AddressType.DSA_DBA),
             street_address=address_data.get('street_address', ''),
             city=address_data.get('city', ''),
             state=address_data.get('state', ''),
             country=address_data.get('country', ''),
-            defaults=address_data
         )
         return address
 

@@ -31,7 +31,7 @@ class Address(AbstractAddressModels):
     last_name = models.CharField(max_length=50)
 
     phone_number = models.CharField(max_length=15, blank=True, null=True)
-    email_address = models.EmailField(blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
     address_type = models.CharField(
         max_length=7,
         choices=AddressType.choices,

@@ -261,6 +261,7 @@ class OrderCreator:
         with transaction.atomic():
             shipping_address = self.validated_data.get('shipping_address', {})
             billing_address = self.validated_data.get('billing_address', {})
+            
         
             custom_discount_amount = self.validated_data.get('custom_discount_amount')
             promocode = self.get_promocode_instance(self.validated_data.get('promocode'))
@@ -284,8 +285,6 @@ class OrderCreator:
                 else:
                     billing_address_id = shipping_address_id
 
-            shipping_address = self.validated_data.get('shipping_address', {})
-            billing_address = self.validated_data.get('billing_address', {})
 
             # Prepare Order data
             customer_currency = self.validated_data.get('customer_currency', CurrencyTypes.USD)
@@ -293,8 +292,8 @@ class OrderCreator:
                 "user_id": self.customer,
                 "supplier": self.validated_data.get('supplier'),
 
-                "shipping_address": self.get_or_create_address(shipping_address),
-                "billing_address": self.get_or_create_address(billing_address),
+                "shipping_address_id": shipping_address_id,
+                "billing_address_id": billing_address_id,
 
                 "currency": self.validated_data.get('currency', CurrencyTypes.USD),
                 "total_price": int(self.total * 100),  #  total is in units, convert to cents/subunits
@@ -327,8 +326,6 @@ class OrderCreator:
                     total_price_in_customer_currency=variant['quantity'] * variant['price'],
                     tax_rate=self.get_tax_rate(variant['tax_class'], shipping_address).rate if self.get_tax_rate(variant['tax_class'], shipping_address) else Decimal('0.00'),
                 )
-
-            print(self.collect_user_agent, self.request.user.username)
 
             if self.collect_user_agent:
                 try:

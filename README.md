@@ -38,6 +38,7 @@
 
 ## Documentation
 - nxtbn documentation [https://docs.nxtbn.com/](https://docs.nxtbn.com/)
+-  Dashboard: (Download will be added soon)
 
 
 Welcome to **Next Billion Native Commerce (nxtbn)**, the ultimate solution for businesses looking for a flexible, scalable, and open-source E-commerce CMS. Built with Django and ReactJS, nxtbn stands out as the leading choice for enterprises seeking scalability and adaptability. 🚀
@@ -45,11 +46,11 @@ Welcome to **Next Billion Native Commerce (nxtbn)**, the ultimate solution for b
 ## 🌟 Key Features
 - **Multi-Language & Multi-Currency Support**: Cater to a global audience with built-in language and currency options.
 - **Payment Gateways & Selling Channels**: Integrate with major payment gateways and expand across different selling platforms effortlessly.
-- **Supports All E-Commerce Models**: Whether you're selling physical products, digital downloads, or services, nxtbn has you covered. The platform includes:
+- **Supports All E-Commerce Models**: Whether you're selling physical products, digital downloads, or services, nxtbn has you covered. The platform includes: (Currently Downloadable Product Not Implemented)
 
-   - **Inventory and Stock Management**: Ideal for those selling physical products. Track inventory, manage stock, and integrate with shipping solutions for seamless order fulfillment.
+   - **Inventory and Stock Management**: Ideal for those selling physical products. Track inventory, manage stock, and integrate with shipping solutions for seamless order fulfillment. (Stock Tracking Implemented/Inventory yet to implement)
    
-   - **Digital Products with Download Options**: If you're selling digital content, nxtbn allows you to offer secure download links and manage digital licenses.
+   - **Digital Products with Download Options**: If you're selling digital content, nxtbn allows you to offer secure download links and manage digital licenses. (Not Implemented)
    
    - **Subscription and One-Time Services**: For service-based businesses, nxtbn supports both subscription-based and one-time payment models.
 
@@ -64,16 +65,6 @@ Welcome to **Next Billion Native Commerce (nxtbn)**, the ultimate solution for b
 
 ![Django NXTBN ecommerce dashboard](https://raw.githubusercontent.com/nxtbn-com/nxtbn-docs/main/source/_static/dashboard.png)
   
-## What Makes Nxtbn Special?
-
-1. **First Django E-Commerce CMS with Theming System**: Nxtbn is the first Django CMS for e-commerce to support a flexible theming system and extension framework, similar to WordPress-Shopify. You can customize the look and feel of your e-commerce site with ease.
-2. **Built-in Headless REST API**: Nxtbn offers a complete headless REST API solution, enabling integration with various business applications and services. This flexibility opens up endless possibilities for customization and scalability.
-3. **No Technology Lock-ins**: Nxtbn avoids technology lock-ins by offering a modular plugin and template architecture. You can use your favorite frontend technology, whether it's Django templates, React, Vue, or others.
-4. **Webhooks for External Data Integration**: The platform's webhook architecture allows you to connect and share data with external systems, enhancing interoperability and flexibility.
-5. **Highly Scalable Architecture**: Whether you're running a small business or a large enterprise, Nxtbn's architecture is designed to scale. You can use it as a high-level boilerplate while accommodating unique business cases.
-6. **AI-Driven Content Management System**: Nxtbn incorporates AI-driven features for rich content management, enabling advanced customization and automation in your e-commerce experience.
-7. **Cloud-Native and Multi-Channel**: The platform is designed for the cloud and supports multiple channels, multi-language, and multi-currency operations by default.
-8. **Open Source and Free to Use**: Nxtbn is open-source, allowing you to use the full platform without commercial limitations. This means you get enterprise-grade features without the enterprise price tag.
 
 ## 💡 Why nxtbn?
 - **Open-Source & Free**: nxtbn is accessible to everyone, with no licensing fees or restrictions.

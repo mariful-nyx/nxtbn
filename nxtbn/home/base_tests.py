@@ -12,7 +12,7 @@ class BaseTestCase(TestCase):
     
     def setUp(self):
         self.user = UserFactory(
-            email="johndoe@example.com",
+            email="test@example.com",
             password=make_password('testpass')
         )       
         

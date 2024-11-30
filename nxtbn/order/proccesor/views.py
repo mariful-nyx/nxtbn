@@ -151,7 +151,8 @@ class TaxCalculator:
                 tax_rate = Decimal('0.00')
                 tax_type = 'No Tax'
 
-            class_tax = (class_subtotal * tax_rate).quantize(Decimal('0.01'))
+            # TODO: wrong tax calculation when currency is KWD, the precisison is 3
+            class_tax = (class_subtotal * tax_rate)
             estimated_tax += class_tax
 
             tax_details.append({
@@ -298,7 +299,7 @@ class OrderCreator:
 
                 "currency": settings.BASE_CURRENCY,
                 "total_price": int(self.total * 100),  #  total is in units, convert to cents/subunits
-                "customer_currency": self.validated_data.get('customer_currency', CurrencyTypes.USD),
+                "customer_currency": customer_currency,
                 "total_price_in_customer_currency": build_currency_amount(self.total, customer_currency),
                 "status": OrderStatus.PENDING,
                 "authorize_status": OrderAuthorizationStatus.NONE,

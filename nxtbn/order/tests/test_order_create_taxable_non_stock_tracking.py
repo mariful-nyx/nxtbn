@@ -12,10 +12,14 @@ from nxtbn.product.tests import ProductFactory, ProductTypeFactory, ProductVaria
 from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
 
 
-class OrderCreateMultiCurrencyAPI(BaseTestCase):
+class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single currency mode either USD, JPY, KWD
+    
     """
-    Test Case for Order Create API with multiple currencies: USD, JPY, KWD.
-    This test ensures accuracy of calculations and multi-precision handling for different currencies.
+        Test Case for Order Create API with multiple currencies: USD, JPY, KWD.
+
+        This test suite ensures the accuracy of calculations and multi-precision handling for different currencies.
+        It covers tax calculation and non-trackable stock products in a single currency mode.
+        TODO: Add support for multi-currency mode.
     """
 
     def setUp(self):
@@ -102,14 +106,14 @@ class OrderCreateMultiCurrencyAPI(BaseTestCase):
         }
 
         # Estimate Test
-        order_estimate_response = self.client.post(self.order_estimate_api_url, order_payload, format='json')
+        order_estimate_response = self.client.post(self.order_estimate_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY,})
         self.assertEqual(order_estimate_response.status_code, status.HTTP_200_OK)
         self.assertEqual(order_estimate_response.data['subtotal'], params['subtotal'])
         self.assertEqual(order_estimate_response.data['total'], params['total'])
         self.assertEqual(order_estimate_response.data['estimated_tax'], params['tax'])
 
         # Order Create Test
-        order_response = self.client.post(self.order_api_url, order_payload, format='json')
+        order_response = self.client.post(self.order_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY,})
         self.assertEqual(order_response.status_code, status.HTTP_200_OK)
         self.assertEqual(order_response.data['subtotal'], params['subtotal'])
         self.assertEqual(order_response.data['total'], params['total'])

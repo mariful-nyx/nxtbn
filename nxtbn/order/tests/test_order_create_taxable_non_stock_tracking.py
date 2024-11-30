@@ -1,3 +1,4 @@
+# test case for single currency mode
 import random
 import sys
 from django.conf import settings
@@ -346,8 +347,8 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
                 "USD",
                 {
                     "subtotal": "$235.50",
-                    "total": "$252.78",
-                    "tax": "$17.28",
+                    "total": "$252.78", # rounded to 2 decimal places, that is why it is not 252.775
+                    "tax": "$17.28", # rounded to 2 decimal places, that is why it is not 17.275
                     "variant_1": {"price": 50.00, "cost_per_unit": 40.00, "stock": 10}, # will be ordered 2 times, Taxable 15%
                     "variant_2": {"price": 30.00, "cost_per_unit": 25.00, "stock": 10}, # will be ordered 3 times, Non-taxable
                     "variant_3": {"price": 45.50, "cost_per_unit": 35.00, "stock": 10}, # will be ordered 1 time, Taxable 5%
@@ -359,9 +360,9 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
             self._test_order_with_multi_variant(
                 "JPY",
                 {
-                    "subtotal": "¥23,550",
-                    "total": "¥25,278",
-                    "tax": "¥1,728",
+                    "subtotal": "¥23,550", 
+                    "total": "¥25,278", # rounded to 0 decimal places
+                    "tax": "¥1,728", # rounded to 0 decimal places
                     "variant_1": {"price": 5000, "cost_per_unit": 4000, "stock": 10}, # will be ordered 2 times, Taxable 15%
                     "variant_2": {"price": 3000, "cost_per_unit": 2500, "stock": 10}, # will be ordered 3 times, Non-taxable
                     "variant_3": {"price": 4550, "cost_per_unit": 3500, "stock": 10}, # will be ordered 1 time, Taxable 5%
@@ -374,8 +375,8 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
                 "KWD",
                 {
                     "subtotal": "KWD235.500",
-                    "total": "KWD252.780",
-                    "tax": "KWD17.280",
+                    "total": "KWD252.775", # rounded to 3 decimal places, that is why it is not 252.78
+                    "tax": "KWD17.275", # rounded to 3 decimal places, that is why it is not 17.28
                     "variant_1": {"price": 50.000, "cost_per_unit": 40.000, "stock": 10}, # will be ordered 2 times, Taxable 15%
                     "variant_2": {"price": 30.000, "cost_per_unit": 25.000, "stock": 10}, # will be ordered 3 times, Non-taxable
                     "variant_3": {"price": 45.500, "cost_per_unit": 35.000, "stock": 10}, # will be ordered 1 time, Taxable 5%

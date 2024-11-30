@@ -98,18 +98,6 @@ class ProductFactory(DjangoModelFactory):
     product_type = factory.SubFactory(ProductTypeFactory)
 
     @factory.post_generation
-    def tags(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if extracted:
-            self.tags.add(*extracted)
-        else:
-            # Add random tags
-            for _ in range(3):
-                self.tags.add(ProductTagFactory())
-
-    @factory.post_generation
     def images(self, create, extracted, **kwargs):
         if not create:
             return

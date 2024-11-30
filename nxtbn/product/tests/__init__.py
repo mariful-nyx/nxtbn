@@ -1,7 +1,10 @@
+import random
+from django.conf import settings
 import factory
 from factory.django import DjangoModelFactory
 from faker import Faker
 from decimal import Decimal
+from nxtbn.core.utils import normalize_amount_currencywise
 from nxtbn.filemanager.tests import ImageFactory
 from nxtbn.product.models import (
     Supplier, Color, Category, Collection, ProductTag, ProductType, Product, ProductVariant
@@ -41,8 +44,11 @@ class CategoryFactory(DjangoModelFactory):
 
     name = factory.Faker("word")
     description = factory.Faker("sentence")
-    parent = factory.SubFactory("self", nullable=True)
-
+    # parent = factory.Maybe(
+    #     factory.Faker("boolean"),
+    #     yes_declaration=factory.SubFactory('self'),
+    #     no_declaration=None
+    # )
 
 # Collection Factory
 class CollectionFactory(DjangoModelFactory):
@@ -54,7 +60,7 @@ class CollectionFactory(DjangoModelFactory):
     is_active = True
     created_by = factory.SubFactory(UserFactory)
     last_modified_by = factory.SubFactory(UserFactory)
-    image = factory.SubFactory("ImageFactory", nullable=True)
+    image = factory.SubFactory(ImageFactory, nullable=True)
 
 
 # Product Tag Factory
@@ -124,7 +130,7 @@ class ProductVariantFactory(DjangoModelFactory):
     product = factory.SubFactory(ProductFactory)
     name = factory.Faker("word")
     sku = factory.Faker("ean13")
-    price = factory.LazyFunction(lambda: Decimal(fake.random_int(min=10, max=1000)))
+    price = normalize_amount_currencywise(random.uniform(10, 1000), settings.BASE_CURRENCY),
     currency = "USD"
     stock = factory.Faker("random_int", min=0, max=100)
     track_inventory = fake.boolean()

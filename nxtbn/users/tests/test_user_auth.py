@@ -5,12 +5,17 @@ from rest_framework.reverse import reverse
 from nxtbn.home.base_tests import BaseTestCase
 
 from django.utils import timezone
+from django.contrib.auth.hashers import make_password
+
+from nxtbn.users.tests import UserFactory
 
 class AuthUserLoginAPITest(BaseTestCase):
     
     def setUp(self):
-        self.url = reverse('signup')
-        super().setUp()
+        self.user = UserFactory(
+            email="test@example.com",
+            password=make_password('testpass')
+        )   
         
     def test_authentication(self):
              
@@ -19,7 +24,7 @@ class AuthUserLoginAPITest(BaseTestCase):
         # =================================
         
         # login
-        login = self.client.login(email='johndoe@example.com', password='testpass')
+        login = self.client.login(email='test@example.com', password='testpass')
         self.loginSeccess(login)
         
         # logout        

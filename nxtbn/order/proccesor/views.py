@@ -299,7 +299,7 @@ class OrderCreator:
 
                 "currency": settings.BASE_CURRENCY,
                 "total_price": int(self.total * 100),  #  total is in units, convert to cents/subunits
-                "customer_currency": self.validated_data.get('customer_currency', CurrencyTypes.USD),
+                "customer_currency": customer_currency,
                 "total_price_in_customer_currency": build_currency_amount(self.total, customer_currency),
                 "status": OrderStatus.PENDING,
                 "authorize_status": OrderAuthorizationStatus.NONE,

@@ -102,14 +102,14 @@ class OrderCreateMultiCurrencyAPI(BaseTestCase):
         }
 
         # Estimate Test
-        order_estimate_response = self.client.post(self.order_estimate_api_url, order_payload, format='json')
+        order_estimate_response = self.client.post(self.order_estimate_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY,})
         self.assertEqual(order_estimate_response.status_code, status.HTTP_200_OK)
         self.assertEqual(order_estimate_response.data['subtotal'], params['subtotal'])
         self.assertEqual(order_estimate_response.data['total'], params['total'])
         self.assertEqual(order_estimate_response.data['estimated_tax'], params['tax'])
 
         # Order Create Test
-        order_response = self.client.post(self.order_api_url, order_payload, format='json')
+        order_response = self.client.post(self.order_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY,})
         self.assertEqual(order_response.status_code, status.HTTP_200_OK)
         self.assertEqual(order_response.data['subtotal'], params['subtotal'])
         self.assertEqual(order_response.data['total'], params['total'])

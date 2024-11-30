@@ -152,7 +152,7 @@ class TaxCalculator:
                 tax_type = 'No Tax'
 
             # TODO: wrong tax calculation when currency is KWD, the precisison is 3
-            class_tax = (class_subtotal * tax_rate).quantize(Decimal('0.01'))
+            class_tax = (class_subtotal * tax_rate)
             estimated_tax += class_tax
 
             tax_details.append({

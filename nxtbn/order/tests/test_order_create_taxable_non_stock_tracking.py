@@ -12,10 +12,14 @@ from nxtbn.product.tests import ProductFactory, ProductTypeFactory, ProductVaria
 from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
 
 
-class OrderCreateMultiCurrencyAPI(BaseTestCase):
+class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single currency mode either USD, JPY, KWD
+    
     """
-    Test Case for Order Create API with multiple currencies: USD, JPY, KWD.
-    This test ensures accuracy of calculations and multi-precision handling for different currencies.
+        Test Case for Order Create API with multiple currencies: USD, JPY, KWD.
+
+        This test suite ensures the accuracy of calculations and multi-precision handling for different currencies.
+        It covers tax calculation and non-trackable stock products in a single currency mode.
+        TODO: Add support for multi-currency mode.
     """
 
     def setUp(self):

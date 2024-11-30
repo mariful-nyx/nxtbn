@@ -1,18 +1,12 @@
 import random
 import sys
 from rest_framework import status
-
 from rest_framework.reverse import reverse
-
 from nxtbn.core import PublishableStatus
 from nxtbn.home.base_tests import BaseTestCase
-
 from django.utils import timezone
-
 from nxtbn.product.models import Product, ProductType
 from rest_framework.test import APIClient
-
-
 
 
 class ProductAndRelatedCreateAPITest(BaseTestCase):
@@ -34,7 +28,7 @@ class ProductAndRelatedCreateAPITest(BaseTestCase):
         self.product_type_url = reverse('producttype-list') 
         response = self.client.post(self.product_type_url, self.product_type_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        sys.stdout.write("Product Type Created")
+        sys.stdout.write("Product Type Created\n")
         
         self.product_type_id = response.data['id']
 
@@ -65,29 +59,27 @@ class ProductAndRelatedCreateAPITest(BaseTestCase):
             # "tax_class": 1,
             "name": "Titanic",
             "summary": "A ship that sank",
-            "images": [
-                
-            ],
-            "meta_title": "423432",
-            "meta_description": "234",
-            "slug": "giveaway-quiz",
+            "images": [],
+            "meta_title": "Titanic",
+            "meta_description": "A ship sank to the bottom of the ocean",
+            "slug": "titanic",
             "status": PublishableStatus.PUBLISHED,
             "category": self.category_id,
             "tags_payload": [
-                "sdf",
-                "sdfsd"
+                "Southampton",
+                "New York"
             ]
         }
 
-        
         self.product_url = reverse('product-list')
         response = self.client.post(self.product_url, self.product_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         
         self.product_id = response.data['id']
 
-
-
-    def tearDown(self):
-        # Clean up by logging out after the test
-        self.client.logout()
+    def test_product_creation(self):
+        """Test product creation process."""
+        # Ensure the product type, category, and product were created
+        self.assertIsNotNone(self.product_type_id)
+        self.assertIsNotNone(self.category_id)
+        self.assertIsNotNone(self.product_id)

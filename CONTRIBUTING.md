@@ -12,8 +12,8 @@ Thank you for considering contributing to nxtbn! This guide provides an overview
 2. **Create a New Branch**: Use a descriptive branch name for your contribution.
 3. **Make Changes**: Implement your changes following our coding guidelines.
 4. **Run Tests**: Ensure that your changes do not introduce errors or the tests is not covered, make sure write new test or modify existing test.
-   To run the test: python manage.py test (For all tests)
-   to run specific test: python manage.py test nxtbn.<app name>.tests.<file name without .py extension)
+   To run the test: `python manage.py test` (For all tests)
+   to run specific test: `python manage.py test nxtbn.<app name>.tests.<file name without .py extension)`
 6. **Submit a Pull Request**: Open a pull request (PR) from your branch to the `main` branch, providing a clear description of the changes.
 
 ## Getting Started

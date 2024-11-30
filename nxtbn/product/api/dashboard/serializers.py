@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from django.db import transaction
@@ -5,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 
 
 from nxtbn.core import PublishableStatus
+from nxtbn.core.utils import normalize_amount_currencywise
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
 from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
 from nxtbn.tax.models import TaxClass
@@ -85,6 +87,7 @@ class CollectionSerializer(serializers.ModelSerializer):
 class ProductVariantSerializer(serializers.ModelSerializer):
     is_default_variant = serializers.SerializerMethodField()
     product_name = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductVariant
@@ -114,6 +117,9 @@ class ProductVariantSerializer(serializers.ModelSerializer):
     
     def get_product_name(self, obj):
         return obj.product.name
+    
+    def get_price(self, obj):
+        return normalize_amount_currencywise(obj.price, settings.BASE_CURRENCY)
 
 class ProductSerializer(serializers.ModelSerializer):
     product_thumbnail = serializers.SerializerMethodField()
@@ -174,6 +180,9 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     #     if ProductVariant.objects.filter(sku=value).exists():
     #         raise serializers.ValidationError("SKU already exists.")
     #     return value
+
+    def validate_price(self, value):
+        return normalize_amount_currencywise(value, settings.BASE_CURRENCY)
 
 
 class ProductMutationSerializer(serializers.ModelSerializer):
@@ -312,7 +321,7 @@ class ProductMutationSerializer(serializers.ModelSerializer):
 class ProductCreateSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
     variants_payload = VariantCreatePayloadSerializer(many=True, write_only=True)
-    currency = serializers.CharField(max_length=3, required=False, write_only=True)
+    # currency = serializers.CharField(max_length=3, required=False, write_only=True)
     tags = ProductTagSerializer(many=True, read_only=True)
     tags_payload = serializers.ListField(child=serializers.CharField(max_length=255), write_only=True, required=False)
     class Meta:
@@ -337,7 +346,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
             # write only fields
             'variants_payload',
-            'currency',
+            # 'currency',
             'meta_title',
             'meta_description',
             'tags',
@@ -352,7 +361,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         images = validated_data.pop('images', [])
         variants_payload = validated_data.pop('variants_payload', [])
         tags_payload = validated_data.pop('tags_payload', [])
-        currency = validated_data.pop('currency', 'USD')
+        currency = settings.BASE_CURRENCY
         tax_class = validated_data.pop('tax_class', None)
 
         with transaction.atomic():

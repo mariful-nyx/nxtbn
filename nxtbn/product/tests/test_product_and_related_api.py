@@ -1,5 +1,6 @@
 import random
 import sys
+from django.conf import settings
 from rest_framework import status
 from rest_framework.reverse import reverse
 from nxtbn.core import PublishableStatus
@@ -28,7 +29,6 @@ class ProductAndRelatedCreateAPITest(BaseTestCase):
         self.product_type_url = reverse('producttype-list') 
         response = self.client.post(self.product_type_url, self.product_type_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        sys.stdout.write("Product Type Created\n")
         
         self.product_type_id = response.data['id']
 
@@ -42,12 +42,22 @@ class ProductAndRelatedCreateAPITest(BaseTestCase):
         self.category_id = category_response.data['id']
         
 
+        if settings.BASE_CURRENCY == 'USD':
+            price = '20.25'
+        
+        if settings.BASE_CURRENCY == 'KWD':
+            price = '30.258'
+
+        if settings.BASE_CURRENCY == 'JPY':
+            price = '2025'
+
         # Create Product
         self.product_data = {
             "variants_payload": [
                 {
                     "is_default_variant": True,
-                    "price": "20",
+                    "currency": settings.BASE_CURRENCY,
+                    "price": price,
                     "cost_per_unit": "44",
                     "sku": "BBC-3",
                     "color_code": "#FFFFFF",
@@ -74,6 +84,7 @@ class ProductAndRelatedCreateAPITest(BaseTestCase):
         self.product_url = reverse('product-list')
         response = self.client.post(self.product_url, self.product_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(str(response.data['variants'][0]['price']), price)
         
         self.product_id = response.data['id']
 

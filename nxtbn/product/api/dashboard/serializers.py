@@ -87,6 +87,7 @@ class CollectionSerializer(serializers.ModelSerializer):
 class ProductVariantSerializer(serializers.ModelSerializer):
     is_default_variant = serializers.SerializerMethodField()
     product_name = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductVariant
@@ -116,6 +117,9 @@ class ProductVariantSerializer(serializers.ModelSerializer):
     
     def get_product_name(self, obj):
         return obj.product.name
+    
+    def get_price(self, obj):
+        return normalize_amount_currencywise(obj.price, settings.BASE_CURRENCY)
 
 class ProductSerializer(serializers.ModelSerializer):
     product_thumbnail = serializers.SerializerMethodField()

@@ -122,12 +122,3 @@ class ProductVariantFactory(DjangoModelFactory):
     currency = "USD"
     stock = factory.Faker("random_int", min=0, max=100)
     track_inventory = fake.boolean()
-
-    @factory.post_generation
-    def add_variant_attributes(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        self.color_code = fake.hex_color()
-        self.weight_unit = fake.random_element(["kg", "lb", "g"])
-        self.weight_value = Decimal(fake.random_int(1, 10))

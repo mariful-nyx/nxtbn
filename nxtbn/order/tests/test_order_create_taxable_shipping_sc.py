@@ -135,7 +135,7 @@ class OrderCreateShippingRateTest(BaseTestCase):
             cost_per_unit=50.00,
             weight_value=self.variant_one_wv,  # 578 grams
         )
-
+        
         product_two = ProductFactory(
             product_type=product_type,
             tax_class=self.tax_class,
@@ -174,6 +174,7 @@ class OrderCreateShippingRateTest(BaseTestCase):
                 "last_name": "Doe",
                 "phone_number": "1234567890"
             },
+            'shipping_method_id': self.shipping_method.id,
             "variants": [
                 {
                     "alias": variant_one.alias,
@@ -189,9 +190,9 @@ class OrderCreateShippingRateTest(BaseTestCase):
         # Expected values
         total_weight = Decimal(
             (self.variant_one_oqty * self.variant_one_wv + self.variant_two_oqty * self.variant_two_wv) / 1000
-        )  # Expected 46.24
+        )  # Expected 4.578
 
-
+       
 
         address = {
             'country': self.country,

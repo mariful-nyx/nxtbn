@@ -26,34 +26,41 @@ from nxtbn.core.signal_initiators import order_created
 from nxtbn.users import UserRole
 
 from nxtbn.order.utils import parse_user_agent
-class ShippingFeeCalculator:
-    def get_shipping_rate_instance(self, shipping_method_id, address):
+
+def get_shipping_rate_instance(shipping_method_id, address, total_weight):
         if not shipping_method_id:
             return None
 
         if not address:
             raise ValueError("Address is required when a shipping method ID is provided.")
+        
+        if not total_weight:
+            raise ValueError("Total weight is required to calculate shipping rate.")
 
-        shipping_rate_qs = ShippingRate.objects.filter(shipping_method__id=shipping_method_id)
+        shipping_rate_qs = ShippingRate.objects.filter(
+            shipping_method__id=shipping_method_id,
+            weight_min__lte=total_weight,
+            weight_max__gte=total_weight
+        )
 
         # Check for a rate defined at the city level
         if address.get('city'):
             rate = shipping_rate_qs.filter(
-                city=address['city'].lower(),
-                country=address['country'].upper(),
-                region=address['state'].lower() if address.get('state') else None,
+                city=address['city'],
+                country=address['country'],
+                region=address['state'] if address.get('state') else None,
             ).first()
             if rate:
                 return rate
 
         # Check for a rate defined at the state level
         if address.get('state'):
+            rate = shipping_rate_qs.filter(
+                region=address['state'],
+                country=address['country'],
+            ).first()
+            print(rate, 'rate for state')
             if rate:
-                rate = shipping_rate_qs.filter(
-                    region=address['state'].lower(),
-                    city__isnull=True,
-                    country=address['country'].upper(),
-                ).first()
                 return rate
 
         # Check for a rate at the country level if no state rate is found, nationwide
@@ -61,10 +68,11 @@ class ShippingFeeCalculator:
             rate = shipping_rate_qs.filter(country=address['country']).first()
             if rate:
                 rate = shipping_rate_qs.filter(
-                    country=address['country'].upper(),
+                    country=address['country'],
                     region__isnull=True,
                     city__isnull=True
                 ).first()
+                print(rate, 'rate for country')
                 return rate
             
         # Global
@@ -76,15 +84,18 @@ class ShippingFeeCalculator:
                     region__isnull=True,
                     city__isnull=True
                 ).first()
+                print(rate, 'rate for global')
                 return rate
         else:
             raise serializers.ValidationError({"details": "We don't ship to this location."})
 
         # If no rate is found for the address, raise an exception
         raise ValueError("No shipping rate available for the provided location.")
+class ShippingFeeCalculator:
+    
 
     def get_shipping_fee_by_rate(self, shipping_method_id, address, total_weight):
-        rate_instance = self.get_shipping_rate_instance(shipping_method_id, address)
+        rate_instance = get_shipping_rate_instance(shipping_method_id, address, total_weight)
         if not rate_instance:
             custom_shipping_amount = self.validated_data.get('custom_shipping_amount', {})
             if custom_shipping_amount:

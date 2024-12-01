@@ -69,10 +69,6 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
         self.state = 'NY'
         self.precision = str(get_currency_precision(settings.BASE_CURRENCY))
 
-        # Tax class
-        self.tax_class = TaxClassFactory()
-
-
         # Shipping method
         self.shipping_method = ShippingMethodFactory(name='DHL-DTH')
 
@@ -167,7 +163,6 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
         # Create products and variants
         product_one = ProductFactory(
             product_type=product_type,
-            tax_class=self.tax_class,
             status=PublishableStatus.PUBLISHED,
         )
         variant_one = ProductVariantFactory(
@@ -181,7 +176,6 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
         
         product_two = ProductFactory(
             product_type=product_type,
-            tax_class=self.tax_class,
             status=PublishableStatus.PUBLISHED,
         )
         variant_two = ProductVariantFactory(

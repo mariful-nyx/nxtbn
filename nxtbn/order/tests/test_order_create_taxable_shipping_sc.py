@@ -14,9 +14,10 @@ from nxtbn.product.tests import ProductFactory, ProductTypeFactory, ProductVaria
 from nxtbn.shipping.models import ShippingRate
 from nxtbn.shipping.tests import ShippingMethodFactory, ShippingRateFactory
 from nxtbn.tax.tests import TaxClassFactory
+from babel.numbers import get_currency_precision, format_currency
 
 
-class OrderCreateShippingRateTest(BaseTestCase):
+class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different single currency test, change settings.BASE_CURRENCY to 'USD' or 'EUR' or 'JPY' or 'KWD' or 'OMR' etc.
     """
         Test case to ensure shipping rates are accurately calculated based on product weights, quantities, and regions.
 
@@ -66,9 +67,11 @@ class OrderCreateShippingRateTest(BaseTestCase):
 
         self.country = 'US'
         self.state = 'NY'
+        self.precision = str(get_currency_precision(settings.BASE_CURRENCY))
 
         # Tax class
         self.tax_class = TaxClassFactory()
+
 
         # Shipping method
         self.shipping_method = ShippingMethodFactory(name='DHL-DTH')
@@ -89,15 +92,55 @@ class OrderCreateShippingRateTest(BaseTestCase):
 
         self.shipping_rate = 0 # default if no rate is found
         self.incremental_rate = 0 # default if no rate is found
+        
+
+        self.test_cases = {
+            '2': { # USD, EUR, BDT etc.
+                'input_weight_min': 0,
+                'input_weight_max': 5,  # 5kg
+                'input_rate': 15,  # 15 USD
+                'input_incremental_rate': 3,  # 3 USD
+                'variant_one_price': 50.29,
+                'variant_one_wv': 100,  # 100 grams
+                'variant_one_oqty': 40,
+                'variant_two_price': 20.26,
+                'variant_two_wv': 578,
+                'variant_two_oqty': 1,
+            },
+            '3': { # KWD, OMR, etc.
+                'input_weight_min': 0,
+                'input_weight_max': 5,  # 5kg
+                'input_rate': 15.000,
+                'input_incremental_rate': 3.000,
+                'variant_one_price': 50.290,
+                'variant_one_wv': 100,  # 100 grams
+                'variant_one_oqty': 40,
+                'variant_two_price': 20.260,
+                'variant_two_wv': 578,
+                'variant_two_oqty': 1,
+            },
+            '0': { # JPY, KRW, etc.
+                'input_weight_min': 0,
+                'input_weight_max': 5,  # 5kg
+                'input_rate': 15,  # 15 USD
+                'input_incremental_rate': 3,  # 3 USD
+                'variant_one_price': 50,
+                'variant_one_wv': 100,  # 100 grams
+                'variant_one_oqty': 40,
+                'variant_two_price': 20,
+                'variant_two_wv': 578,
+                'variant_two_oqty': 1,
+            },
+        }
 
        
         ShippingRateFactory(
             shipping_method=self.shipping_method,
             country=self.country,
             region=self.state,
-            rate=normalize_amount_currencywise(self.input_rate, settings.BASE_CURRENCY),
-            weight_min=self.input_weight_min,
-            weight_max=self.input_weight_max,  
+            rate=normalize_amount_currencywise(self.test_cases[self.precision]['input_rate'], settings.BASE_CURRENCY),
+            weight_min=self.test_cases[self.precision]['input_weight_min'],
+            weight_max=self.test_cases[self.precision]['input_weight_max'],  
             currency=settings.BASE_CURRENCY,
             incremental_rate=normalize_amount_currencywise(self.input_incremental_rate, settings.BASE_CURRENCY)
         )
@@ -131,9 +174,9 @@ class OrderCreateShippingRateTest(BaseTestCase):
             product=product_one,
             track_inventory=False,
             currency=currency,
-            price=normalize_amount_currencywise(self.variant_one_price, currency),
+            price=normalize_amount_currencywise(self.test_cases[self.precision]['variant_one_price'], currency),
             cost_per_unit=50.00,
-            weight_value=self.variant_one_wv,  # 578 grams
+            weight_value= self.test_cases[self.precision]['variant_one_wv'],
         )
         
         product_two = ProductFactory(
@@ -145,9 +188,9 @@ class OrderCreateShippingRateTest(BaseTestCase):
             product=product_two,
             track_inventory=False,
             currency=currency,
-            price=normalize_amount_currencywise(self.variant_two_price, currency),
+            price=normalize_amount_currencywise(self.test_cases[self.precision]['variant_two_price'], currency),
             cost_per_unit=50.00,
-            weight_value=self.variant_two_wv,  # 578 grams
+            weight_value=self.test_cases[self.precision]['variant_two_wv'],  # 578 grams
         )
 
         # Payload for order
@@ -178,18 +221,18 @@ class OrderCreateShippingRateTest(BaseTestCase):
             "variants": [
                 {
                     "alias": variant_one.alias,
-                    "quantity": self.variant_one_oqty,
+                    "quantity": self.test_cases[self.precision]['variant_one_oqty'],
                 },
                 {
                     "alias": variant_two.alias,
-                    "quantity": self.variant_two_oqty,
+                    "quantity": self.test_cases[self.precision]['variant_two_oqty'],
                 }
             ]
         }
 
         # Expected values
         total_weight = Decimal(
-            (self.variant_one_oqty * self.variant_one_wv + self.variant_two_oqty * self.variant_two_wv) / 1000
+            (self.test_cases[self.precision]['variant_one_oqty'] * self.test_cases[self.precision]['variant_one_wv'] + self.test_cases[self.precision]['variant_two_oqty'] * self.test_cases[self.precision]['variant_two_wv']) / 1000
         )  # Expected 4.578
 
        
@@ -206,15 +249,18 @@ class OrderCreateShippingRateTest(BaseTestCase):
 
         if shipping_rate_instance:
             self.shipping_rate = shipping_rate_instance.rate
-            self.incremental_rate = shipping_rate_instance.incremental_rate
+            self.test_cases[self.precision]['input_incremental_rate'] = shipping_rate_instance.incremental_rate
        
 
         shipping_cost = (
             self.shipping_rate
             if total_weight <= self.input_weight_max
-            else self.shipping_rate + (total_weight - Decimal(5)) * self.incremental_rate
+            else self.shipping_rate + (total_weight - Decimal(5)) *  self.test_cases[self.precision]['input_incremental_rate']
         ) 
-        expected_subtotal = Decimal(self.variant_one_price * self.variant_one_oqty + self.variant_two_price * self.variant_two_oqty) 
+        expected_subtotal = Decimal(
+            self.test_cases[self.precision]['variant_one_price'] * self.test_cases[self.precision]['variant_one_oqty'] +
+            self.test_cases[self.precision]['variant_two_price'] * self.test_cases[self.precision]['variant_two_oqty']
+        )
         expected_total = expected_subtotal + shipping_cost 
 
 

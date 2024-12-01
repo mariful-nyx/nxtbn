@@ -59,7 +59,6 @@ def get_shipping_rate_instance(shipping_method_id, address, total_weight):
                 region=address['state'],
                 country=address['country'],
             ).first()
-            print(rate, 'rate for state')
             if rate:
                 return rate
 
@@ -124,7 +123,7 @@ class ShippingFeeCalculator:
         return shipping_fee, shipping_name
     
     def get_total_weight(self, variants):
-        return sum(variant['quantity'] * variant['weight'] for variant in variants)
+        return sum(variant['quantity'] * variant['weight'] for variant in variants) / 1000  # Convert to kg
 
 
 

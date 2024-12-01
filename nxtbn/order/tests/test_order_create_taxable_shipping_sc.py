@@ -189,9 +189,9 @@ class OrderCreateShippingRateTest(BaseTestCase):
         # Expected values
         total_weight = Decimal(
             (self.variant_one_oqty * self.variant_one_wv + self.variant_two_oqty * self.variant_two_wv) / 1000
-        )  # Expected 46.24
+        )  # Expected 4.578
 
-
+       
 
         address = {
             'country': self.country,

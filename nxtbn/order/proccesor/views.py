@@ -103,18 +103,17 @@ class ShippingFeeCalculator:
                 return Decimal('0.00'), '-'
 
         # Calculate shipping fee based on weight
-        base_weight = rate_instance.weight_min
+        max_weight = rate_instance.weight_max
         base_rate = rate_instance.rate
         incremental_rate = rate_instance.incremental_rate  # Assume ShippingRate has incremental_rate field
 
-        if total_weight <= base_weight:
+        if total_weight <= max_weight: # If total weight is less than or equal to max weight
             shipping_fee = base_rate
         else:
-            extra_weight = total_weight - base_weight
+            extra_weight = total_weight - max_weight
             shipping_fee = base_rate + (extra_weight * incremental_rate)
 
         shipping_name = rate_instance.name if hasattr(rate_instance, 'name') else 'Standard Shipping'
-
         return shipping_fee, shipping_name
 
     def get_total_shipping_fee(self, variants, shipping_method_id, address):

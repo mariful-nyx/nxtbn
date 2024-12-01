@@ -51,4 +51,6 @@ class MonetaryMixin:
             
             if config.get("require_base_currency", False):
                 if currency_str != settings.BASE_CURRENCY:
-                    raise ValidationError({field_name: f"Currency field '{field_name}' expects value same as base currency '{settings.BASE_CURRENCY}', other currency values can't be added"})
+                    raise ValidationError({
+                        field_name: f"Currency field '{field_name}' expects value same as base currency '{settings.BASE_CURRENCY}', other currency values can't be added. Amount: '{amount}' paylaod Currency: '{currency_str}' but expected Currency: '{settings.BASE_CURRENCY}'"
+                    })

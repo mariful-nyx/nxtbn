@@ -95,6 +95,7 @@ class OrderCreateShippingRate(BaseTestCase):
             rate=normalize_amount_currencywise(10, currency),
             weight_min=0,
             weight_max=5,  # 5kg
+            currency=currency
         )
         shipping_rate_one = ShippingRateFactory(
             shipping_method=shipping_method,
@@ -103,6 +104,7 @@ class OrderCreateShippingRate(BaseTestCase):
             rate=normalize_amount_currencywise(10, currency),
             weight_min=0,
             weight_max=5,  # 5kg
+            currency=currency
         )
 
         # Payload for order

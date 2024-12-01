@@ -174,6 +174,7 @@ class OrderCreateShippingRateTest(BaseTestCase):
                 "last_name": "Doe",
                 "phone_number": "1234567890"
             },
+            'shipping_method_id': self.shipping_method.id,
             "variants": [
                 {
                     "alias": variant_one.alias,

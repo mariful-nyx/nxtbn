@@ -25,16 +25,8 @@ class ShippingRateFactory(DjangoModelFactory):
 
     shipping_method = factory.SubFactory(ShippingMethodFactory)
     country = factory.Faker("country_code")  # Generates a random ISO 3166-1 alpha-2 country code
-    region = factory.Maybe(
-        factory.Faker("boolean"),
-        yes_declaration=factory.Faker("state"),
-        no_declaration=None
-    )
-    city = factory.Maybe(
-        factory.Faker("boolean"),
-        yes_declaration=factory.Faker("city"),
-        no_declaration=None
-    )
+    region = factory.Faker("word")
+    city = factory.Faker("word")
     weight_min = factory.LazyFunction(lambda: Decimal(random.uniform(0.5, 10)).quantize(Decimal("0.01")))
     weight_max = factory.LazyAttribute(lambda o: o.weight_min + Decimal(random.uniform(1, 10)).quantize(Decimal("0.01")))
     rate = factory.LazyFunction(lambda: Decimal(random.uniform(5, 100)).quantize(Decimal("0.01")))

@@ -40,7 +40,7 @@ class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single curren
         self.tax_class = TaxClassFactory()
 
         self.order_api_url = reverse('order-create')
-        self.order_estimate_api_url = reverse('order-eastimate')
+        self.order_estimate_api_url = reverse('order-estimate')
 
     def _test_order_for_currency(self, currency, params):
         """
@@ -210,7 +210,7 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
         self.tax_class_5 = TaxClassFactory()
 
         self.order_api_url = reverse('order-create')
-        self.order_estimate_api_url = reverse('order-eastimate')
+        self.order_estimate_api_url = reverse('order-estimate')
 
     def _test_order_with_multi_variant(self, currency, params):
         """

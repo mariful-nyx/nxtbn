@@ -109,7 +109,7 @@ class Command(BaseCommand):
                 cost_per_unit=random.uniform(5, 500),
                 compare_at_price=random.uniform(15, 1500),
                 sku=fake.uuid4(),
-                weight_unit=weight_unit[0],
+                # weight_unit=weight_unit[0],
                 weight_value=random.uniform(1, 1000),
             )
 
@@ -117,7 +117,7 @@ class Command(BaseCommand):
             product.default_variant = default_variant
 
             for _ in range(random.randint(1, 5)):
-                weight_unit = random.choice(WeightUnits.choices)
+                # weight_unit = random.choice(WeightUnits.choices)
                 variant = ProductVariant.objects.create(
                     product=product,
                     name=fake.word(),
@@ -126,7 +126,7 @@ class Command(BaseCommand):
                     cost_per_unit=random.uniform(5, 500),
                     compare_at_price=random.uniform(15, 1500),
                     sku=fake.uuid4(),
-                    weight_unit=weight_unit[0],
+                    # weight_unit=weight_unit[0],
                     weight_value=random.uniform(1, 1000),
                 )
 

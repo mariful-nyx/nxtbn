@@ -125,7 +125,6 @@ class ShippingRate(MonetaryMixin, AbstractBaseModel):
     )
 
     class Meta:
-        unique_together = ('shipping_method', 'country', 'weight_min', 'weight_max')
         verbose_name = "Shipping Rate"
         verbose_name_plural = "Shipping Rates"
 

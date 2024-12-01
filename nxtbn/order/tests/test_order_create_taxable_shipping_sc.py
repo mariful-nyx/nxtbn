@@ -135,7 +135,7 @@ class OrderCreateShippingRateTest(BaseTestCase):
             cost_per_unit=50.00,
             weight_value=self.variant_one_wv,  # 578 grams
         )
-
+        
         product_two = ProductFactory(
             product_type=product_type,
             tax_class=self.tax_class,

@@ -31,10 +31,6 @@ class ProductTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        # Check if the product is a physical product
-        if validated_data.get('physical_product') and not validated_data.get('weight_unit'):
-            raise ValidationError({'weight_unit': 'This field is required for physical products.'})
-
         # Create the ProductType instance
         return super().create(validated_data)
     
@@ -102,7 +98,6 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             'price',
             'cost_per_unit',
             'sku',
-            'weight_unit',
             'weight_value',
             'stock',
             'color_code',
@@ -170,7 +165,7 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     cost_per_unit = serializers.DecimalField(max_digits=10, decimal_places=3)
     sku = serializers.CharField(max_length=255, required=False)
     stock = serializers.IntegerField(required=False)
-    weight_unit = serializers.CharField(max_length=10, required=False, allow_null=True)
+    # weight_unit = serializers.CharField(max_length=10, required=False, allow_null=True)
     weight_value = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     color_code = serializers.CharField(max_length=7, required=False, allow_null=True)
     is_default_variant = serializers.BooleanField(default=False)

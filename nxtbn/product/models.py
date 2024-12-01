@@ -106,15 +106,10 @@ class ProductTag(models.Model):
 class ProductType(models.Model):
     name = models.CharField(unique=True, max_length=50)
     taxable = models.BooleanField(default=False)
-    physical_product = models.BooleanField(default=False)
+    physical_product = models.BooleanField(default=False) # weight store in grams
     track_stock = models.BooleanField(default=False)
     has_variant = models.BooleanField(default=False)
-    weight_unit = models.CharField(
-        max_length=5,
-        choices=WeightUnits.choices,
-        blank=True,
-        null=True
-    )
+   
 
     def __str__(self):
         fields = [self.name]
@@ -126,8 +121,6 @@ class ProductType(models.Model):
             fields.append("Track Stock")
         if self.has_variant:
             fields.append("Has Variant")
-        if self.weight_unit:
-            fields.append(f"Weight Unit: {self.weight_unit}")
         return " | ".join(fields)
     
     # TO DO: class Meta: # Handle unique together with each field except name
@@ -268,13 +261,13 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
 
     color_code = models.CharField(max_length=7, null=True, blank=True)  # TO DO: Remove this field, unnecessary, Decided with critically analyze. Can handle with product.related_to field
     # Weight and dimensions are also types of attributes, but we created these fields separately for shipping rate calculation purposes.
-    weight_unit = models.CharField(
-        max_length=5,
-        choices=WeightUnits.choices,
-        blank=True,
-        null=True
-    )
-    weight_value = models.DecimalField(
+    # weight_unit = models.CharField(
+    #     max_length=5,
+    #     choices=WeightUnits.choices,
+    #     blank=True,
+    #     null=True
+    # )
+    weight_value = models.DecimalField( # stores weight in grams
         max_digits=5,
         decimal_places=2,
         null=True,

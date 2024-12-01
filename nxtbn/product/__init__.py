@@ -1,6 +1,6 @@
 from django.db import models
 
-class WeightUnits(models.TextChoices):
+class WeightUnits(models.TextChoices): # Will not use this i backend. we will store it in gram
     """Defines standard units of weight for product measurement.
 
     - 'GRAM': Weight in grams.

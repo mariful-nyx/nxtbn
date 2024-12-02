@@ -13,6 +13,7 @@ class BaseTestCase(TestCase):
     client = APIClient()
     auth_client = APIClient()
     admin_login_url = reverse('admin_login')
+    customer_login_url = reverse('customer_login')
     
     def setUp(self):
         self.user = UserFactory(
@@ -20,6 +21,9 @@ class BaseTestCase(TestCase):
             password=make_password('testpass')
         )       
         
+    def badRequest(self, request, *args, **kwargs):
+        self.assertEqual(request.status_code, 400, *args, **kwargs)
+
     def permissionDenied(self, request, *args, **kwargs):
         self.assertEqual(request.status_code, 403, *args, **kwargs)
 
@@ -87,7 +91,7 @@ class BaseTestCase(TestCase):
             'password': 'testpass'
         }
         
-        response = self.client.post(self.admin_login_url, login_data)
+        response = self.client.post(self.customer_login_url, login_data)
         self.assertSuccess(response)
        
         access_token = response.data['token']['access']

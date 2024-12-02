@@ -30,7 +30,7 @@ class OrderEstimateSerializer(serializers.Serializer):
     billing_address_id = serializers.IntegerField(required=False)
 
     shipping_method_id = serializers.IntegerField(required=False)
-    custom_shipping_amount = PriceAndNameSerializer(required=False)
+    custom_shipping_amount = PriceAndNameSerializer(required=False) # Only staff can set custom shipping amount
 
     custom_discount_amount = PriceAndNameSerializer(required=False)
     promocode = serializers.CharField(required=False)

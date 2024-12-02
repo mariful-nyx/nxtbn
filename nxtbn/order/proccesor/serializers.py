@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from nxtbn.discount.models import PromoCode
 from nxtbn.product.models import Product
+from nxtbn.users import UserRole
 
 class VariantQuantitySerializer(serializers.Serializer):
     alias = serializers.CharField()
@@ -41,3 +42,12 @@ class OrderEstimateSerializer(serializers.Serializer):
         if len(value) == 0:
             raise serializers.ValidationError("You must add one or more products to your cart.")
         return value
+    
+    def validate_custom_discount_amount(self, value):
+        if value and not value.get('price'):
+            raise serializers.ValidationError("Discount amount is required.")
+        
+        if self.context['request'].user.role == UserRole.CUSTOMER:
+            raise serializers.ValidationError("You are not authorized to apply discount. Only staff can apply discount.")
+        return value
+        

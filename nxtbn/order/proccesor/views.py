@@ -477,7 +477,7 @@ class OrderProccessorAPIView(generics.GenericAPIView):
     serializer_class = OrderEstimateSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
 
 

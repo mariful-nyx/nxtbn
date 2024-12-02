@@ -35,7 +35,7 @@ class OrderEstimateSerializer(serializers.Serializer):
     custom_discount_amount = PriceAndNameSerializer(required=False)
     promocode = serializers.CharField(required=False)
     variants = serializers.ListSerializer(child=VariantQuantitySerializer(), required=True)
-    customer_id = serializers.IntegerField(required=False) # if order is created by admin
+    customer_id = serializers.IntegerField(required=False)
     note = serializers.CharField(required=False)
 
     def validate_variants(self, value):
@@ -43,12 +43,7 @@ class OrderEstimateSerializer(serializers.Serializer):
             raise serializers.ValidationError("You must add one or more products to your cart.")
         return value
     
-    def validate_custom_discount_amount(self, value):
-        if value and not value.get('price'):
-            raise serializers.ValidationError("Discount amount is required.")
-        
-        if not self.context['request'].user.is_staff:
-            raise serializers.ValidationError("Only staff can apply custom discount.")
-            
-        return value
-        
+    def validate_custom_shipping_amount(self, value):
+        if self.context['request'].user.is_staff:
+            return value
+        raise serializers.ValidationError("Only staff can set custom shipping amount.")

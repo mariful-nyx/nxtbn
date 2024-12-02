@@ -84,7 +84,8 @@ class BaseTestCase(TestCase):
             email="cc@example.com",
             password=make_password('testpass'),
             role=UserRole.CUSTOMER,
-            is_staff=False
+            is_staff=False,
+            is_superuser=False
         )
         login_data = {
             'email': 'cc@example.com',

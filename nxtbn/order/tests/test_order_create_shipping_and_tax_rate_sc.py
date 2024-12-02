@@ -72,22 +72,6 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
         # Shipping method
         self.shipping_method = ShippingMethodFactory(name='DHL-DTH')
 
-        # Shipping rates
-        self.input_weight_min = 0
-        self.input_weight_max = 5 # 5kg
-        self.input_rate = 15 #15 USD
-        self.input_incremental_rate = 3 #3 USD
-
-        self.variant_one_price = 50.29
-        self.variant_one_wv = 100 # 100 grams
-        self.variant_one_oqty = 40
-        
-        self.variant_two_price = 20.26
-        self.variant_two_wv = 578
-        self.variant_two_oqty = 1
-
-        self.shipping_rate = 0 # default if no rate is found
-        self.incremental_rate = 0 # default if no rate is found
         
 
         self.test_cases = {
@@ -138,7 +122,7 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
             weight_min=self.test_cases[self.precision]['input_weight_min'],
             weight_max=self.test_cases[self.precision]['input_weight_max'],  
             currency=settings.BASE_CURRENCY,
-            incremental_rate=normalize_amount_currencywise(self.input_incremental_rate, settings.BASE_CURRENCY)
+            incremental_rate=normalize_amount_currencywise(self.test_cases[self.precision]['input_incremental_rate'], settings.BASE_CURRENCY)
         )
 
        
@@ -248,7 +232,7 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
 
         shipping_cost = (
             self.shipping_rate
-            if total_weight <= self.input_weight_max
+            if total_weight <= self.test_cases[self.precision]['input_weight_max']
             else self.shipping_rate + (total_weight - Decimal(5)) *  self.test_cases[self.precision]['input_incremental_rate']
         ) 
         expected_subtotal = Decimal(

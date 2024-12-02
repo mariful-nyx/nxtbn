@@ -11,10 +11,14 @@ from nxtbn.product import WeightUnits
 from nxtbn.product.models import Product
 from rest_framework.test import APIClient
 from nxtbn.product.tests import ProductFactory, ProductTypeFactory, ProductVariantFactory
+from rest_framework.test import force_authenticate
 from nxtbn.shipping.models import ShippingRate
 from nxtbn.shipping.tests import ShippingMethodFactory, ShippingRateFactory
 from nxtbn.tax.tests import TaxClassFactory
 from babel.numbers import get_currency_precision, format_currency
+
+from nxtbn.users.tests import UserFactory
+from django.contrib.auth.hashers import make_password
 
 
 class OrderCreateShippingRateManual(BaseTestCase):
@@ -63,7 +67,12 @@ class OrderCreateShippingRateManual(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.client = APIClient()
-        self.client.login(email='test@example.com', password='testpass')
+        self.user = UserFactory(
+            email="cc@example.com",
+            password=make_password('testpass'),
+            # is_staff=False,
+        )
+        force_authenticate(self.client, user=self.user)
 
         self.country = 'US'
         self.state = 'NY'

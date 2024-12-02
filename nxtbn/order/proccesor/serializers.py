@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from nxtbn.discount.models import PromoCode
 from nxtbn.product.models import Product
@@ -46,4 +47,4 @@ class OrderEstimateSerializer(serializers.Serializer):
     def validate_custom_shipping_amount(self, value):
         if self.context['request'].user.is_staff:
             return value
-        raise serializers.ValidationError("Only staff can set custom shipping amount.")
+        raise PermissionDenied("Only staff can set custom shipping amount.")

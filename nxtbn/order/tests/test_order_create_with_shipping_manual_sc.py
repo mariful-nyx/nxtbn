@@ -421,9 +421,9 @@ class OrderCreateShippingRateManualAsCustomer(BaseTestCase): # as customer, to t
         # Estimate Test
         order_estimate_response = self.auth_client.post(self.order_estimate_api_url, order_payload, format='json')
 
-        self.badRequest(order_estimate_response)
+        self.permissionDenied(order_estimate_response)
 
        
         # Order Create Test
         order_response = self.client.post(self.order_api_url, order_payload, format='json')
-        self.badRequest(order_response)
+        self.permissionDenied(order_response)

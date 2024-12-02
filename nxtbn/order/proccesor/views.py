@@ -6,6 +6,7 @@ from rest_framework import status
 from django.db import transaction
 
 from nxtbn.core import CurrencyTypes
+from nxtbn.core.admin_permissions import RoleBasedPermission
 from nxtbn.core.utils import apply_exchange_rate, build_currency_amount
 from nxtbn.discount import PromoCodeType
 from nxtbn.discount.models import PromoCode
@@ -468,6 +469,15 @@ class OrderProccessorAPIView(generics.GenericAPIView):
         The base class for order eastimation and creation. works for both admin and customer.
         If you test the order creation, you must comply with the following docs: https://github.com/nxtbn-com/testing-ordering 
     """
+    permission_classes = [RoleBasedPermission]
+    ROLE_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"order_create_or_estimate",},
+        UserRole.ORDER_PROCESSOR: {"order_create_or_estimate",},
+        UserRole.CUSTOMER_SUPPORT_AGENT: {"order_create_or_estimate",},
+        UserRole.MARKETING_MANAGER: {"order_create_or_estimate",},
+    }
+    action = 'order_create_or_estimate'
+
     create_order = False
     broadcast_on_order_create = False
     order_source = 'admin' # options: 'admin', 'storefront', 'mobile

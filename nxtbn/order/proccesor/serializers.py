@@ -47,7 +47,8 @@ class OrderEstimateSerializer(serializers.Serializer):
         if value and not value.get('price'):
             raise serializers.ValidationError("Discount amount is required.")
         
-        if self.context['request'].user.role == UserRole.CUSTOMER:
-            raise serializers.ValidationError("You are not authorized to apply discount. Only staff can apply discount.")
+        if not self.context['request'].user.is_staff:
+            raise serializers.ValidationError("Only staff can apply custom discount.")
+            
         return value
         

@@ -13,52 +13,11 @@ from rest_framework.test import APIClient
 from nxtbn.product.tests import ProductFactory, ProductTypeFactory, ProductVariantFactory
 from nxtbn.shipping.models import ShippingRate
 from nxtbn.shipping.tests import ShippingMethodFactory, ShippingRateFactory
-from nxtbn.tax.tests import TaxClassFactory
+from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
 from babel.numbers import get_currency_precision, format_currency
 
 
-class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different single currency test, change settings.BASE_CURRENCY to 'USD' or 'EUR' or 'JPY' or 'KWD' or 'OMR' etc.
-    """
-        Test case to ensure shipping rates are accurately calculated based on product weights, quantities, and regions.
-
-        This test case calculates the following:
-
-        1. **Subtotal**:
-            - Variant One:
-            - Price per unit: $50.29
-            - Quantity: 40
-            - Subtotal for Variant One: 50.29 * 40 = $2011.60
-            - Variant Two:
-            - Price per unit: $20.26
-            - Quantity: 1
-            - Subtotal for Variant Two: 20.26 * 1 = $20.26
-            - **Total Subtotal**: $2011.60 + $20.26 = **$2031.86**
-
-        2. **Shipping Cost**:
-            - Variant One Weight:
-            - Weight per unit: 100 grams
-            - Quantity: 40
-            - Total weight for Variant One: 100 * 40 = 4000 grams (4 kg)
-            - Variant Two Weight:
-            - Weight per unit: 578 grams
-            - Quantity: 1
-            - Total weight for Variant Two: 578 grams
-            - **Total Weight**: 4 kg + 0.578 kg = **4.578 kg**
-            - Shipping Method (DHL-DTH):
-            - Weight Range: 0 to 5 kg
-            - Base Rate: $15
-            - Incremental Rate: $3 per kg (applies only for weight over 5 kg)
-            - **Total Shipping Cost**: Since the total weight is 4.578 kg (within the 0-5 kg range), the shipping cost is simply the base rate of **$15** (no incremental rate applies).
-
-        3. **Total**:
-            - **Total** = Subtotal + Shipping Cost = $2031.86 + $15 = **$2046.86**
-
-        The method ensures that:
-        - Subtotal is correctly calculated by multiplying the price and quantity of each product variant.
-        - Shipping cost is based on the total weight and the defined rate structure.
-        - The total order cost is the sum of the subtotal and shipping cost.
-    """
-     
+class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to different single currency test, change settings.BASE_CURRENCY to 'USD' or 'EUR' or 'JPY' or 'KWD' or 'OMR' etc.    
    
     def setUp(self):
         super().setUp()
@@ -72,13 +31,14 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
         # Shipping method
         self.shipping_method = ShippingMethodFactory(name='DHL-DTH')
 
-        
+       
 
         self.test_cases = {
             '2': { # USD, EUR, BDT etc.
                 'input_weight_min': 0,
                 'input_weight_max': 5,  # 5kg
                 'input_rate': 15,  # 15 USD
+                'input_tax_rate': 15,  # 15% VAT/GTST
                 'input_incremental_rate': 3,  # 3 USD
                 'variant_one_price': 50.29,
                 'variant_one_wv': 100,  # 100 grams
@@ -91,6 +51,7 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
                 'input_weight_min': 0,
                 'input_weight_max': 5,  # 5kg
                 'input_rate': 15.000,
+                'input_tax_rate': 15.000, # 15% VAT/GTST
                 'input_incremental_rate': 3.000,
                 'variant_one_price': 50.290,
                 'variant_one_wv': 100,  # 100 grams
@@ -103,6 +64,7 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
                 'input_weight_min': 0,
                 'input_weight_max': 5,  # 5kg
                 'input_rate': 15,  # 15 USD
+                'input_tax_rate': 15,  # 15% VAT/GTST
                 'input_incremental_rate': 3,  # 3 USD
                 'variant_one_price': 50,
                 'variant_one_wv': 100,  # 100 grams
@@ -112,6 +74,16 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
                 'variant_two_oqty': 1,
             },
         }
+
+         # Tax class
+        self.tax_class = TaxClassFactory()
+        tax_rate = TaxRateFactory(
+            tax_class=self.tax_class,
+            is_active=True,
+            rate=self.test_cases[self.precision]['input_tax_rate'],
+            country=self.country,
+            state=self.state,
+        )
 
        
         ShippingRateFactory(
@@ -130,7 +102,7 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
         self.order_api_url = reverse('order-create')
         self.order_estimate_api_url = reverse('order-estimate')
 
-    def test_order_shipping_rate_calculation(self):
+    def test_order_shipping_rate_tax_rate_calculation(self):
         """
         Test case to ensure shipping rates are accurately calculated based on product weights and regions.
         """
@@ -145,9 +117,10 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
         )
 
         # Create products and variants
-        product_one = ProductFactory(
+        product_one = ProductFactory( # with tax class
             product_type=product_type,
             status=PublishableStatus.PUBLISHED,
+            tax_class=self.tax_class,
         )
         variant_one = ProductVariantFactory(
             product=product_one,
@@ -158,7 +131,7 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
             weight_value= self.test_cases[self.precision]['variant_one_wv'],
         )
         
-        product_two = ProductFactory(
+        product_two = ProductFactory( # without tax class
             product_type=product_type,
             status=PublishableStatus.PUBLISHED,
         )
@@ -234,12 +207,19 @@ class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different 
             self.shipping_rate
             if total_weight <= self.test_cases[self.precision]['input_weight_max']
             else self.shipping_rate + (total_weight - Decimal(5)) *  self.test_cases[self.precision]['input_incremental_rate']
-        ) 
+        )
+
+        tax_cost = Decimal(self.test_cases[self.precision]['input_tax_rate']) / 100 * Decimal(
+            self.test_cases[self.precision]['variant_one_price'] * self.test_cases[self.precision]['variant_one_oqty']
+        )
+
+        
+
         expected_subtotal = Decimal(
             self.test_cases[self.precision]['variant_one_price'] * self.test_cases[self.precision]['variant_one_oqty'] +
             self.test_cases[self.precision]['variant_two_price'] * self.test_cases[self.precision]['variant_two_oqty']
         )
-        expected_total = expected_subtotal + shipping_cost 
+        expected_total = expected_subtotal + shipping_cost + tax_cost
 
 
         expected_total_fr = build_currency_amount(expected_total, currency, locale='en_US')

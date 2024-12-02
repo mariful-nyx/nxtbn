@@ -13,12 +13,11 @@ from rest_framework.test import APIClient
 from nxtbn.product.tests import ProductFactory, ProductTypeFactory, ProductVariantFactory
 from nxtbn.shipping.models import ShippingRate
 from nxtbn.shipping.tests import ShippingMethodFactory, ShippingRateFactory
-from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
+from nxtbn.tax.tests import TaxClassFactory
 from babel.numbers import get_currency_precision, format_currency
 
 
-class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to different single currency test, change settings.BASE_CURRENCY to 'USD' or 'EUR' or 'JPY' or 'KWD' or 'OMR' etc.    
-   
+class TestOrderCreateWithDiscountRate(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.client = APIClient()
@@ -31,28 +30,27 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
         # Shipping method
         self.shipping_method = ShippingMethodFactory(name='DHL-DTH')
 
-       
+        
 
         self.test_cases = {
             '2': { # USD, EUR, BDT etc.
                 'input_weight_min': 0,
                 'input_weight_max': 5,  # 5kg
-                'input_rate': 15,  # 15 USD
-                'input_tax_rate': 15,  # 15% VAT/GTST
                 'input_incremental_rate': 3,  # 3 USD
+
                 'variant_one_price': 50.29,
                 'variant_one_wv': 100,  # 100 grams
                 'variant_one_oqty': 40,
                 'variant_two_price': 20.26,
                 'variant_two_wv': 578,
                 'variant_two_oqty': 1,
+                'order_discount_code': 'DISCOUNT10',
             },
             '3': { # KWD, OMR, etc.
                 'input_weight_min': 0,
                 'input_weight_max': 5,  # 5kg
-                'input_rate': 15.000,
-                'input_tax_rate': 15.000, # 15% VAT/GTST
-                'input_incremental_rate': 3.000,
+                'order_discount_code': 'DISCOUNT10',
+
                 'variant_one_price': 50.290,
                 'variant_one_wv': 100,  # 100 grams
                 'variant_one_oqty': 40,
@@ -64,7 +62,6 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
                 'input_weight_min': 0,
                 'input_weight_max': 5,  # 5kg
                 'input_rate': 15,  # 15 USD
-                'input_tax_rate': 15,  # 15% VAT/GTST
                 'input_incremental_rate': 3,  # 3 USD
                 'variant_one_price': 50,
                 'variant_one_wv': 100,  # 100 grams
@@ -74,16 +71,6 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
                 'variant_two_oqty': 1,
             },
         }
-
-         # Tax class
-        self.tax_class = TaxClassFactory()
-        tax_rate = TaxRateFactory(
-            tax_class=self.tax_class,
-            is_active=True,
-            rate=self.test_cases[self.precision]['input_tax_rate'],
-            country=self.country,
-            state=self.state,
-        )
 
        
         ShippingRateFactory(
@@ -102,7 +89,7 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
         self.order_api_url = reverse('order-create')
         self.order_estimate_api_url = reverse('order-estimate')
 
-    def test_order_shipping_rate_tax_rate_calculation(self):
+    def test_order_shipping_rate_calculation(self):
         """
         Test case to ensure shipping rates are accurately calculated based on product weights and regions.
         """
@@ -117,10 +104,9 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
         )
 
         # Create products and variants
-        product_one = ProductFactory( # with tax class
+        product_one = ProductFactory(
             product_type=product_type,
             status=PublishableStatus.PUBLISHED,
-            tax_class=self.tax_class,
         )
         variant_one = ProductVariantFactory(
             product=product_one,
@@ -131,7 +117,7 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
             weight_value= self.test_cases[self.precision]['variant_one_wv'],
         )
         
-        product_two = ProductFactory( # without tax class
+        product_two = ProductFactory(
             product_type=product_type,
             status=PublishableStatus.PUBLISHED,
         )
@@ -207,25 +193,17 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
             self.shipping_rate
             if total_weight <= self.test_cases[self.precision]['input_weight_max']
             else self.shipping_rate + (total_weight - Decimal(5)) *  self.test_cases[self.precision]['input_incremental_rate']
-        )
-
-        tax_cost = Decimal(self.test_cases[self.precision]['input_tax_rate']) / 100 * Decimal(
-            self.test_cases[self.precision]['variant_one_price'] * self.test_cases[self.precision]['variant_one_oqty']
-        )
-
-        
-
+        ) 
         expected_subtotal = Decimal(
             self.test_cases[self.precision]['variant_one_price'] * self.test_cases[self.precision]['variant_one_oqty'] +
             self.test_cases[self.precision]['variant_two_price'] * self.test_cases[self.precision]['variant_two_oqty']
         )
-        expected_total = expected_subtotal + shipping_cost + tax_cost
+        expected_total = expected_subtotal + shipping_cost 
 
 
         expected_total_fr = build_currency_amount(expected_total, currency, locale='en_US')
         expected_subtotal_fr = build_currency_amount(expected_subtotal, currency, locale='en_US')
         expected_shipping_cost_fr = build_currency_amount(shipping_cost, currency, locale='en_US')
-        tax_cost_fr = build_currency_amount(tax_cost, currency, locale='en_US')
 
         
 
@@ -236,7 +214,6 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
         self.assertEqual(order_estimate_response.data['subtotal'], expected_subtotal_fr)
         self.assertEqual(order_estimate_response.data['total'], expected_total_fr)
         self.assertEqual(order_estimate_response.data['shipping_fee'], expected_shipping_cost_fr)
-        self.assertEqual(order_estimate_response.data['estimated_tax'], tax_cost_fr)
 
         # Order Create Test
         order_response = self.client.post(self.order_api_url, order_payload, format='json')
@@ -244,4 +221,3 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
         self.assertEqual(order_response.data['subtotal'], expected_subtotal_fr)
         self.assertEqual(order_response.data['total'], expected_total_fr)
         self.assertEqual(order_response.data['shipping_fee'], expected_shipping_cost_fr)
-        self.assertEqual(order_response.data['estimated_tax'], tax_cost_fr)

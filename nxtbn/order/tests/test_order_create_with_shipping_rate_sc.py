@@ -17,7 +17,7 @@ from nxtbn.tax.tests import TaxClassFactory
 from babel.numbers import get_currency_precision, format_currency
 
 
-class OrderCreateShippingRateTest(BaseTestCase): #single currency: to different single currency test, change settings.BASE_CURRENCY to 'USD' or 'EUR' or 'JPY' or 'KWD' or 'OMR' etc.
+class OrderCreateShippingRateTaxable(BaseTestCase): #single currency: to different single currency test, change settings.BASE_CURRENCY to 'USD' or 'EUR' or 'JPY' or 'KWD' or 'OMR' etc.
     """
         Test case to ensure shipping rates are accurately calculated based on product weights, quantities, and regions.
 

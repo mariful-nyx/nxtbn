@@ -249,11 +249,13 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
     track_inventory = models.BooleanField(default=False)
     allow_backorder = models.BooleanField(default=False, help_text="Allow orders even if out of stock.")
 
-    # if track_inventory is enabled
-    stock = models.IntegerField(default=0, verbose_name="Stock")
+    # if track_inventory is enabled: stock, stock_status, low_stock_threshold is required
+    stock = models.IntegerField( # Redundant field, can be calculated from warehouse stock and stock movements. for query optimization, we store it here.
+        default=0,
+        verbose_name="Stock",
+        help_text="Current stock level to show on the storefront or make available for purchase or make some restrictions. the stock value here can be different from the warehouse stock."
+    ) 
     low_stock_threshold = models.IntegerField(default=0, verbose_name="Stock", help_text="Threshold to trigger low stock alert.")
-
-    # if track_inventory is not enabled
     stock_status = models.CharField(default=StockStatus.IN_STOCK, choices=StockStatus.choices, max_length=15)
 
     sku = models.CharField(max_length=50, unique=True)

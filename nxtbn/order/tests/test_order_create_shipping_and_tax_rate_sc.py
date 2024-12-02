@@ -99,8 +99,8 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
 
        
 
-        self.order_api_url = reverse('order-create')
-        self.order_estimate_api_url = reverse('order-estimate')
+        self.order_api_url = reverse('admin_order_create')
+        self.order_estimate_api_url = reverse('admin_order_estimate')
 
     def test_order_shipping_rate_tax_rate_calculation(self):
         """

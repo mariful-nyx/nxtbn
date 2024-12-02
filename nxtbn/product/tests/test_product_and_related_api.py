@@ -14,9 +14,8 @@ class ProductAndRelatedCreateAPITest(BaseTestCase):
     
     def setUp(self):
         super().setUp()
-        self.client = APIClient()
-        self.url = reverse('signup')
-        self.client.login(email='test@example.com', password='testpass')
+        
+        self.adminLogin()
         
         # Create ProductType
         self.product_type_data = {
@@ -27,7 +26,7 @@ class ProductAndRelatedCreateAPITest(BaseTestCase):
         
         # Create the product type via the API
         self.product_type_url = reverse('producttype-list') 
-        response = self.client.post(self.product_type_url, self.product_type_data, format='json')
+        response = self.auth_client.post(self.product_type_url, self.product_type_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         
         self.product_type_id = response.data['id']
@@ -37,7 +36,7 @@ class ProductAndRelatedCreateAPITest(BaseTestCase):
             "parent": None
         }
         self.category_url = reverse('category-list')
-        category_response = self.client.post(self.category_url, self.category_data, format='json')
+        category_response = self.auth_client.post(self.category_url, self.category_data, format='json')
         self.assertEqual(category_response.status_code, status.HTTP_201_CREATED)
         self.category_id = category_response.data['id']
         
@@ -82,7 +81,7 @@ class ProductAndRelatedCreateAPITest(BaseTestCase):
         }
 
         self.product_url = reverse('product-list')
-        response = self.client.post(self.product_url, self.product_data, format='json')
+        response = self.auth_client.post(self.product_url, self.product_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(str(response.data['variants'][0]['price']), price)
         

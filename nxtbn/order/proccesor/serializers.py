@@ -34,7 +34,7 @@ class OrderEstimateSerializer(serializers.Serializer):
     custom_discount_amount = PriceAndNameSerializer(required=False)
     promocode = serializers.CharField(required=False)
     variants = serializers.ListSerializer(child=VariantQuantitySerializer(), required=True)
-    customer_id = serializers.IntegerField(required=False)
+    customer_id = serializers.IntegerField(required=False) # if order is created by admin
     note = serializers.CharField(required=False)
 
     def validate_variants(self, value):

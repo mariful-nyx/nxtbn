@@ -48,3 +48,8 @@ class OrderEstimateSerializer(serializers.Serializer):
         if self.context['request'].user.is_staff:
             return value
         raise PermissionDenied("Only staff can set custom shipping amount.")
+    
+    def validate_custom_discount_amount(self, value):
+        if self.context['request'].user.is_staff:
+            return value
+        raise PermissionDenied("Only staff can set custom discount amount.")

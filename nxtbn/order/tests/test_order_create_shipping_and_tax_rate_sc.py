@@ -225,6 +225,7 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
         expected_total_fr = build_currency_amount(expected_total, currency, locale='en_US')
         expected_subtotal_fr = build_currency_amount(expected_subtotal, currency, locale='en_US')
         expected_shipping_cost_fr = build_currency_amount(shipping_cost, currency, locale='en_US')
+        tax_cost_fr = build_currency_amount(tax_cost, currency, locale='en_US')
 
         
 
@@ -235,6 +236,7 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
         self.assertEqual(order_estimate_response.data['subtotal'], expected_subtotal_fr)
         self.assertEqual(order_estimate_response.data['total'], expected_total_fr)
         self.assertEqual(order_estimate_response.data['shipping_fee'], expected_shipping_cost_fr)
+        self.assertEqual(order_estimate_response.data['estimated_tax'], tax_cost_fr)
 
         # Order Create Test
         order_response = self.client.post(self.order_api_url, order_payload, format='json')
@@ -242,3 +244,4 @@ class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to dif
         self.assertEqual(order_response.data['subtotal'], expected_subtotal_fr)
         self.assertEqual(order_response.data['total'], expected_total_fr)
         self.assertEqual(order_response.data['shipping_fee'], expected_shipping_cost_fr)
+        self.assertEqual(order_response.data['estimated_tax'], tax_cost_fr)

@@ -313,8 +313,8 @@ class OrderCreateShippingRateManualAsCustomer(BaseTestCase): # as customer, to t
     
        
 
-        self.order_api_url = reverse('admin_order_create')
-        self.order_estimate_api_url = reverse('admin_order_estimate')
+        self.order_api_url = reverse('order_create')
+        self.order_estimate_api_url = reverse('order_estimate')
 
     def test_order_shipping_rate_calculation(self):
         """
@@ -420,8 +420,6 @@ class OrderCreateShippingRateManualAsCustomer(BaseTestCase): # as customer, to t
 
         # Estimate Test
         order_estimate_response = self.auth_client.post(self.order_estimate_api_url, order_payload, format='json')
-
-        print(order_estimate_response.data)
 
         self.badRequest(order_estimate_response)
 

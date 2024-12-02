@@ -17,8 +17,11 @@ from nxtbn.shipping.tests import ShippingMethodFactory, ShippingRateFactory
 from nxtbn.tax.tests import TaxClassFactory
 from babel.numbers import get_currency_precision, format_currency
 
+from nxtbn.users import UserRole
 from nxtbn.users.tests import UserFactory
 from django.contrib.auth.hashers import make_password
+
+from nxtbn.users.utils.jwt_utils import JWTManager
 
 
 class OrderCreateShippingRateManual(BaseTestCase):
@@ -67,12 +70,7 @@ class OrderCreateShippingRateManual(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.client = APIClient()
-        self.user = UserFactory(
-            email="cc@example.com",
-            password=make_password('testpass'),
-            # is_staff=False,
-        )
-        force_authenticate(self.client, user=self.user)
+        self.superAdminLogin()
 
         self.country = 'US'
         self.state = 'NY'
@@ -128,8 +126,8 @@ class OrderCreateShippingRateManual(BaseTestCase):
     
        
 
-        self.order_api_url = reverse('order-create')
-        self.order_estimate_api_url = reverse('order-estimate')
+        self.order_api_url = reverse('admin_order_create')
+        self.order_estimate_api_url = reverse('admin_order_estimate')
 
     def test_order_shipping_rate_calculation(self):
         """
@@ -234,7 +232,8 @@ class OrderCreateShippingRateManual(BaseTestCase):
         
 
         # Estimate Test
-        order_estimate_response = self.client.post(self.order_estimate_api_url, order_payload, format='json')
+        order_estimate_response = self.auth_client.post(self.order_estimate_api_url, order_payload, format='json')
+
 
         self.assertEqual(order_estimate_response.status_code, status.HTTP_200_OK)
         self.assertEqual(order_estimate_response.data['subtotal'], expected_subtotal_fr)

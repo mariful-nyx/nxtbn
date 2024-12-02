@@ -21,7 +21,7 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
-from nxtbn.core.admin_permissions import NxtbnAdminPermission
+from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
 from nxtbn.core.utils import to_currency_unit
 from nxtbn.order.proccesor.views import OrderProccessorAPIView
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, ReturnStatus
@@ -29,6 +29,7 @@ from nxtbn.order.models import Order, OrderLineItem, ReturnLineItem, ReturnReque
 from nxtbn.payment import PaymentMethod
 from nxtbn.payment.models import Payment
 from nxtbn.product.models import ProductVariant
+from nxtbn.users import UserRole
 from nxtbn.users.admin import User
 from .serializers import CustomerCreateSerializer, OrderDetailsSerializer, OrderListSerializer, OrderPaymentUpdateSerializer, OrderStatusUpdateSerializer, OrderPaymentMethodSerializer, ReturnLineItemSerializer, ReturnLineItemStatusUpdateSerializer, ReturnRequestBulkUpdateSerializer, ReturnRequestDetailsSerializer, ReturnRequestSerializer, ReturnRequestStatusUpdateSerializer
 from nxtbn.core.paginator import NxtbnPagination
@@ -368,9 +369,28 @@ class OrderSummaryAPIView(APIView):
 
         return Response(formatted_data)
 class OrderEastimateView(OrderProccessorAPIView):
+    permission_classes = [RoleBasedPermission]
+    ROLE_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"order_estimate",},
+        UserRole.ORDER_PROCESSOR: {"order_estimate",},
+        UserRole.CUSTOMER_SUPPORT_AGENT: {"order_estimate",},
+        UserRole.MARKETING_MANAGER: {"order_estimate",},
+    }
+    action = 'order_estimate'
+
     create_order = False # Eastimate order
 
 class OrderCreateView(OrderProccessorAPIView):
+    permission_classes = [RoleBasedPermission]
+    ROLE_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"order_create",},
+        UserRole.ORDER_PROCESSOR: {"order_create",},
+        UserRole.CUSTOMER_SUPPORT_AGENT: {"order_create",},
+        UserRole.MARKETING_MANAGER: {"order_create",},
+    }
+    action = 'order_create'
+
+
     create_order = True # Eastimate and create order
 
 class CreateCustomAPIView(generics.CreateAPIView):

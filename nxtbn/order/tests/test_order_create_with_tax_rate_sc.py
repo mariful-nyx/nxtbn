@@ -29,8 +29,8 @@ class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single curren
 
     def setUp(self):
         super().setUp()
-        self.client = APIClient()
-        self.client.login(email='test@example.com', password='testpass')
+        self.auth_client = APIClient()
+        self.adminLogin()
 
         # Define common properties
         self.country = 'US'
@@ -39,8 +39,8 @@ class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single curren
         # Tax class
         self.tax_class = TaxClassFactory()
 
-        self.order_api_url = reverse('order-create')
-        self.order_estimate_api_url = reverse('order-estimate')
+        self.order_api_url = reverse('admin_order_create')
+        self.order_estimate_api_url = reverse('admin_order_estimate')
 
     def _test_order_for_currency(self, currency, params):
         """
@@ -111,14 +111,14 @@ class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single curren
         }
 
         # Estimate Test
-        order_estimate_response = self.client.post(self.order_estimate_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY,})
+        order_estimate_response = self.auth_client.post(self.order_estimate_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY,})
         self.assertEqual(order_estimate_response.status_code, status.HTTP_200_OK)
         self.assertEqual(order_estimate_response.data['subtotal'], params['subtotal'])
         self.assertEqual(order_estimate_response.data['total'], params['total'])
         self.assertEqual(order_estimate_response.data['estimated_tax'], params['tax'])
 
         # Order Create Test
-        order_response = self.client.post(self.order_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY,})
+        order_response = self.auth_client.post(self.order_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY,})
         self.assertEqual(order_response.status_code, status.HTTP_200_OK)
         self.assertEqual(order_response.data['subtotal'], params['subtotal'])
         self.assertEqual(order_response.data['total'], params['total'])
@@ -198,9 +198,7 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
 
     def setUp(self):
         super().setUp()
-        self.client = APIClient()
-        self.client.login(email='test@example.com', password='testpass')
-
+        self.adminLogin()
         # Define common properties
         self.country = 'US'
         self.state = 'NY'
@@ -209,8 +207,8 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
         self.tax_class_15 = TaxClassFactory()
         self.tax_class_5 = TaxClassFactory()
 
-        self.order_api_url = reverse('order-create')
-        self.order_estimate_api_url = reverse('order-estimate')
+        self.order_api_url = reverse('admin_order_create')
+        self.order_estimate_api_url = reverse('admin_order_estimate')
 
     def _test_order_with_multi_variant(self, currency, params):
         """
@@ -324,14 +322,14 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
         }
 
         # Estimate Test
-        order_estimate_response = self.client.post(self.order_estimate_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY})
+        order_estimate_response = self.auth_client.post(self.order_estimate_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY})
         self.assertEqual(order_estimate_response.status_code, status.HTTP_200_OK)
         self.assertEqual(order_estimate_response.data['subtotal'], params['subtotal'])
         self.assertEqual(order_estimate_response.data['total'], params['total'])
         self.assertEqual(order_estimate_response.data['estimated_tax'], params['tax'])
 
         # Order Create Test
-        order_response = self.client.post(self.order_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY})
+        order_response = self.auth_client.post(self.order_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY})
         self.assertEqual(order_response.status_code, status.HTTP_200_OK)
         self.assertEqual(order_response.data['subtotal'], params['subtotal'])
         self.assertEqual(order_response.data['total'], params['total'])

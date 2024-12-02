@@ -1,7 +1,9 @@
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from nxtbn.discount.models import PromoCode
 from nxtbn.product.models import Product
+from nxtbn.users import UserRole
 
 class VariantQuantitySerializer(serializers.Serializer):
     alias = serializers.CharField()
@@ -29,7 +31,7 @@ class OrderEstimateSerializer(serializers.Serializer):
     billing_address_id = serializers.IntegerField(required=False)
 
     shipping_method_id = serializers.IntegerField(required=False)
-    custom_shipping_amount = PriceAndNameSerializer(required=False)
+    custom_shipping_amount = PriceAndNameSerializer(required=False) # Only staff can set custom shipping amount
 
     custom_discount_amount = PriceAndNameSerializer(required=False)
     promocode = serializers.CharField(required=False)
@@ -41,3 +43,8 @@ class OrderEstimateSerializer(serializers.Serializer):
         if len(value) == 0:
             raise serializers.ValidationError("You must add one or more products to your cart.")
         return value
+    
+    def validate_custom_shipping_amount(self, value):
+        if self.context['request'].user.is_staff:
+            return value
+        raise PermissionDenied("Only staff can set custom shipping amount.")

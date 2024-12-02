@@ -6,6 +6,7 @@ from rest_framework import status
 from django.db import transaction
 
 from nxtbn.core import CurrencyTypes
+from nxtbn.core.admin_permissions import RoleBasedPermission
 from nxtbn.core.utils import apply_exchange_rate, build_currency_amount
 from nxtbn.discount import PromoCodeType
 from nxtbn.discount.models import PromoCode
@@ -476,7 +477,7 @@ class OrderProccessorAPIView(generics.GenericAPIView):
     serializer_class = OrderEstimateSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
 
 

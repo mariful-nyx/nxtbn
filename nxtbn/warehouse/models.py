@@ -21,7 +21,7 @@ class Stock(AbstractBaseModel):
 
 
 
-class StockMovement(AbstractBaseModel):
+class StockMovement(AbstractBaseModel): # Stock movement is a record of the movement of stock from one warehouse to another.
     product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='stock_movements')
     from_warehouse = models.ForeignKey(Warehouse, related_name='outgoing_stock_movements', on_delete=models.CASCADE, null=True, blank=True)
     to_warehouse = models.ForeignKey(Warehouse, related_name='incoming_stock_movements', on_delete=models.CASCADE, null=True, blank=True)
@@ -34,11 +34,11 @@ class StockMovement(AbstractBaseModel):
 
     def save(self, *args, **kwargs):
         if self.movement_type == StockMovementType.PURCHASE:
-            self.from_warehouse = None  # No 'from_warehouse' for purchase
-            self.to_warehouse = self.to_warehouse  # Ensure to_warehouse is set correctly for purchase
+            self.from_warehouse = None
+            self.to_warehouse = self.to_warehouse 
         elif self.movement_type == StockMovementType.SALE:
-            self.to_warehouse = None  # No 'to_warehouse' for sale
+            self.to_warehouse = None 
         elif self.movement_type == StockMovementType.RETURN:
-            self.to_warehouse = self.to_warehouse  # Ensure to_warehouse is set correctly for return
-            self.from_warehouse = self.from_warehouse  # Ensure from_warehouse is set for return
+            self.to_warehouse = self.to_warehouse
+            self.from_warehouse = self.from_warehouse 
         super().save(*args, **kwargs)

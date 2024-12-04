@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from nxtbn.warehouse.models import Warehouse, Stock, StockMovement
+from nxtbn.product.models import ProductVariant
 
 class WarehouseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,17 +8,17 @@ class WarehouseSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'location']
 
 class StockSerializer(serializers.ModelSerializer):
-    warehouse = serializers.StringRelatedField() 
-    product_variant = serializers.StringRelatedField()
+    warehouse = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all()) 
+    product_variant = serializers.PrimaryKeyRelatedField(queryset=ProductVariant.objects.all())
 
     class Meta:
         model = Stock
         fields = ['id', 'warehouse', 'product_variant', 'quantity']
 
 class StockMovementSerializer(serializers.ModelSerializer):
-    product_variant = serializers.StringRelatedField()
-    from_warehouse = serializers.StringRelatedField()
-    to_warehouse = serializers.StringRelatedField()
+    product_variant = serializers.PrimaryKeyRelatedField(queryset=ProductVariant.objects.all())
+    from_warehouse = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all())
+    to_warehouse = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all())
 
     class Meta:
         model = StockMovement

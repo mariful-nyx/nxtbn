@@ -17,7 +17,6 @@ class OrderInvoiceSerializer(serializers.ModelSerializer):
     company_info = serializers.SerializerMethodField()
     items = OrderLineItemSerializer(source='line_items', many=True)
     total_price = serializers.DecimalField(source='total_in_units', max_digits=12, decimal_places=2)
-    total_price_in_customer_currency = serializers.DecimalField(max_digits=12, decimal_places=4)
     payment_method = serializers.CharField(source='get_payment_method')
 
     class Meta:
@@ -30,7 +29,6 @@ class OrderInvoiceSerializer(serializers.ModelSerializer):
             'company_info', 
             'items',
             'total_price',
-            'total_price_in_customer_currency',
             'currency',
             'customer_currency',
             'payment_method',

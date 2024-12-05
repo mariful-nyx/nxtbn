@@ -149,31 +149,27 @@ class BasicStatsView(APIView):
             previous_start_date = previous_end_date - timedelta(days=7)
 
         # Filter current period orders
-        orders_queryset = Order.objects.all()
+        orders_queryset = Order.objects.all() # All orders including return and cancelled orders
+        orders_without_cancelation_and_return = Order.objects.exclude(status=OrderStatus.CANCELLED).exclude(status=OrderStatus.RETURNED)
         if start_date:
             orders_queryset = orders_queryset.filter(created_at__gte=start_date)
+            orders_without_cancelation_and_return = orders_without_cancelation_and_return.filter(created_at__gte=start_date)
         if end_date:
             orders_queryset = orders_queryset.filter(created_at__lte=end_date)
+            orders_without_cancelation_and_return = orders_without_cancelation_and_return.filter(created_at__lte=end_date)
 
         # Total Orders
         total_orders = orders_queryset.count()
 
         # Total Sale (sum of total_price in Orders)
-        total_sale = orders_queryset.aggregate(total=Sum(F('total_price')))['total'] or 0
+        total_sale = orders_queryset.aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0      
 
-        # Net Sales (sum of payment_amount in Payments, filtered by the same date range)
-        payments_queryset = Payment.objects.all()
-        if start_date:
-            payments_queryset = payments_queryset.filter(created_at__gte=start_date)
-        if end_date:
-            payments_queryset = payments_queryset.filter(created_at__lte=end_date)
-
-        net_sales = payments_queryset.aggregate(net_total=Sum(F('payment_amount')))['net_total'] or 0
+        net_sales = orders_without_cancelation_and_return.aggregate(net_total=Sum(F('total_price_without_tax')))['net_total'] or 0
         total_variants = ProductVariant.objects.count()
 
         data = {
             'percetage_change_preiod_title': '',
-            'sales': {
+            'sales': { # total sales including return and cancelled orders and excluding tax
                 'amount': to_currency_unit(total_sale, settings.BASE_CURRENCY, locale='en_US'),
                 'last_percentage_change': ''
             },
@@ -184,7 +180,7 @@ class BasicStatsView(APIView):
             'variants': {
                 'amount': total_variants,
             },
-            'net_sales': {
+            'net_sales': { # total sales excluding return and cancelled orders and excluding tax
                 'amount': to_currency_unit(net_sales, settings.BASE_CURRENCY, locale='en_US'),
                 'last_percentage_change': ''
             }
@@ -243,9 +239,9 @@ class OrderOverviewStatsView(APIView):
         order_pending = Order.objects.filter(status=OrderStatus.PENDING).count()
 
         all_orders_in_period = Order.objects.filter(created_at__gte=start_date, created_at__lte=end_date)
-        order_delivered = all_orders_in_period.filter(status=OrderStatus.DELIVERED).aggregate(total=Sum(F('total_price')))['total'] or 0
-        order_returned = all_orders_in_period.filter(status=OrderStatus.RETURNED).aggregate(total=Sum(F('total_price')))['total'] or 0
-        order_cancelled = all_orders_in_period.filter(status=OrderStatus.CANCELLED).aggregate(total=Sum(F('total_price')))['total'] or 0
+        order_delivered = all_orders_in_period.filter(status=OrderStatus.DELIVERED).aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0
+        order_returned = all_orders_in_period.filter(status=OrderStatus.RETURNED).aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0
+        order_cancelled = all_orders_in_period.filter(status=OrderStatus.CANCELLED).aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0
 
         last_order = Order.objects.all().last()
         data = {

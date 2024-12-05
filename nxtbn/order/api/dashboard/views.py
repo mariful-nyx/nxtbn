@@ -153,21 +153,16 @@ class BasicStatsView(APIView):
         orders_without_cancelation_and_return = Order.objects.exclude(status=OrderStatus.CANCELLED).exclude(status=OrderStatus.RETURNED)
         if start_date:
             orders_queryset = orders_queryset.filter(created_at__gte=start_date)
+            orders_without_cancelation_and_return = orders_without_cancelation_and_return.filter(created_at__gte=start_date)
         if end_date:
             orders_queryset = orders_queryset.filter(created_at__lte=end_date)
+            orders_without_cancelation_and_return = orders_without_cancelation_and_return.filter(created_at__lte=end_date)
 
         # Total Orders
         total_orders = orders_queryset.count()
 
         # Total Sale (sum of total_price in Orders)
-        total_sale = orders_queryset.aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0
-
-        # Net Sales (sum of payment_amount in Payments, filtered by the same date range)
-        payments_queryset = Payment.objects.all()
-        if start_date:
-            payments_queryset = payments_queryset.filter(created_at__gte=start_date)
-        if end_date:
-            payments_queryset = payments_queryset.filter(created_at__lte=end_date)
+        total_sale = orders_queryset.aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0      
 
         net_sales = orders_without_cancelation_and_return.aggregate(net_total=Sum(F('total_price_without_tax')))['net_total'] or 0
         total_variants = ProductVariant.objects.count()

@@ -27,6 +27,7 @@ from nxtbn.product.api.dashboard.serializers import (
     ProductStatusUpdateBulkSerializer,
     ProductTagSerializer,
     ProductTypeSerializer,
+    ProductVariantShortSerializer,
     ProductWithVariantSerializer,
     RecursiveCategorySerializer,
     TaxClassSerializer,
@@ -282,8 +283,45 @@ class BulkProductDeleteAPIView(generics.DestroyAPIView):
         product_ids = product_ids.split(',') if product_ids else []
         Product.objects.filter(id__in=product_ids).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
 
-class ProductVariants(generics.ListAPIView):
-    serializer_class = ProductVariantSerializer
+
+
+
+
+
+class ProductVariantFilter(filters.FilterSet):
+    alias = filters.CharFilter(field_name='alias', lookup_expr='iexact')
+    id = filters.NumberFilter(field_name='id')
+    sku = filters.CharFilter(field_name='sku', lookup_expr='iexact')
+
+    class Meta:
+        model = Product
+        fields = [
+            'id',
+            'alias',
+            'name',
+        ]
+  
+class ProductVariantFilterMixin:
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+        drf_filters.OrderingFilter
+    ] 
+    search_fields = [
+        'name',
+        'product_brand',
+        'supplier__name',
+        'alias',
+        'product_name',
+    ]
+    ordering_fields = [
+        'name',
+    ]
+    filterset_class = ProductFilter
+
+class ProductVariants(ProductVariantFilterMixin, generics.ListAPIView):
+    serializer_class = ProductVariantShortSerializer
     queryset = ProductVariant.objects.all()
+    pagination_class = NxtbnPagination
+    

@@ -464,3 +464,21 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
 class ProductStatusUpdateBulkSerializer(serializers.Serializer):
     product_ids = serializers.ListField(child=serializers.IntegerField(), required=True)
     status = serializers.ChoiceField(choices=PublishableStatus.choices, required=True)
+
+
+
+
+class ProductVariantShortSerializer(serializers.ModelSerializer):
+    is_default_variant = serializers.SerializerMethodField()
+    product_name = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
+    name = serializers.CharField(max_length=500, source='get_descriptive_name')
+
+    class Meta:
+        model = ProductVariant
+        ref_name = 'product_variant_dashboard_short_get'
+        fields = (
+            'id',
+            'alias',
+            'name',
+        )

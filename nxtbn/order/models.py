@@ -150,12 +150,20 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         help_text="ISO currency code for the order. This is the base currency in which the total amount will be stored after converting from the customer's currency to the base currency. "
                 "For example, 'USD' for US Dollars. The base currency is defined in the settings."
     )
-    total_price = models.BigIntegerField(
+
+    # total amount that needs to be paid by the customer
+    total_price = models.BigIntegerField( # total shipping cost + total discounted amount + total tax + total line items
         null=True, blank=True, validators=[MinValueValidator(1)],
         help_text="Total amount of the order in cents, converted from the original currency (customer's currency) to the base currency. "
                 "For example, if the base currency is USD and the customer_currency is different (e.g., AUD), the total amount will be converted to USD. "
                 "This converted amount is stored in cents."
     )
+
+    total_price_without_tax = models.BigIntegerField( # total shipping cost + total discounted amount + total line items
+        null=True, blank=True, validators=[MinValueValidator(1)],
+        help_text="Total amount of the order without tax in cents, stored in the base currency."
+    )
+    
     total_shipping_cost = models.BigIntegerField(
         null=True, blank=True, validators=[MinValueValidator(0)],
         help_text="Total shipping amount of the order in cents, stored in the base currency.",

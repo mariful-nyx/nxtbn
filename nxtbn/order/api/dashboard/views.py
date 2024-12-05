@@ -159,7 +159,7 @@ class BasicStatsView(APIView):
         total_orders = orders_queryset.count()
 
         # Total Sale (sum of total_price in Orders)
-        total_sale = orders_queryset.aggregate(total=Sum(F('total_price')))['total'] or 0
+        total_sale = orders_queryset.aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0
 
         # Net Sales (sum of payment_amount in Payments, filtered by the same date range)
         payments_queryset = Payment.objects.all()

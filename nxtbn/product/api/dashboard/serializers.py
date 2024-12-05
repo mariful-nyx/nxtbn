@@ -469,10 +469,6 @@ class ProductStatusUpdateBulkSerializer(serializers.Serializer):
 
 
 class ProductVariantShortSerializer(serializers.ModelSerializer):
-    is_default_variant = serializers.SerializerMethodField()
-    product_name = serializers.SerializerMethodField()
-    price = serializers.SerializerMethodField()
-    name = serializers.CharField(max_length=500, source='get_descriptive_name')
 
     class Meta:
         model = ProductVariant

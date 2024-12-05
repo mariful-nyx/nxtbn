@@ -106,6 +106,11 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
             "type": MoneyFieldTypes.SUBUNIT,
             "require_base_currency": True,
         },
+        "total_price_without_tax": {
+            "currency_field": "currency",
+            "type": MoneyFieldTypes.SUBUNIT,
+            "require_base_currency": True,
+        },
         "total_shipping_cost": {
             "currency_field": "currency",
             "type": MoneyFieldTypes.SUBUNIT,

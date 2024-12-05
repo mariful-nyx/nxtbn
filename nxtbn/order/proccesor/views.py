@@ -309,6 +309,7 @@ class OrderCreator:
 
                 "currency": settings.BASE_CURRENCY,
                 "total_price": int(self.total * 100),  #  total is in units, convert to cents/subunits
+                "total_price_without_tax":  int(self.total_without_tax * 100),
                 "customer_currency": customer_currency,
                 # "total_price_in_customer_currency": build_currency_amount(self.total, customer_currency),
                 "status": OrderStatus.PENDING,
@@ -398,6 +399,7 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
             self.validated_data.get('shipping_address', {})
         )
         self.total = self.total_subtotal - self.discount + self.shipping_fee + self.estimated_tax
+        self.total_without_tax = self.total_subtotal - self.discount + self.shipping_fee
 
     def get_response(self):
         exchange_rate = currency_Backend().get_exchange_rate(self.request.currency)
@@ -411,7 +413,8 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
             "shipping_name": self.shipping_name,
             "estimated_tax": apply_exchange_rate(self.estimated_tax, exchange_rate, self.request.currency, 'en_US'),
             "tax_details": self.tax_details,
-            "total": apply_exchange_rate(self.total, exchange_rate, self.request.currency, 'en_US'),
+            "total": apply_exchange_rate(self.total, exchange_rate, self.request.currency, 'en_US'), # total amount that will be charged
+            "total_without_tax": apply_exchange_rate(self.total_without_tax, exchange_rate, self.request.currency, 'en_US'),
         }
         return response_data
 

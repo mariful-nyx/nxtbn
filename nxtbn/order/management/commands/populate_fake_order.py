@@ -32,7 +32,7 @@ class Command(BaseCommand):
                 city=fake.city(),
                 country=fake.country(),
                 phone_number=fake.phone_number(),
-                email_address=fake.email()
+                email=fake.email()
             )
             billing_address = Address.objects.create(
                 first_name=fake.first_name(),
@@ -41,7 +41,7 @@ class Command(BaseCommand):
                 city=fake.city(),
                 country=fake.country(),
                 phone_number=fake.phone_number(),
-                email_address=fake.email()
+                email=fake.email()
             )
 
             random_user = User.objects.order_by('?').first()

@@ -239,9 +239,9 @@ class OrderOverviewStatsView(APIView):
         order_pending = Order.objects.filter(status=OrderStatus.PENDING).count()
 
         all_orders_in_period = Order.objects.filter(created_at__gte=start_date, created_at__lte=end_date)
-        order_delivered = all_orders_in_period.filter(status=OrderStatus.DELIVERED).aggregate(total=Sum(F('total_price')))['total'] or 0
-        order_returned = all_orders_in_period.filter(status=OrderStatus.RETURNED).aggregate(total=Sum(F('total_price')))['total'] or 0
-        order_cancelled = all_orders_in_period.filter(status=OrderStatus.CANCELLED).aggregate(total=Sum(F('total_price')))['total'] or 0
+        order_delivered = all_orders_in_period.filter(status=OrderStatus.DELIVERED).aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0
+        order_returned = all_orders_in_period.filter(status=OrderStatus.RETURNED).aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0
+        order_cancelled = all_orders_in_period.filter(status=OrderStatus.CANCELLED).aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0
 
         last_order = Order.objects.all().last()
         data = {

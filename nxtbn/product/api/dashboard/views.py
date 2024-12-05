@@ -295,7 +295,7 @@ class ProductVariantFilter(filters.FilterSet):
     sku = filters.CharFilter(field_name='sku', lookup_expr='iexact')
 
     class Meta:
-        model = Product
+        model = ProductVariant
         fields = [
             'id',
             'alias',
@@ -310,15 +310,13 @@ class ProductVariantFilterMixin:
     ] 
     search_fields = [
         'name',
-        'product_brand',
-        'supplier__name',
         'alias',
-        'product_name',
+        'id'
     ]
     ordering_fields = [
         'name',
     ]
-    filterset_class = ProductFilter
+    filterset_class = ProductVariantFilter
 
 class ProductVariants(ProductVariantFilterMixin, generics.ListAPIView):
     serializer_class = ProductVariantShortSerializer

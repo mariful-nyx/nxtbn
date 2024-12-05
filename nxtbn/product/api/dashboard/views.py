@@ -300,6 +300,7 @@ class ProductVariantFilter(filters.FilterSet):
             'id',
             'alias',
             'name',
+            'sku'
         ]
   
 class ProductVariantFilterMixin:
@@ -311,7 +312,8 @@ class ProductVariantFilterMixin:
     search_fields = [
         'name',
         'alias',
-        'id'
+        'id',
+        'sku'
     ]
     ordering_fields = [
         'name',

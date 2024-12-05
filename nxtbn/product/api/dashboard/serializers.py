@@ -477,4 +477,5 @@ class ProductVariantShortSerializer(serializers.ModelSerializer):
             'id',
             'alias',
             'name',
+            'sku'
         )

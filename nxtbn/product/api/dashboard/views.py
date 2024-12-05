@@ -29,7 +29,8 @@ from nxtbn.product.api.dashboard.serializers import (
     ProductTypeSerializer,
     ProductWithVariantSerializer,
     RecursiveCategorySerializer,
-    TaxClassSerializer
+    TaxClassSerializer,
+    ProductVariantSerializer
 )
 from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
 from nxtbn.tax.models import TaxClass
@@ -281,3 +282,8 @@ class BulkProductDeleteAPIView(generics.DestroyAPIView):
         product_ids = product_ids.split(',') if product_ids else []
         Product.objects.filter(id__in=product_ids).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+class ProductVariants(generics.ListAPIView):
+    serializer_class = ProductVariantSerializer
+    queryset = ProductVariant.objects.all()

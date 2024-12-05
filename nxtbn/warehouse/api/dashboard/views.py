@@ -1,6 +1,7 @@
 from rest_framework import viewsets
+from rest_framework import generics
 from nxtbn.warehouse.models import Warehouse, Stock, StockMovement
-from nxtbn.warehouse.api.dashboard.serializers import WarehouseSerializer, StockSerializer, StockMovementSerializer
+from nxtbn.warehouse.api.dashboard.serializers import WarehouseSerializer, StockSerializer, StockMovementSerializer, StockDetailViewSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 
@@ -10,8 +11,13 @@ class WarehouseViewSet(viewsets.ModelViewSet):
 
 class StockViewSet(viewsets.ModelViewSet):
     queryset = Stock.objects.select_related('warehouse', 'product_variant').all()
-    serializer_class = StockSerializer
     pagination_class = NxtbnPagination
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return StockDetailViewSerializer
+        return StockSerializer
+
 
 class StockMovementViewSet(viewsets.ModelViewSet):
     queryset = StockMovement.objects.select_related(

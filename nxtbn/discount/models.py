@@ -141,7 +141,7 @@ class PromoCode(AbstractBaseModel):
             user=user,
             created_at__gte=cutoff_date,
             status__in=[OrderStatus.SHIPPED, OrderStatus.DELIVERED]
-        ).aggregate(total=models.Sum('total_price_in_customer_currency'))['total'] or 0
+        ).aggregate(total=models.Sum('total')) or 0
         return total >= self.min_purchase_amount
     
     def has_applicable_products(self, user):

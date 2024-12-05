@@ -58,7 +58,7 @@ class OrderListSerializer(serializers.ModelSerializer):
 class OrderLineItemCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderLineItem
-        fields = ['variant', 'quantity', 'price_per_unit', 'currency', 'total_price_in_customer_currency']
+        fields = ['variant', 'quantity', 'price_per_unit', 'currency',]
 
 
 
@@ -118,7 +118,6 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
     total_tax = serializers.SerializerMethodField()
     due = serializers.SerializerMethodField()
     overcharged_amount = serializers.CharField(source='get_overcharged_amount')
-    total_price_in_customer_currency = serializers.SerializerMethodField()
     payment_method = serializers.CharField(source='get_payment_method')
     promo_code = PromoCodeBasicSerializer()
     payments = BasicPaymentSerializer(many=True)
@@ -140,7 +139,6 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'due',
             'overcharged_amount',
             'customer_currency',
-            'total_price_in_customer_currency',
             'status',
             'authorize_status',
             'charge_status',
@@ -174,9 +172,6 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
     
     def get_total_tax(self, obj):
         return obj.humanize_total_tax()
-
-    def get_total_price_in_customer_currency(self, obj):
-        return obj.total_price_in_customer_currency
     
     def get_total_paid_amount(self, obj):
         return obj.humanize_total_paid_amount()

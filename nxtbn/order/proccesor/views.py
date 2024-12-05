@@ -310,7 +310,7 @@ class OrderCreator:
                 "currency": settings.BASE_CURRENCY,
                 "total_price": int(self.total * 100),  #  total is in units, convert to cents/subunits
                 "customer_currency": customer_currency,
-                "total_price_in_customer_currency": build_currency_amount(self.total, customer_currency),
+                # "total_price_in_customer_currency": build_currency_amount(self.total, customer_currency),
                 "status": OrderStatus.PENDING,
                 "authorize_status": OrderAuthorizationStatus.NONE,
                 "charge_status": OrderChargeStatus.DUE,
@@ -335,7 +335,7 @@ class OrderCreator:
                     currency=order.currency,
                     total_price=int(variant['quantity'] * variant['price'] * 100),  # Convert to cents
                     customer_currency=order.customer_currency,
-                    total_price_in_customer_currency=variant['quantity'] * variant['price'],
+                    # total_price_in_customer_currency=variant['quantity'] * variant['price'],
                     tax_rate=self.get_tax_rate(variant['tax_class'], shipping_address).rate if self.get_tax_rate(variant['tax_class'], shipping_address) else Decimal('0.00'),
                 )
 

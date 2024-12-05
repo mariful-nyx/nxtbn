@@ -106,10 +106,10 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
             "type": MoneyFieldTypes.SUBUNIT,
             "require_base_currency": True,
         },
-        "total_price_in_customer_currency": {
-            "currency_field": "customer_currency",
-            "type": MoneyFieldTypes.UNIT,
-        },
+        # "total_price_in_customer_currency": {
+        #     "currency_field": "customer_currency",
+        #     "type": MoneyFieldTypes.UNIT,
+        # },
         "total_shipping_cost": {
             "currency_field": "currency",
             "type": MoneyFieldTypes.SUBUNIT,
@@ -182,13 +182,13 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         help_text="ISO currency code of the original amount paid by the customer. "
                 "For example, 'AUD' for Australian Dollars."
     )
-    total_price_in_customer_currency = models.DecimalField(
-        null=True,
-        blank=True,
-        decimal_places=4,
-        max_digits=12,
-        help_text="Original amount paid by the customer in the customer's currency, stored in cents. "
-    )
+    # total_price_in_customer_currency = models.DecimalField(
+    #     null=True,
+    #     blank=True,
+    #     decimal_places=4,
+    #     max_digits=12,
+    #     help_text="Original amount paid by the customer in the customer's currency, stored in cents. "
+    # )
 
 
     status = models.CharField(
@@ -364,12 +364,6 @@ class OrderLineItem(MonetaryMixin, models.Model):
         max_length=3,
         default=CurrencyTypes.USD,
         choices=CurrencyTypes.choices,
-    )
-    total_price_in_customer_currency = models.DecimalField(
-        null=True,
-        blank=True,
-        decimal_places=4,
-        max_digits=12,
     )
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text=_("Tax rate at the time of the order"))
 

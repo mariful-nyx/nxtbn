@@ -165,8 +165,9 @@ class BasicStatsView(APIView):
         total_sale = orders_queryset.aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0      
 
         net_sales = orders_without_cancelation_and_return.aggregate(net_total=Sum(F('total_price_without_tax')))['net_total'] or 0
-        total_variants = ProductVariant.objects.count()
-
+        total_variants_sold = OrderLineItem.objects.filter(
+            order__created_at__gte=start_date, order__created_at__lte=end_date
+        ).aggregate(total=Sum('quantity'))['total'] or 0
         data = {
             'percetage_change_preiod_title': '',
             'sales': { # total sales including return and cancelled orders and excluding tax
@@ -178,7 +179,7 @@ class BasicStatsView(APIView):
                 'last_percentage_change': ''
             },
             'variants': {
-                'amount': total_variants,
+                'amount': total_variants_sold,
             },
             'net_sales': { # total sales excluding return and cancelled orders and excluding tax
                 'amount': to_currency_unit(net_sales, settings.BASE_CURRENCY, locale='en_US'),

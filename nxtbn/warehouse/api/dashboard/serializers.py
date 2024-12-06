@@ -72,3 +72,22 @@ class StockMovementSerializer(serializers.ModelSerializer):
     def get_to_warehouse_name(self, obj):
         return obj.to_warehouse.name if obj.to_warehouse else None
     
+
+
+class StockMovementDetailSerializer(serializers.ModelSerializer):
+    
+    product_variant = ProductVariantSerializer(read_only=True)
+    from_warehouse = WarehouseSerializer(read_only=True)
+    to_warehouse = WarehouseSerializer(read_only=True)
+
+    class Meta:
+        model = StockMovement
+        fields = [
+            'id',
+            'product_variant',
+            'from_warehouse',
+            'to_warehouse',
+            'quantity',
+            'movement_type',
+            'note',
+        ]

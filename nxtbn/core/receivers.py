@@ -1,7 +1,10 @@
+import os
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 from nxtbn.core.models import InvoiceSettings, SiteSettings
 from django.contrib.sites.models import Site
+
+from nxtbn.plugins.utils import PLUGIN_BASE_DIR
 
 
 @receiver(post_migrate)
@@ -35,3 +38,23 @@ def create_default_site_settings(sender, **kwargs):
             postal_code="123456",
             contact_email="invoice@example.com",
         )
+
+    # inpbuilt plugins
+    # check if stripe, sslcommerz, plugins are exists in plugin directory
+    if os.path.exists(PLUGIN_BASE_DIR):
+        from nxtbn.plugins.models import Plugin
+        from nxtbn.plugins import PluginType
+
+        for plugin_name in ['stripe', 'sslcommerz']:
+            plugin_dirs = [d for d in os.listdir(PLUGIN_BASE_DIR) if os.path.isdir(os.path.join(PLUGIN_BASE_DIR, d))]
+            for plugin_name in plugin_dirs:
+                plugin_dir = os.path.join(PLUGIN_BASE_DIR, plugin_name)
+                if os.path.isdir(plugin_dir):
+                    if not Plugin.objects.filter(name=plugin_name).exists():
+                        Plugin.objects.create(
+                            name=plugin_name,
+                            plugin_type=PluginType.PAYMENT_PROCESSOR,
+                        )
+                else:
+                    print(f"{plugin_name} plugin not found in {PLUGIN_BASE_DIR}.")
+            

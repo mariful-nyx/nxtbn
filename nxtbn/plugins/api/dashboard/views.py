@@ -32,7 +32,7 @@ from nxtbn.plugins.models import fixed_dirs
 
 
 from nxtbn.plugins import PluginType
-from nxtbn.plugins.api.dashboard.serializers import  PluginInstallWithZIPURLSerializer, PluginSerializer, PluginUpdateSerializer, ZipFileUploadSerializer
+from nxtbn.plugins.api.dashboard.serializers import  PluginSerializer, PluginUpdateSerializer, ZipFileUploadSerializer
 from nxtbn.plugins.manager import PluginPathManager
 from nxtbn.plugins.models import Plugin
 
@@ -69,28 +69,7 @@ class PluginsUploadView(PluginBaseMixin, generics.CreateAPIView):
             status=status.HTTP_201_CREATED,
         )
 
-class PluginInstallViaZipUrlView(PluginBaseMixin, generics.CreateAPIView):
-    serializer_class = PluginInstallWithZIPURLSerializer
 
-    def perform_create(self, serializer):
-        zip_url = serializer.validated_data['zip_url']
-        response = requests.get(zip_url, stream=True)
-        if response.status_code != 200:
-            raise ValidationError({'zip_url': 'Failed to download the ZIP file.'})
-        
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            self.tmpdirname = tmpdirname
-            temp_zip_path = os.path.join(tmpdirname, 'plugin.zip')
-            with open(temp_zip_path, 'wb') as temp_zip_file:
-                for chunk in response.iter_content(chunk_size=128):
-                    temp_zip_file.write(chunk)
-            self.handle_uploaded_file(temp_zip_path)
-
-        return Response(
-            {'message': 'Plugin downloaded, extracted, and registered successfully'},
-            status=status.HTTP_201_CREATED,
-        )
-    
 
 
 class PluginDetailAPIView(generics.RetrieveUpdateDestroyAPIView):

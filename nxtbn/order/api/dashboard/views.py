@@ -234,7 +234,7 @@ class OrderOverviewStatsView(APIView):
 
         # Parse dates if provided, or default to all-time if not provided
         start_date = datetime.strptime(start_date_str, "%Y-%m-%d") if start_date_str else None
-        end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) if end_date_str else timezone.now() + timedelta(days=1) # Add 1 day to adjust for end date as inclusive
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1) if end_date_str else timezone.now() + timedelta(days=1)
 
         order_pending = Order.objects.filter(status=OrderStatus.PENDING).count()
 
@@ -247,7 +247,7 @@ class OrderOverviewStatsView(APIView):
         data = {
             'order_pending': {
                 'amount': order_pending,
-                'last_order': last_order.created_at  if last_order else None
+                'last_order': last_order.created_at if last_order else None
             },
             'order_delivered': {
                 'amount': to_currency_unit(order_delivered, settings.BASE_CURRENCY, locale='en_US'),
@@ -263,7 +263,9 @@ class OrderOverviewStatsView(APIView):
             }
         }
 
+        # Calculate previous period dates based on range_name
         today = timezone.now().date()
+        previous_start_date, previous_end_date = None, None
         if range_name and range_name.lower() in comparables:
             if compare_opposite_title[range_name.lower()] == 'Yesterday':
                 previous_start_date = today - timedelta(days=1)
@@ -278,9 +280,29 @@ class OrderOverviewStatsView(APIView):
                 previous_start_date = today.replace(year=today.year - 1, month=1, day=1)
                 previous_end_date = today.replace(year=today.year - 1, month=12, day=31)
 
-        data['percetage_change_preiod_title'] = compare_opposite_title_tr[range_name.lower()]
+        # Get totals for the previous period
+        if previous_start_date and previous_end_date:
+            previous_orders = Order.objects.filter(created_at__gte=previous_start_date, created_at__lte=previous_end_date)
+            previous_delivered = previous_orders.filter(status=OrderStatus.DELIVERED).aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0
+            previous_returned = previous_orders.filter(status=OrderStatus.RETURNED).aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0
+            previous_cancelled = previous_orders.filter(status=OrderStatus.CANCELLED).aggregate(total=Sum(F('total_price_without_tax')))['total'] or 0
+
+            # Calculate percentage changes
+            delivered_percentage_change = round(((order_delivered - previous_delivered) / previous_delivered * 100), 2) if previous_delivered > 0 else 0
+            returned_percentage_change = round(((order_returned - previous_returned) / previous_returned * 100), 2) if previous_returned > 0 else 0
+            cancelled_percentage_change = round(((order_cancelled - previous_cancelled) / previous_cancelled * 100), 2) if previous_cancelled > 0 else 0
+
+            # Add to response
+            data['order_delivered']['last_percentage_change'] = delivered_percentage_change
+            data['order_returned']['last_percentage_change'] = returned_percentage_change
+            data['order_cancelled']['last_percentage_change'] = cancelled_percentage_change
+
+        # Set percentage change period title
+        if range_name and range_name.lower() in comparables:
+            data['percetage_change_preiod_title'] = compare_opposite_title_tr[range_name.lower()]
 
         return Response(data)
+
 
 
 class OrderSummaryAPIView(APIView):

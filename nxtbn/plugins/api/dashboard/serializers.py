@@ -27,13 +27,6 @@ class ZipFileUploadSerializer(serializers.Serializer):
 
 
 
-class PluginInstallWithZIPURLSerializer(serializers.Serializer):
-    zip_url = serializers.URLField()
-    # plugin_type = serializers.ChoiceField(choices=PluginType.choices)
-    # tag = serializers.CharField(max_length=255, required=False) # version tag
-
-
-
 class PluginSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plugin

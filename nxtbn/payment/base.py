@@ -159,12 +159,12 @@ class PaymentPlugin(ABC):
     
 
    
-    def payment_url_with_meta(self, order_alias: str, **kwargs) -> Dict[str, Any]:
+    def payment_url_with_meta(self, order, **kwargs) -> Dict[str, Any]:
         """
         Get payment URL and additional metadata based on the order ID.
 
         Args:
-            order_alias (str): The unique identifier for the order.
+           Order Instance.
 
         Keyword Args:
             **kwargs: Additional keyword arguments specific to the payment gateway.

@@ -58,7 +58,7 @@ class StartPaymentProcess(generics.CreateAPIView):
             context={'request': request},
             order=order
         )
-        payment_url_meta = payment_manager.payment_url_with_meta(order_alias)
+        payment_url_meta = payment_manager.payment_url_with_meta()
         
         return Response(payment_url_meta)
     

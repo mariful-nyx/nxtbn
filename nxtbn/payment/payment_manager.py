@@ -81,7 +81,7 @@ class PaymentManager:
         """
         return self.gateway.public_keys()
     
-    def payment_url_with_meta(self, order_alias, **kwargs):
+    def payment_url_with_meta(self, **kwargs):
         """
         Get payment URL and additional metadata based on the order alias.
 
@@ -102,7 +102,7 @@ class PaymentManager:
                 ...
             }
         """
-        return self.gateway.payment_url_with_meta(order_alias, **kwargs)
+        return self.gateway.payment_url_with_meta(self.order, **kwargs)
     
 
     def handle_webhook_event(self, request_data, **kwargs):

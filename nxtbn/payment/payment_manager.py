@@ -5,12 +5,11 @@ from importlib import import_module
 
 import logging
 
+from django.conf import settings
+
 from nxtbn.order.models import Order
-from nxtbn.plugins import PluginType
-from nxtbn.plugins.manager import PluginPathManager
 
 logger = logging.getLogger(__name__)
-
 
 
 class PaymentManager:
@@ -26,7 +25,7 @@ class PaymentManager:
     def select_gateway(self, payment_plugin_id: str, context: dict = {}, order: Optional[Order] = None):
         """Select the appropriate gateway based on the payment method."""
 
-        gateway_path = PluginPathManager.get_plugin_path(payment_plugin_id, PluginType.PAYMENT_PROCESSOR) + '.plugin'              
+        gateway_path = settings.INSTALLED_PLUGINS[payment_plugin_id]         
 
         module_name, class_name = gateway_path.rsplit(".", 1)
         module = import_module(module_name)

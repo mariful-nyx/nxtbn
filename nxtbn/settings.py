@@ -390,6 +390,10 @@ if not get_env_var("MEMCACHE_LOCATION", default=""):
 
 PLUGIN_BASE_DIR = 'nxtbn.plugins.sources'
 
+INSTALLED_PLUGINS = [
+    'nxtbn.plugins.sources.nxt_stripe.StripeGateway',
+]
+
 NXTBN_JWT_SETTINGS = {
     'SECRET_KEY': get_env_var("JWT_SECRET_KEY", SECRET_KEY), # default django's secret key
     'ALGORITHM': 'HS256',

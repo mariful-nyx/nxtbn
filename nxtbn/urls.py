@@ -104,21 +104,3 @@ urlpatterns += [
     path("docs-dashboard-redoc/", DASHBOARD_API_DOCS_SCHEMA_VIEWS.with_ui("redoc", cache_timeout=0), name="docs_dashboard_redoc"),
     path("docs-storefront-redoc/", STOREFRONT_API_DOCS_SCHEMA_VIEWS.with_ui("redoc", cache_timeout=0), name="docs_storefront_redoc")
 ]
-
-
-
-
-plugin_urls = []
-
-PLUGIN_BASE_DIR = getattr(settings, 'PLUGIN_BASE_DIR')
-
-if os.path.exists(PLUGIN_BASE_DIR):
-    for plugin in os.listdir(PLUGIN_BASE_DIR):
-        try:
-            module_path = f"{PLUGIN_BASE_DIR}.{plugin}.urls"
-            module = importlib.import_module(module_path)
-            plugin_urls.append(path(plugin, include(module_path)))
-        except Exception as e:
-            print(f"Failed to load plugin '{plugin}': {e}")
-
-urlpatterns += plugin_urls

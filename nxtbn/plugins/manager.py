@@ -4,7 +4,7 @@ from nxtbn.plugins.models import Plugin
 import shutil
 import os
 
-class PluginPathManager:
+class PluginPathManager: # No Longer in use
     DEFAULT_CACHE_TIMEOUT = 7 * 24 * 60 * 60  # Cache for one week
 
     def __init__(self, plugin_name, plugin_type):

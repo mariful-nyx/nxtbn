@@ -88,7 +88,7 @@ class OrderFilter(filters.FilterSet):
 
 
 class OrderListView(generics.ListAPIView):
-    permission_classes = (NxtbnAdminPermission,)
+    permission_classes = (RoleBasedPermission,)
     queryset = Order.objects.all()
     serializer_class = OrderListSerializer
     pagination_class = NxtbnPagination
@@ -101,6 +101,12 @@ class OrderListView(generics.ListAPIView):
     filterset_class = OrderFilter
     search_fields = ['alias', 'id', 'user__username', 'supplier__name']
     ordering_fields = ['created_at']
+    ROLE_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"list",},
+        UserRole.ORDER_PROCESSOR: {"list",},
+        UserRole.CUSTOMER_SUPPORT_AGENT: {"list",},
+        UserRole.MARKETING_MANAGER: {"list",},
+    }
 
 
 class OrderDetailView(generics.RetrieveAPIView):
@@ -128,6 +134,12 @@ compare_opposite_title = {
 
 
 class BasicStatsView(APIView):
+    permission_classes = [RoleBasedPermission]
+    ROLE_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"basic_stats",},
+        UserRole.MARKETING_MANAGER: {"basic_stats",},
+    }
+    action = 'basic_stats'
 
     def get(self, request):
         # Get start and end dates from query parameters
@@ -226,6 +238,12 @@ class OrderOverviewStatsView(APIView):
             - end_date (str): The end date for the statistics in 'YYYY-MM-DD' format.
             - range_name (str, optional): The name of the date range.
     """
+    permission_classes = [RoleBasedPermission]
+    ROLE_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"analytics",},
+        UserRole.MARKETING_MANAGER: {"analytics",},
+    }
+    action = 'analytics'
       
 
     def get(self, request):
@@ -307,6 +325,13 @@ class OrderOverviewStatsView(APIView):
 
 
 class OrderSummaryAPIView(APIView):
+    permission_classes = [RoleBasedPermission]
+    ROLE_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"analytics",},
+        UserRole.MARKETING_MANAGER: {"analytics",},
+    }
+    action = 'analytics'
+
     def get(self, request, *args, **kwargs):
         time_period = request.query_params.get('time_period')  # 'year', 'month', 'week', 'day'
         current_date = datetime.now()

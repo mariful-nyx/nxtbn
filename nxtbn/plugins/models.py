@@ -23,7 +23,7 @@ fixed_dirs = {
 }
 
 
-class Plugin(AbstractBaseModel):
+class Plugin(AbstractBaseModel): # No Longer in use. In future, we can use this model to store plugin details
     name = models.CharField(
         max_length=255,
         unique=True,

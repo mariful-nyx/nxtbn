@@ -19,7 +19,7 @@ from nxtbn.users.admin import User
 class Supplier(NameDescriptionAbstract, AbstractSEOModel):
     pass
 
-class Color(AbstractBaseModel):
+class Color(AbstractBaseModel): # TO DO: Remove this model, unnecessary, Decided with critically analyze. Can handle with product.related_to field
     code = models.CharField(max_length=7, unique=True)
     name = models.CharField(max_length=20, unique=True)
 
@@ -229,6 +229,11 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
             "type": MoneyFieldTypes.UNIT,
             "require_base_currency": True,
         },
+        "compare_at_price": {
+            "currency_field": "currency",
+            "type": MoneyFieldTypes.UNIT,
+            "require_base_currency": True,
+        }
     }
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
@@ -249,19 +254,17 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
     track_inventory = models.BooleanField(default=False)
     allow_backorder = models.BooleanField(default=False, help_text="Allow orders even if out of stock.")
 
-    # if track_inventory is enabled: stock, stock_status, low_stock_threshold is required
+   
     stock = models.IntegerField( # Redundant field, can be calculated from warehouse stock and stock movements. for query optimization, we store it here.
         default=0,
         verbose_name="Stock",
         help_text="Current stock level to show on the storefront or make available for purchase or make some restrictions. the stock value here can be different from the warehouse stock."
     ) 
-    low_stock_threshold = models.IntegerField(default=0, verbose_name="Stock", help_text="Threshold to trigger low stock alert.")
-    stock_status = models.CharField(default=StockStatus.IN_STOCK, choices=StockStatus.choices, max_length=15)
 
     sku = models.CharField(max_length=50, unique=True)
 
 
-    color_code = models.CharField(max_length=7, null=True, blank=True)  # TO DO: Remove this field, unnecessary, Decided with critically analyze. Can handle with product.related_to field
+    #color_code = models.CharField(max_length=7, null=True, blank=True)  # TO DO: Remove this field, unnecessary, Decided with critically analyze. Can handle with product.related_to field
     # Weight and dimensions are also types of attributes, but we created these fields separately for shipping rate calculation purposes.
     # weight_unit = models.CharField(
     #     max_length=5,

@@ -102,8 +102,6 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             'stock',
             'color_code',
             'track_inventory',
-            'stock_status',
-            'low_stock_threshold',
             'is_default_variant',
         )
 

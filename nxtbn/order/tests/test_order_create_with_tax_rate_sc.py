@@ -74,7 +74,7 @@ class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single curren
             track_inventory=False,
             currency=currency,
             price=normalize_amount_currencywise(params['price'], currency),
-            stock=params['stock'],
+            # stock=params['stock'],
             cost_per_unit=params['cost_per_unit'],
         )
 
@@ -142,7 +142,7 @@ class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single curren
                     "price": 20.26,
                     "cost_per_unit": 50.00,
                     "tax_rate": 15,  # 15%
-                    "stock": 10,
+                    # "stock": 10,
                 },
             )
 
@@ -160,7 +160,7 @@ class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single curren
                     "price": 2000,
                     "cost_per_unit": 5000,
                     "tax_rate": 15,  # 15%
-                    "stock": 10,
+                    # "stock": 10,
                 },
             )
 
@@ -177,7 +177,7 @@ class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single curren
                     "price": 20.234,
                     "cost_per_unit": 15.500,
                     "tax_rate": 15,  # 15%
-                    "stock": 10,
+                    # "stock": 10,
                 },
             )
 
@@ -268,7 +268,7 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
             track_inventory=False,
             currency=currency,
             price=normalize_amount_currencywise(params['variant_1']['price'], currency),
-            stock=params['variant_1']['stock'],
+            # stock=params['variant_1']['stock'],
             cost_per_unit=params['variant_1']['cost_per_unit'],
         )
 
@@ -277,7 +277,7 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
             track_inventory=False,
             currency=currency,
             price=normalize_amount_currencywise(params['variant_2']['price'], currency),
-            stock=params['variant_2']['stock'],
+            # stock=params['variant_2']['stock'],
             cost_per_unit=params['variant_2']['cost_per_unit'],
         )
 
@@ -286,7 +286,7 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
             track_inventory=False,
             currency=currency,
             price=normalize_amount_currencywise(params['variant_3']['price'], currency),
-            stock=params['variant_3']['stock'],
+            # stock=params['variant_3']['stock'],
             cost_per_unit=params['variant_3']['cost_per_unit'],
         )
 

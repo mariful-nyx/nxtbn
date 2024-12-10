@@ -15,6 +15,15 @@ class Stock(AbstractBaseModel):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="stocks")
     product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name="warehouse_stocks")
     quantity = models.IntegerField(default=0)
+    reserved = models.IntegerField(
+        default=0,
+        help_text=(
+            "Quantity of this product variant that is reserved for specific purposes: "
+            "1. Pending Orders: Items reserved for orders that have been placed but not yet fulfilled. "
+            "2. Blocked Stock: Inventory set aside for quality control, specific customer allocation, or planned events. "
+            "3. Pre-booked Stock: Stock promised to a customer or distributor but not yet shipped."
+        )
+    )
 
     def __str__(self):
         return f"{self.product_variant.sku} in {self.warehouse.name}"

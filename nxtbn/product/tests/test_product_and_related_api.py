@@ -59,7 +59,7 @@ class ProductAndRelatedCreateAPITest(BaseTestCase):
                     "price": price,
                     "cost_per_unit": "44",
                     "sku": "BBC-3",
-                    "color_code": "#FFFFFF",
+                    # "color_code": "#FFFFFF",
                     "track_inventory": False,
                 }
             ],

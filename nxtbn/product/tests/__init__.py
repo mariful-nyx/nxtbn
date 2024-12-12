@@ -120,5 +120,5 @@ class ProductVariantFactory(DjangoModelFactory):
     sku = factory.Faker("ean13")
     price = normalize_amount_currencywise(random.uniform(10, 1000), settings.BASE_CURRENCY),
     currency = "USD"
-    stock = factory.Faker("random_int", min=0, max=100)
+    # stock = factory.Faker("random_int", min=0, max=100)
     track_inventory = fake.boolean()

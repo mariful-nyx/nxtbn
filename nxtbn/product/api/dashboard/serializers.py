@@ -99,11 +99,9 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             'cost_per_unit',
             'sku',
             'weight_value',
-            'stock',
-            'color_code',
+            # 'stock',
+            # 'color_code',
             'track_inventory',
-            'stock_status',
-            'low_stock_threshold',
             'is_default_variant',
         )
 
@@ -164,10 +162,10 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=3)
     cost_per_unit = serializers.DecimalField(max_digits=10, decimal_places=3)
     sku = serializers.CharField(max_length=255, required=False)
-    stock = serializers.IntegerField(required=False)
+    # stock = serializers.IntegerField(required=False)
     # weight_unit = serializers.CharField(max_length=10, required=False, allow_null=True)
     weight_value = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
-    color_code = serializers.CharField(max_length=7, required=False, allow_null=True)
+    # color_code = serializers.CharField(max_length=7, required=False, allow_null=True)
     is_default_variant = serializers.BooleanField(default=False)
     track_inventory = serializers.BooleanField(default=False)
     allow_backorder = serializers.BooleanField(default=False)
@@ -434,7 +432,7 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
     default_variant = ProductVariantSerializer(read_only=True)
     product_thumbnail = serializers.SerializerMethodField()
-    stock = serializers.IntegerField(read_only=True, source='get_stock')
+    # stock = serializers.IntegerField(read_only=True, source='get_stock')
     class Meta:
         model = Product 
         ref_name = 'product_dashboard_variant_get'
@@ -451,7 +449,7 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
             'status',
             'is_live',
             'product_thumbnail',
-            'stock',
+            # 'stock',
         )
 
     def get_product_thumbnail(self, obj):

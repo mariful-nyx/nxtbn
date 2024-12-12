@@ -80,3 +80,12 @@ def remove_ordered_items_from_cart(order, request=None):
                 cart_item.delete()  # Remove the cart item corresponding to the ordered product
             except CartItem.DoesNotExist:
                 continue  # Ignore if the item is not in the cart (already removed or wasn't added)
+
+
+def reserve_stock(order):
+    """
+    Reserve stock for the ordered items.
+    """
+    for item in order.line_items.all():
+        item.variant.reserve_stock(item.quantity)
+        item.variant.save()

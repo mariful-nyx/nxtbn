@@ -19,7 +19,7 @@ from nxtbn.users.admin import User
 class Supplier(NameDescriptionAbstract, AbstractSEOModel):
     pass
 
-class Color(AbstractBaseModel):
+class Color(AbstractBaseModel): # TO DO: Remove this model, unnecessary, Decided with critically analyze. Can handle with product.related_to field
     code = models.CharField(max_length=7, unique=True)
     name = models.CharField(max_length=20, unique=True)
 
@@ -181,12 +181,8 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
             return full_url
         return None
 
-    
-    def colors(self):
-        return self.variants.values_list('color_code', flat=True).distinct()
-    
-    def get_stock(self):
-        return self.variants.aggregate(stock=models.Sum('stock'))['stock']
+
+
     
     def product_price_range(self):
         """
@@ -229,12 +225,17 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
             "type": MoneyFieldTypes.UNIT,
             "require_base_currency": True,
         },
+        "compare_at_price": {
+            "currency_field": "currency",
+            "type": MoneyFieldTypes.UNIT,
+            "require_base_currency": True,
+        }
     }
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
     name = models.CharField(max_length=255, blank=True, null=True)
 
-    compare_at_price = models.DecimalField(max_digits=12, decimal_places=3, validators=[MinValueValidator(Decimal('0.01'))], null=True, blank=True)
+    compare_at_price = models.DecimalField(max_digits=12, decimal_places=3, validators=[MinValueValidator(Decimal('0.01'))], null=True, blank=True) # TO DO: Handle this field which is still not used in the project.
 
     currency = models.CharField(
         max_length=3,
@@ -249,33 +250,14 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
     track_inventory = models.BooleanField(default=False)
     allow_backorder = models.BooleanField(default=False, help_text="Allow orders even if out of stock.")
 
-    # if track_inventory is enabled: stock, stock_status, low_stock_threshold is required
-    stock = models.IntegerField( # Redundant field, can be calculated from warehouse stock and stock movements. for query optimization, we store it here.
-        default=0,
-        verbose_name="Stock",
-        help_text="Current stock level to show on the storefront or make available for purchase or make some restrictions. the stock value here can be different from the warehouse stock."
-    ) 
-    low_stock_threshold = models.IntegerField(default=0, verbose_name="Stock", help_text="Threshold to trigger low stock alert.")
-    stock_status = models.CharField(default=StockStatus.IN_STOCK, choices=StockStatus.choices, max_length=15)
-
     sku = models.CharField(max_length=50, unique=True)
-
-
-    color_code = models.CharField(max_length=7, null=True, blank=True)  # TO DO: Remove this field, unnecessary, Decided with critically analyze. Can handle with product.related_to field
-    # Weight and dimensions are also types of attributes, but we created these fields separately for shipping rate calculation purposes.
-    # weight_unit = models.CharField(
-    #     max_length=5,
-    #     choices=WeightUnits.choices,
-    #     blank=True,
-    #     null=True
-    # )
+   
     weight_value = models.DecimalField( # stores weight in grams
         max_digits=5,
         decimal_places=2,
         null=True,
         blank=True
     )
-    is_preorder = models.BooleanField(default=False)
     purchase_limit_per_order = models.PositiveIntegerField(null=True, blank=True, help_text="Maximum number of units that can be purchased in a single order.")
     
 
@@ -316,6 +298,14 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
         
         if self.product.images.exists():
             return self.product.product_thumbnail(request)
+        
+    def reserve_stock(self, quantity):
+        """
+        Reserve stock for an order.
+        """
+        if self.track_inventory:
+            self.stock -= quantity
+            self.save()
 
 
 

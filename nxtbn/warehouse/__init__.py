@@ -6,3 +6,10 @@ class StockMovementType(models.TextChoices):
     TRANSFER_OUT = 'TRANSFER_OUT', 'Transfer Out'
     SALE = 'SALE', 'Sale'
     RETURN = 'RETURN', 'Return'
+
+
+class StockMovementStatus(models.TextChoices):
+    PENDING = 'PENDING', 'Pending'
+    IN_TRANSIT = 'IN_TRANSIT', 'In Transit'
+    COMPLETED = 'COMPLETED', 'Completed'
+    CANCELLED = 'CANCELLED', 'Cancelled'

@@ -12,7 +12,10 @@ from nxtbn.product.models import Product
 from nxtbn.product.tests import ProductFactory, ProductTypeFactory, ProductVariantFactory
 from babel.numbers import get_currency_precision
 
+from django.test.utils import override_settings
 
+
+@override_settings(RESERVE_STOCK_ON_ORDER=False)
 class TestOrderCreateWithDiscountManually(BaseTestCase): # admin_order_create
     def setUp(self):
         super().setUp()

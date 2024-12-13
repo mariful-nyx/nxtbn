@@ -17,6 +17,10 @@ from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
 from babel.numbers import get_currency_precision, format_currency
 
 
+from django.test.utils import override_settings
+
+
+@override_settings(RESERVE_STOCK_ON_ORDER=False)
 class OrderCreateShippingRateTaxRateTest(BaseTestCase): #single currency: to different single currency test, change settings.BASE_CURRENCY to 'USD' or 'EUR' or 'JPY' or 'KWD' or 'OMR' etc.    
    
     def setUp(self):

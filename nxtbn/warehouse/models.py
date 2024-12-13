@@ -27,6 +27,9 @@ class Stock(AbstractBaseModel):
 
     def __str__(self):
         return f"{self.product_variant.sku} in {self.warehouse.name}"
+    
+    def available_for_new_order(self):
+        return self.quantity - self.reserved
 
 class StockReservation(AbstractBaseModel):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name="reservations")

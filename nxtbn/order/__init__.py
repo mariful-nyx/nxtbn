@@ -140,3 +140,19 @@ class ReturnReceiveStatus(models.TextChoices):
     NOT_RECEIVED = 'NOT_RECEIVED', _('Not Received')
     RECEIVED = 'RECEIVED', _('Received')
     RECEIVED_WITH_ISSUES = 'RECEIVED_WITH_ISSUES', _('Received with Issues')
+
+
+class OrderStockReservationStatus(models.TextChoices):
+    """
+    OrderReservationStatus is an enumeration of possible statuses for an order reservation.
+
+    Attributes:
+        RESERVED: The stock has been reserved for the order.
+        RELEASED: The stock reservation has been released.
+        INSUFFICIENT_STOCK: The stock is insufficient to fulfill the order.
+        NOT_RESERVED: The stock has not been reserved for the order.
+    """
+    RESERVED = 'RESERVED', _('Reserved')
+    RELEASED = 'RELEASED', _('Released')
+    INSUFFICIENT_STOCK = 'INSUFFICIENT_STOCK', _('Insufficient Stock')
+    NOT_RESERVED = 'NOT_RESERVED', _('Not Reserved')

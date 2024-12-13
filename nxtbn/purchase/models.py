@@ -1,0 +1,33 @@
+from django.db import models
+
+from nxtbn.product.models import Product, Supplier
+from nxtbn.purchase import PurchaseStatus
+from nxtbn.users.models import User
+
+
+
+class PurchaseOrder(models.Model):
+    """Represents a purchase order from a supplier"""    
+    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
+    status = models.CharField(max_length=20, choices=PurchaseStatus.choices, default=PurchaseStatus.DRAFT)
+    expected_delivery_date = models.DateField(null=True, blank=True)
+    
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
+    total_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    def __str__(self):
+        return f"PO-{self.id} ({self.status})"
+
+class PurchaseOrderItem(models.Model):
+    """Line items for a purchase order"""
+    purchase_order = models.ForeignKey(PurchaseOrder, related_name='items', on_delete=models.CASCADE)
+    variant = models.ForeignKey(Product, on_delete=models.PROTECT)
+    
+    ordered_quantity = models.PositiveIntegerField()
+    received_quantity = models.PositiveIntegerField(default=0)
+    
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.ordered_quantity}"

@@ -411,3 +411,4 @@ ALLOWED_CURRENCIES = get_env_var("ALLOWED_CURRENCIES", default=[], var_type=list
 IS_MULTI_CURRENCY = get_env_var("IS_MULTI_CURRENCY", default=False, var_type=bool)
 STORE_URL = get_env_var("STORE_URL", default="http://localhost:8000")
 RESERVE_STOCK_ON_ORDER = True
+VALIDATE_STOCK_ON_ORDER = True

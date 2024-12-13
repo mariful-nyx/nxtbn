@@ -26,7 +26,7 @@ from nxtbn.core.currency.backend import currency_Backend
 from nxtbn.core.signal_initiators import order_created
 from nxtbn.users import UserRole
 
-from nxtbn.order.utils import parse_user_agent
+from nxtbn.order.utils import parse_user_agent, validate_variant_with_stocks
 from nxtbn.warehouse.tasks import handle_stock_reserve
 
 def get_shipping_rate_instance(shipping_method_id, address, total_weight):
@@ -271,6 +271,10 @@ class OrderCreator:
         Creates and saves an Order instance based on the pre-calculated data.
         Also creates corresponding OrderLineItems.
         """
+
+        if settings.VALIDATE_STOCK_ON_ORDER:
+            validate_variant_with_stocks(self.variants)
+
         with transaction.atomic():
             shipping_address = self.validated_data.get('shipping_address', {})
             billing_address = self.validated_data.get('billing_address', {})

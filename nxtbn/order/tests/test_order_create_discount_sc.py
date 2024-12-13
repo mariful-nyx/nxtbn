@@ -17,8 +17,10 @@ from nxtbn.shipping.models import ShippingRate
 from nxtbn.shipping.tests import ShippingMethodFactory, ShippingRateFactory
 from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
 from babel.numbers import get_currency_precision, format_currency
+from django.test.utils import override_settings
 
 
+@override_settings(RESERVE_STOCK_ON_ORDER=False)
 class TestOrderCreateWithDiscount(BaseTestCase):
     def setUp(self):
         super().setUp()

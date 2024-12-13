@@ -377,10 +377,10 @@ class OrderCreator:
         return address
 
 class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator, OrderCreator):
-    def __init__(self, validated_data, order_source, create_order=False, collect_user_agent=False, reserve_stock=True, request=None):
+    def __init__(self, validated_data, order_source, create_order=False, collect_user_agent=False, request=None):
         self.validated_data = validated_data
         self.create_order = create_order
-        self.reserve_stock = reserve_stock # Reserve stock for the order
+        self.reserve_stock = settings.RESERVE_STOCK_ON_ORDER
         self.order_source = order_source
         self.collect_user_agent = collect_user_agent
         self.request = request
@@ -482,7 +482,6 @@ class OrderProccessorAPIView(generics.GenericAPIView):
     broadcast_on_order_create = False
     order_source = 'admin' # options: 'admin', 'storefront', 'mobile
     collect_user_agent = False
-    reserve_stock = True
 
     serializer_class = OrderEstimateSerializer
 
@@ -497,7 +496,6 @@ class OrderProccessorAPIView(generics.GenericAPIView):
                 order_source=self.order_source,
                 create_order=self.create_order,
                 collect_user_agent=self.collect_user_agent,
-                reserve_stock=self.reserve_stock,
                 request=request
             )
             response = order_calculation.get_response()

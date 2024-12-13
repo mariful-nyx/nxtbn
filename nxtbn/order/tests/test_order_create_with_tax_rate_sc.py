@@ -17,6 +17,10 @@ from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
 # Ensures accuracy in calculations for Taxable, and non-trackable stock products.
 # ======================================================================================================================
 
+from django.test.utils import override_settings
+
+
+@override_settings(RESERVE_STOCK_ON_ORDER=False)
 class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single currency mode either USD, JPY, KWD
     
     """
@@ -190,6 +194,8 @@ class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single curren
 # ======================================================================================================================
 
 
+
+@override_settings(RESERVE_STOCK_ON_ORDER=False)
 class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
     """
         Test Case for Order Create API with multiple products/variants in a single currency mode.

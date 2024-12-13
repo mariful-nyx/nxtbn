@@ -18,7 +18,16 @@ class StockSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Stock
-        fields = ['id', 'warehouse', 'product_variant', 'quantity', 'warehouse_name', 'product_variant_name']
+        fields = [
+            'id',
+            'warehouse',
+            'product_variant',
+            'quantity',
+            'warehouse_name',
+            'product_variant_name',
+            'reserved',
+            'available_for_new_order',
+        ]
 
     def get_warehouse_name(self, obj):
         return obj.warehouse.name
@@ -34,7 +43,7 @@ class StockDetailViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Stock
-        fields = ['id', 'warehouse', 'product_variant', 'quantity']
+        fields = ['id', 'warehouse', 'product_variant', 'quantity', 'reserved', 'available_for_new_order',]
 
 
 

@@ -3,12 +3,14 @@ from django.db import models
 from nxtbn.product.models import Product, Supplier
 from nxtbn.purchase import PurchaseStatus
 from nxtbn.users.models import User
+from nxtbn.warehouse.models import Warehouse
 
 
 
 class PurchaseOrder(models.Model):
     """Represents a purchase order from a supplier"""    
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
+    destination = models.ForeignKey(Warehouse, on_delete=models.PROTECT)
     status = models.CharField(max_length=20, choices=PurchaseStatus.choices, default=PurchaseStatus.DRAFT)
     expected_delivery_date = models.DateField(null=True, blank=True)
     

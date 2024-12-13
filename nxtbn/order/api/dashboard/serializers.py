@@ -13,6 +13,7 @@ from nxtbn.payment.models import Payment
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
 from nxtbn.product.models import ProductVariant
 from nxtbn.users.models import User
+from nxtbn.warehouse.utils import deduct_reservation_on_dispatch, release_stock
 
 class LineVariantSerializer(serializers.ModelSerializer):
     variant_thumbnail = serializers.SerializerMethodField()
@@ -220,6 +221,15 @@ class OrderStatusUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(_("Order must be shipped before mark it as delivered."))
         
         return attrs
+    
+    def update(self, instance, validated_data):
+        if validated_data.get('status') == OrderStatus.CANCELLED:
+            release_stock(instance)
+
+        if validated_data.get('status') == OrderStatus.SHIPPED:
+            deduct_reservation_on_dispatch(instance)
+        
+        return super().update(instance, validated_data)
     
 
 

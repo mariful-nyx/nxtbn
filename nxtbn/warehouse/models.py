@@ -2,7 +2,8 @@ from django.db import models
 
 from nxtbn.core.models import AbstractBaseModel
 from nxtbn.product.models import ProductVariant
-from nxtbn.warehouse import StockMovementType
+from nxtbn.users.models import User
+from nxtbn.warehouse import StockMovementStatus
 
 
 class Warehouse(AbstractBaseModel):
@@ -31,6 +32,8 @@ class Stock(AbstractBaseModel):
     def available_for_new_order(self):
         return self.quantity - self.reserved
 
+
+
 class StockReservation(AbstractBaseModel):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name="reservations")
     quantity = models.PositiveIntegerField()
@@ -54,24 +57,25 @@ class StockReservation(AbstractBaseModel):
         self.stock.save()
         super().create(*args, **kwargs)
 
-class StockMovement(AbstractBaseModel): # Stock movement is a record of the movement of stock from one warehouse to another.
-    product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='stock_movements')
-    from_warehouse = models.ForeignKey(Warehouse, related_name='outgoing_stock_movements', on_delete=models.CASCADE, null=True, blank=True)
-    to_warehouse = models.ForeignKey(Warehouse, related_name='incoming_stock_movements', on_delete=models.CASCADE, null=True, blank=True)
-    quantity = models.PositiveIntegerField()
-    movement_type = models.CharField(max_length=20, choices=StockMovementType.choices)
-    note = models.TextField(blank=True, null=True, help_text="Additional details about the movement.")
 
+
+class StockTransfer(models.Model):
+    """Tracks transfers of inventory between warehouses"""    
+    from_warehouse = models.ForeignKey(Warehouse, related_name='transfers_out', on_delete=models.PROTECT)
+    to_warehouse = models.ForeignKey(Warehouse, related_name='transfers_in', on_delete=models.PROTECT)
+    
+    status = models.CharField(max_length=20, choices=StockMovementStatus.choices, default=StockMovementStatus.PENDING)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
     def __str__(self):
-        return f"{self.movement_type} for {self.product_variant.sku}"
+        return f"Transfer {self.id} - {self.from_warehouse} to {self.to_warehouse}"
 
-    def save(self, *args, **kwargs):
-        if self.movement_type == StockMovementType.PURCHASE:
-            self.from_warehouse = None
-            self.to_warehouse = self.to_warehouse 
-        elif self.movement_type == StockMovementType.SALE:
-            self.to_warehouse = None 
-        elif self.movement_type == StockMovementType.RETURN:
-            self.to_warehouse = self.to_warehouse
-            self.from_warehouse = self.from_warehouse 
-        super().save(*args, **kwargs)
+class StockTransferItem(models.Model):
+    """Line items for a stock transfer"""
+    stock_transfer = models.ForeignKey(StockTransfer, related_name='items', on_delete=models.CASCADE)
+    variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT)
+    
+    quantity = models.PositiveIntegerField()
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.quantity}"

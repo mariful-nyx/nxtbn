@@ -3,7 +3,7 @@ from django.db import models
 from nxtbn.core.models import AbstractBaseModel
 from nxtbn.product.models import ProductVariant
 from nxtbn.users.models import User
-from nxtbn.warehouse import StockMovementStatus, StockMovementType
+from nxtbn.warehouse import StockMovementStatus
 
 
 class Warehouse(AbstractBaseModel):

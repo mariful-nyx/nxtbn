@@ -27,8 +27,32 @@ class Stock(AbstractBaseModel):
 
     def __str__(self):
         return f"{self.product_variant.sku} in {self.warehouse.name}"
+    
+    def available_for_new_order(self):
+        return self.quantity - self.reserved
 
+class StockReservation(AbstractBaseModel):
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name="reservations")
+    quantity = models.PositiveIntegerField()
+    purpose = models.CharField(max_length=50, help_text="Purpose of the reservation. e.g. 'Pending Order', 'Blocked Stock', 'Pre-booked Stock'")
 
+    def __str__(self):
+        return f"{self.quantity} reserved for {self.purpose}"
+
+    def save(self, *args, **kwargs):
+        if self.quantity > self.stock.quantity:
+            raise ValueError("Reservation quantity cannot exceed stock quantity.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self.stock.reserved -= self.quantity
+        self.stock.save()
+        super().delete(*args, **kwargs)
+
+    def create(self, *args, **kwargs):
+        self.stock.reserved += self.quantity
+        self.stock.save()
+        super().create(*args, **kwargs)
 
 class StockMovement(AbstractBaseModel): # Stock movement is a record of the movement of stock from one warehouse to another.
     product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='stock_movements')

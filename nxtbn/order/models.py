@@ -13,7 +13,7 @@ from nxtbn.core.models import AbstractAddressModels, AbstractBaseModel, Abstract
 from nxtbn.core.utils import build_currency_amount, to_currency_unit
 from nxtbn.discount.models import PromoCode
 from nxtbn.gift_card.models import GiftCard
-from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, PaymentTerms, ReturnReason, ReturnReceiveStatus, ReturnStatus
+from nxtbn.order import AddressType, OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, OrderStockReservationStatus, PaymentTerms, ReturnReason, ReturnReceiveStatus, ReturnStatus
 from nxtbn.payment import PaymentMethod
 from nxtbn.product.models import ProductVariant
 from nxtbn.users import UserRole
@@ -238,18 +238,16 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
         default=PaymentMethod.CASH_ON_DELIVERY,
         help_text="Preferred payment method for this order. The actual payment method may differ when the order is initiated or paid."
     )
+    reservation_status = models.CharField(
+        default=OrderStockReservationStatus.NOT_RESERVED,
+        max_length=20,
+        choices=OrderStockReservationStatus.choices
+    )
     note = models.TextField(blank=True, null=True, max_length=255) # filled by customer
     comment = models.TextField(blank=True, null=True, max_length=500) # filled by admin
 
     class Meta:
         ordering = ('-created_at',) # Most recent orders first
-        permissions = [
-            ("can_cancel_order", "Can cancel an order"),
-            ("can_refund_order", "Can refund an order"),
-            ("can_ship_order", "Can ship an order"),
-            ("can_deliver_order", "Can deliver an order"),
-            ("can_return_order", "Can return an order"),
-        ]
 
     def save(self, *args, **kwargs):
         self.validate_amount()

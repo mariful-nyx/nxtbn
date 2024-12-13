@@ -27,6 +27,7 @@ from nxtbn.core.signal_initiators import order_created
 from nxtbn.users import UserRole
 
 from nxtbn.order.utils import parse_user_agent
+from nxtbn.warehouse.tasks import handle_stock_reserve
 
 def get_shipping_rate_instance(shipping_method_id, address, total_weight):
         if not shipping_method_id:
@@ -340,12 +341,16 @@ class OrderCreator:
                     tax_rate=self.get_tax_rate(variant['tax_class'], shipping_address).rate if self.get_tax_rate(variant['tax_class'], shipping_address) else Decimal('0.00'),
                 )
 
+
             if self.collect_user_agent:
                 try:
                     user_agent_data = parse_user_agent(self.request)
                     OrderDeviceMeta.objects.create(order=order, **user_agent_data)
                 except Exception as e:
                     pass
+            
+            if self.reserve_stock:
+                handle_stock_reserve.delay(order.id)
                 
             return order
 
@@ -372,9 +377,10 @@ class OrderCreator:
         return address
 
 class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator, OrderCreator):
-    def __init__(self, validated_data, order_source, create_order=False, collect_user_agent=False, request=None):
+    def __init__(self, validated_data, order_source, create_order=False, collect_user_agent=False, reserve_stock=True, request=None):
         self.validated_data = validated_data
         self.create_order = create_order
+        self.reserve_stock = reserve_stock # Reserve stock for the order
         self.order_source = order_source
         self.collect_user_agent = collect_user_agent
         self.request = request
@@ -476,6 +482,7 @@ class OrderProccessorAPIView(generics.GenericAPIView):
     broadcast_on_order_create = False
     order_source = 'admin' # options: 'admin', 'storefront', 'mobile
     collect_user_agent = False
+    reserve_stock = True
 
     serializer_class = OrderEstimateSerializer
 
@@ -490,6 +497,7 @@ class OrderProccessorAPIView(generics.GenericAPIView):
                 order_source=self.order_source,
                 create_order=self.create_order,
                 collect_user_agent=self.collect_user_agent,
+                reserve_stock=self.reserve_stock,
                 request=request
             )
             response = order_calculation.get_response()

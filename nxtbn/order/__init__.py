@@ -154,5 +154,5 @@ class OrderStockReservationStatus(models.TextChoices):
     """
     RESERVED = 'RESERVED', _('Reserved')
     RELEASED = 'RELEASED', _('Released')
-    INSUFFICIENT_STOCK = 'INSUFFICIENT_STOCK', _('Insufficient Stock')
+    FAILED = 'FAILED', _('Failed')
     NOT_RESERVED = 'NOT_RESERVED', _('Not Reserved')

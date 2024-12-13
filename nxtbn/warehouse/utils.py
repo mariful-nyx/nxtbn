@@ -35,5 +35,5 @@ def reserve_stock(order):
 
                 if required_quantity > 0:
                     # Raise error if stock is insufficient
-                    order.reservation_status = OrderStockReservationStatus.INSUFFICIENT_STOCK
+                    order.reservation_status = OrderStockReservationStatus.FAILED
                     raise ValidationError(f"Insufficient stock for {item.variant.name}")

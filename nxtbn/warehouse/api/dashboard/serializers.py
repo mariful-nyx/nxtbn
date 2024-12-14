@@ -7,7 +7,7 @@ from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
 class WarehouseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Warehouse
-        fields = ['id', 'name', 'location']
+        fields = '__all__'
 
 class StockSerializer(serializers.ModelSerializer):
     warehouse = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all()) 

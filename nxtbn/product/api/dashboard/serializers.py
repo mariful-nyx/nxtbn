@@ -478,3 +478,30 @@ class ProductVariantShortSerializer(serializers.ModelSerializer):
             'name',
             'sku'
         )
+
+
+class InventoryVariants(serializers.ModelSerializer):
+    stock = serializers.SerializerMethodField()
+    class Meta:
+        model = ProductVariant
+        ref_name = 'inventory_dashboard_variants_get'
+        fields =  (
+            'id',
+            'name',
+            'stock',
+        )
+    def get_stock(self, obj):
+        return obj.get_stock_details()
+
+class InventorySerializer(serializers.ModelSerializer):
+    variants = InventoryVariants(many=True, read_only=True)
+
+    class Meta:
+        model = Product 
+        ref_name = 'inventory_dashboard_get'
+        fields =  (
+            'id',
+            'name',
+            'status',
+            'variants',
+        )

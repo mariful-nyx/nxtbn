@@ -211,7 +211,7 @@ class ProductMutationSerializer(serializers.ModelSerializer):
             'related_to',
             'default_variant',
             'collections',
-            'colors',
+            # 'colors',
             'tax_class',
             'meta_title',
             'meta_description',

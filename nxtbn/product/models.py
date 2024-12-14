@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
+from django.db.models import Sum
 from babel.numbers import get_currency_precision, format_currency
 
 
@@ -163,11 +164,28 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
 
     class Meta:
         ordering = ('name',)
-        permissions = [
-            ('manage_product', 'Can manage product'),
-            ('manage_product_variant', 'Can manage product variant'),
-            ('manage_stock', 'Can manage stock'),
-        ]
+
+    def get_stock_details(self):
+        from nxtbn.warehouse.models import Stock
+        
+        stock_data = Stock.objects.filter(
+            product_variant__product=self
+        ).aggregate(
+            total_stock=Sum('quantity'),
+            total_reserved=Sum('reserved')
+        )
+        
+        # Extract and handle possible None values
+        total_stock = stock_data.get('total_stock') or 0
+        total_reserved = stock_data.get('total_reserved') or 0
+        available_for_sell = total_stock - total_reserved
+
+        # Return as an object
+        return {
+            'total_stock': total_stock,
+            'total_reserved': total_reserved,
+            'available_for_sell': available_for_sell
+        }
 
     def product_thumbnail(self, request):
         """
@@ -205,6 +223,7 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
         if locale:
             return f"{format_currency(min_price, self.default_variant.currency, locale=locale)} - {format_currency(max_price, self.default_variant.currency, locale=locale)}"
         return f"{min_price} - {max_price}"
+        
 
     def __str__(self):
         return self.name
@@ -260,6 +279,22 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
     )
     purchase_limit_per_order = models.PositiveIntegerField(null=True, blank=True, help_text="Maximum number of units that can be purchased in a single order.")
     
+    def get_stock_details(self):
+        stock_data = self.warehouse_stocks.aggregate(
+            total_stock=Sum('quantity'),
+            total_reserved=Sum('reserved')
+        )
+
+        # Extract and handle possible None values
+        total_stock = stock_data.get('total_stock') or 0
+        total_reserved = stock_data.get('total_reserved') or 0
+        available_for_sell = total_stock - total_reserved
+
+        return {
+            'total_stock': total_stock,
+            'total_reserved': total_reserved,
+            'available_for_sell': available_for_sell
+        }
 
     def get_descriptive_name(self):
         parts = [self.product.name]

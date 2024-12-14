@@ -103,6 +103,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             # 'color_code',
             'track_inventory',
             'is_default_variant',
+            'allow_backorder',
         )
 
     def get_is_default_variant(self, obj):

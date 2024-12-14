@@ -1,13 +1,18 @@
 from rest_framework import viewsets
-from rest_framework import generics
+from rest_framework import generics, status
+from nxtbn.product.models import ProductVariant
 from nxtbn.warehouse.models import Warehouse, Stock
 from nxtbn.warehouse.api.dashboard.serializers import WarehouseSerializer, StockSerializer, StockDetailViewSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 
 from rest_framework import filters as drf_filters
+from rest_framework.views import APIView
 import django_filters
+from rest_framework.response import Response
 from django_filters import rest_framework as filters
+from django.db.models.functions import Coalesce
+from django.db.models import F
 
 
 
@@ -51,3 +56,40 @@ class StockViewSet(StockFilterMixin, viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return StockDetailViewSerializer
         return StockSerializer
+
+
+
+
+class WarehouseStockByVariantAPIView(APIView):
+    def get(self, request, variant_id):
+        try:
+            # Fetch the product variant
+            product_variant = ProductVariant.objects.get(id=variant_id)
+        except ProductVariant.DoesNotExist:
+            return Response({"error": "Variant not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Annotate warehouses with stock data for the given variant
+        warehouses = Warehouse.objects.annotate(
+            total_quantity=Coalesce(
+                Stock.objects.filter(warehouse=F('id'), product_variant=product_variant)
+                .values('quantity')[:1], 0
+            ),
+            reserved_quantity=Coalesce(
+                Stock.objects.filter(warehouse=F('id'), product_variant=product_variant)
+                .values('reserved')[:1], 0
+            )
+        )
+
+        # Prepare the response data
+        data = []
+        for warehouse in warehouses:
+            # Calculate available quantity
+            available_quantity = warehouse.total_quantity - warehouse.reserved_quantity
+            data.append({
+                "warehouse_name": warehouse.name,
+                "total_quantity": warehouse.total_quantity,
+                "reserved_quantity": warehouse.reserved_quantity,
+                "available_quantity": available_quantity
+            })
+
+        return Response(data)

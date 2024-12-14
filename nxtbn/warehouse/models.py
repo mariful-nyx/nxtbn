@@ -1,4 +1,5 @@
 from django.db import models
+from django.forms import ValidationError
 
 from nxtbn.core.models import AbstractBaseModel
 from nxtbn.product.models import ProductVariant
@@ -9,8 +10,18 @@ from nxtbn.warehouse import StockMovementStatus
 class Warehouse(AbstractBaseModel):
     name = models.CharField(max_length=255, unique=True, help_text="Warehouse name. e.g. 'Main Warehouse' or 'Warehouse A' or 'store-1'")
     location = models.CharField(max_length=255)
+    is_default = models.BooleanField(
+        default=False,
+        help_text="Only one warehouse can be default"
+    )
+
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            Warehouse.objects.filter(is_default=True).update(is_default=False)
+        super().save(*args, **kwargs)
 
 class Stock(AbstractBaseModel):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="stocks")
@@ -26,8 +37,18 @@ class Stock(AbstractBaseModel):
         )
     )
 
+    def clean(self):
+        # Check if a Stock instance with the same warehouse and product_variant already exists
+        if Stock.objects.filter(warehouse=self.warehouse, product_variant=self.product_variant).exists():
+            raise ValidationError(
+                f"A stock record with this warehouse and product variant already exists: "
+                f"{self.warehouse.name} - {self.product_variant.sku}"
+            )
+
     def __str__(self):
         return f"{self.product_variant.sku} in {self.warehouse.name}"
+    
+   
     
     def available_for_new_order(self):
         return self.quantity - self.reserved

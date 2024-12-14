@@ -9,8 +9,18 @@ from nxtbn.warehouse import StockMovementStatus
 class Warehouse(AbstractBaseModel):
     name = models.CharField(max_length=255, unique=True, help_text="Warehouse name. e.g. 'Main Warehouse' or 'Warehouse A' or 'store-1'")
     location = models.CharField(max_length=255)
+    is_default = models.BooleanField(
+        default=False,
+        help_text="Only one warehouse can be default"
+    )
+
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            Warehouse.objects.filter(is_default=True).update(is_default=False)
+        super().save(*args, **kwargs)
 
 class Stock(AbstractBaseModel):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="stocks")

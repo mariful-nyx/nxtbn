@@ -5,6 +5,7 @@ from nxtbn.core.models import InvoiceSettings, SiteSettings
 from django.contrib.sites.models import Site
 
 from nxtbn.plugins.utils import PLUGIN_BASE_DIR
+from nxtbn.warehouse.models import Warehouse
 
 
 @receiver(post_migrate)
@@ -38,6 +39,14 @@ def create_default_site_settings(sender, **kwargs):
             postal_code="123456",
             contact_email="invoice@example.com",
         )
+
+    if Warehouse.objects.count() == 0:
+        Warehouse.objects.create(
+            name="Default Warehouse",
+            location="Default Location",
+            is_default=True,
+        )
+        print("Warehouse instance created.")
 
     # inpbuilt plugins
     # check if stripe, sslcommerz, plugins are exists in plugin directory

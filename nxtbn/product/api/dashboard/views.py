@@ -18,6 +18,7 @@ from nxtbn.product.models import Color, Product, Category, Collection, ProductTa
 from nxtbn.product.api.dashboard.serializers import (
     BasicCategorySerializer,
     ColorSerializer,
+    InventorySerializer,
     ProductCreateSerializer,
     ProductMinimalSerializer,
     ProductMutationSerializer,
@@ -325,3 +326,9 @@ class ProductVariants(ProductVariantFilterMixin, generics.ListAPIView):
     queryset = ProductVariant.objects.all()
     pagination_class = NxtbnPagination
     
+
+
+class InventoryListView(ProductFilterMixin, generics.ListCreateAPIView):
+    permission_classes = (NxtbnAdminPermission,)
+    serializer_class = InventorySerializer
+    pagination_class = NxtbnPagination

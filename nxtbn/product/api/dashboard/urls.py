@@ -21,7 +21,8 @@ from nxtbn.product.api.dashboard.views import (
     TaxClassView,
     BulkProductStatusUpdateAPIView,
     BulkProductDeleteAPIView,
-    ProductVariants
+    ProductVariants,
+    InventoryListView
 
 )
 
@@ -50,6 +51,7 @@ urlpatterns = [
     path('tax-class/', TaxClassView.as_view(), name='tax-class'),
     path('products/update/bulk/', BulkProductStatusUpdateAPIView.as_view(), name='bulk-product-status-update'),
     path('products/delete/bulk/', BulkProductDeleteAPIView.as_view(), name='bulk-product-status-delete'),
-    path('products-variants/', ProductVariants.as_view(), name='products-variants')
+    path('products-variants/', ProductVariants.as_view(), name='products-variants'),
+    path('inventory/', InventoryListView.as_view(), name='product-inventory'),
 ]
 

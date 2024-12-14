@@ -103,6 +103,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             # 'color_code',
             'track_inventory',
             'is_default_variant',
+            'allow_backorder',
         )
 
     def get_is_default_variant(self, obj):
@@ -211,7 +212,7 @@ class ProductMutationSerializer(serializers.ModelSerializer):
             'related_to',
             'default_variant',
             'collections',
-            'colors',
+            # 'colors',
             'tax_class',
             'meta_title',
             'meta_description',
@@ -476,4 +477,31 @@ class ProductVariantShortSerializer(serializers.ModelSerializer):
             'alias',
             'name',
             'sku'
+        )
+
+
+class InventoryVariants(serializers.ModelSerializer):
+    stock = serializers.SerializerMethodField()
+    class Meta:
+        model = ProductVariant
+        ref_name = 'inventory_dashboard_variants_get'
+        fields =  (
+            'id',
+            'name',
+            'stock',
+        )
+    def get_stock(self, obj):
+        return obj.get_stock_details()
+
+class InventorySerializer(serializers.ModelSerializer):
+    variants = InventoryVariants(many=True, read_only=True)
+
+    class Meta:
+        model = Product 
+        ref_name = 'inventory_dashboard_get'
+        fields =  (
+            'id',
+            'name',
+            'status',
+            'variants',
         )

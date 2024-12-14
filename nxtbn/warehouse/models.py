@@ -1,4 +1,5 @@
 from django.db import models
+from django.forms import ValidationError
 
 from nxtbn.core.models import AbstractBaseModel
 from nxtbn.product.models import ProductVariant
@@ -36,8 +37,18 @@ class Stock(AbstractBaseModel):
         )
     )
 
+    def clean(self):
+        # Check if a Stock instance with the same warehouse and product_variant already exists
+        if Stock.objects.filter(warehouse=self.warehouse, product_variant=self.product_variant).exists():
+            raise ValidationError(
+                f"A stock record with this warehouse and product variant already exists: "
+                f"{self.warehouse.name} - {self.product_variant.sku}"
+            )
+
     def __str__(self):
         return f"{self.product_variant.sku} in {self.warehouse.name}"
+    
+   
     
     def available_for_new_order(self):
         return self.quantity - self.reserved

@@ -306,7 +306,7 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
             parts.append(self.product.brand)
         
         if self.weight_value:
-            parts.append(f"Weight: {self.weight_value} {self.weight_unit}")
+            parts.append(f"Weight: {self.weight_value}")
         
         dimensions = []
         if 'height' in self.metadata:

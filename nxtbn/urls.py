@@ -94,6 +94,9 @@ urlpatterns = [
     path('tax/dashboard/api/', include('nxtbn.tax.api.dashboard.urls')),
 
     path('warehouse/dashboard/api/', include('nxtbn.warehouse.api.dashboard.urls')),
+
+    path('purchase/dashboard/api/', include('nxtbn.purchase.api.dashboard.urls')),
+
 ]
 
 urlpatterns += [

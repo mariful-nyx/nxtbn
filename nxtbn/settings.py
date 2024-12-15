@@ -412,3 +412,8 @@ IS_MULTI_CURRENCY = get_env_var("IS_MULTI_CURRENCY", default=False, var_type=boo
 STORE_URL = get_env_var("STORE_URL", default="http://localhost:8000")
 RESERVE_STOCK_ON_ORDER = True
 VALIDATE_STOCK_ON_ORDER = True
+
+# TODO: Not implemented yet. It allows only two options: 'direct_from_warehouse' and 'consolidated'
+# If 'direct_from_warehouse', then the order will be fulfilled from the warehouse where the product is available.
+# If 'consolidated', then the order will be fulfilled from the central warehouse by gathering products from multiple warehouses.
+MULTI_WAREHOUSE_FULFILLMENT_STRATEGY = "direct_from_warehouse"

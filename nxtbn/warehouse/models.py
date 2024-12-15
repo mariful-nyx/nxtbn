@@ -59,6 +59,13 @@ class StockReservation(AbstractBaseModel):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name="reservations")
     quantity = models.PositiveIntegerField()
     purpose = models.CharField(max_length=50, help_text="Purpose of the reservation. e.g. 'Pending Order', 'Blocked Stock', 'Pre-booked Stock'")
+    transferred_to = models.ForeignKey(
+        Warehouse,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='transfers',
+        help_text="Destination warehouse for stock transfer during order fulfillment."
+    )
 
     def __str__(self):
         return f"{self.quantity} reserved for {self.purpose}"

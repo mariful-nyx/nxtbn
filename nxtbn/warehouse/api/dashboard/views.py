@@ -13,7 +13,7 @@ import django_filters
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from django.db.models.functions import Coalesce
-from django.db.models import F, Sum
+from django.db.models import F, Sum, Q
 
 
 
@@ -60,7 +60,6 @@ class StockViewSet(StockFilterMixin, viewsets.ModelViewSet):
 
 
 
-
 class WarehouseStockByVariantAPIView(APIView):
     def get(self, request, variant_id):
         try:
@@ -69,25 +68,27 @@ class WarehouseStockByVariantAPIView(APIView):
         except ProductVariant.DoesNotExist:
             return Response({"error": "Variant not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Aggregate stock data for the given product variant in each warehouse
-        stocks = (
-            Stock.objects.filter(product_variant=product_variant)
-            .values("warehouse__id", "warehouse__name")
-            .annotate(
-                total_quantity=Coalesce(Sum("quantity"), 0),
-                reserved_quantity=Coalesce(Sum("reserved"), 0),
+        # Query all warehouses and annotate stock data for the given variant
+        warehouses = Warehouse.objects.annotate(
+            total_quantity=Coalesce(
+                Sum('stocks__quantity', filter=Q(stocks__product_variant=product_variant)), 
+                0
+            ),
+            reserved_quantity=Coalesce(
+                Sum('stocks__reserved', filter=Q(stocks__product_variant=product_variant)), 
+                0
             )
         )
 
         # Prepare the response data
         data = []
-        for stock in stocks:
-            available_quantity = stock["total_quantity"] - stock["reserved_quantity"]
+        for warehouse in warehouses:
+            available_quantity = warehouse.total_quantity - warehouse.reserved_quantity
             data.append({
-                "warehouse_id": stock["warehouse__id"],
-                "warehouse_name": stock["warehouse__name"],
-                "quantity": stock["total_quantity"],
-                "reserved_quantity": stock["reserved_quantity"],
+                "warehouse_id": warehouse.id,
+                "warehouse_name": warehouse.name,
+                "quantity": warehouse.total_quantity,
+                "reserved_quantity": warehouse.reserved_quantity,
                 "available_quantity": available_quantity,
             })
 

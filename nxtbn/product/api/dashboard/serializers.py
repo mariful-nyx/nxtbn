@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError
 from nxtbn.core import PublishableStatus
 from nxtbn.core.utils import normalize_amount_currencywise
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
-from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
+from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant, Supplier
 from nxtbn.tax.models import TaxClass
 from nxtbn.filemanager.models import Image
 
@@ -504,4 +504,17 @@ class InventorySerializer(serializers.ModelSerializer):
             'name',
             'status',
             'variants',
+        )
+
+
+class SupplierSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Supplier
+        fields = (
+            'id',
+            'name',
+            'description',
+            'meta_title',
+            'meta_description',
+            'slug'
         )

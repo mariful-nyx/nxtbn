@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from nxtbn.product.models import Category,Collection, Color,Product, ProductVariant
+from nxtbn.product.models import Category,Collection, Color,Product, ProductVariant, Supplier
 
 # Register your models here.
 
@@ -69,3 +69,6 @@ class ColorAdmin(admin.ModelAdmin):
     form = ColorAdminForm
     list_display = ('name', 'code')
     search_fields = ('name', 'code')
+
+
+admin.site.register(Supplier)

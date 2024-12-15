@@ -14,7 +14,7 @@ from django_filters import rest_framework as filters
 
 from nxtbn.core import PublishableStatus
 from nxtbn.core.paginator import NxtbnPagination
-from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant
+from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant, Supplier
 from nxtbn.product.api.dashboard.serializers import (
     BasicCategorySerializer,
     ColorSerializer,
@@ -32,7 +32,7 @@ from nxtbn.product.api.dashboard.serializers import (
     ProductWithVariantSerializer,
     RecursiveCategorySerializer,
     TaxClassSerializer,
-    ProductVariantSerializer
+    SupplierSerializer
 )
 from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
 from nxtbn.tax.models import TaxClass
@@ -331,4 +331,10 @@ class ProductVariants(ProductVariantFilterMixin, generics.ListAPIView):
 class InventoryListView(ProductFilterMixin, generics.ListCreateAPIView):
     permission_classes = (NxtbnAdminPermission,)
     serializer_class = InventorySerializer
+    pagination_class = NxtbnPagination
+
+
+class SupplierModelViewSet(viewsets.ModelViewSet):
+    serializer_class = SupplierSerializer
+    queryset = Supplier.objects.all()
     pagination_class = NxtbnPagination

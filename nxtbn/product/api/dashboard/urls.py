@@ -22,8 +22,8 @@ from nxtbn.product.api.dashboard.views import (
     BulkProductStatusUpdateAPIView,
     BulkProductDeleteAPIView,
     ProductVariants,
-    InventoryListView
-
+    InventoryListView,
+    SupplierModelViewSet
 )
 
 register_converter(IdOrNoneConverter, 'id_or_none')
@@ -34,6 +34,7 @@ router.register(r'colors', ColorViewSet)
 router.register(r'product-types', ProductTypeViewSet)
 router.register(r'product-tags', ProductTagViewSet)
 router.register(r'collections', CollectionViewSet)
+router.register(r'suppliers', SupplierModelViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -96,6 +96,7 @@ class WarehouseStockByVariantAPIView(APIView):
     
 
 
+
 class UpdateStockWarehouseWise(generics.UpdateAPIView):
     serializer_class = StockUpdateSerializer
 
@@ -103,25 +104,25 @@ class UpdateStockWarehouseWise(generics.UpdateAPIView):
         variant_id = kwargs.get('variant_id')
         payload = request.data 
 
-      
         product_variant = get_object_or_404(ProductVariant, id=variant_id)
 
         for item in payload:
             warehouse_id = item.get("warehouse")
-            quantity = item.get("quantity")
+            quantity = int(item.get("quantity"))
 
-           
+            if quantity is None or quantity <= 0:
+                # Skip if quantity is not provided or is <= 0
+                continue
+
             warehouse = get_object_or_404(Warehouse, id=warehouse_id)
 
-           
-            stock, created = Stock.objects.get_or_create(
-                warehouse=warehouse,
-                product_variant=product_variant,
-                defaults={"quantity": quantity}
-            )
-
-            if not created:
-                stock.quantity = quantity
+            try:
+                # Check if the stock already exists
+                stock = Stock.objects.get(warehouse=warehouse, product_variant=product_variant)
+                stock.quantity = quantity  # Update the stock quantity
                 stock.save()
+            except Stock.DoesNotExist:
+                # Create a new stock only if quantity > 0
+                Stock.objects.create(warehouse=warehouse, product_variant=product_variant, quantity=quantity)
 
         return Response({"detail": "Stock updated successfully."}, status=status.HTTP_200_OK)

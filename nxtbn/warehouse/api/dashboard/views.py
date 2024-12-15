@@ -1,8 +1,9 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import generics, status
 from nxtbn.product.models import ProductVariant
 from nxtbn.warehouse.models import Warehouse, Stock
-from nxtbn.warehouse.api.dashboard.serializers import WarehouseSerializer, StockSerializer, StockDetailViewSerializer
+from nxtbn.warehouse.api.dashboard.serializers import StockUpdateSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 
@@ -12,7 +13,7 @@ import django_filters
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from django.db.models.functions import Coalesce
-from django.db.models import F
+from django.db.models import F, Sum, Q
 
 
 
@@ -59,7 +60,6 @@ class StockViewSet(StockFilterMixin, viewsets.ModelViewSet):
 
 
 
-
 class WarehouseStockByVariantAPIView(APIView):
     def get(self, request, variant_id):
         try:
@@ -68,28 +68,61 @@ class WarehouseStockByVariantAPIView(APIView):
         except ProductVariant.DoesNotExist:
             return Response({"error": "Variant not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Annotate warehouses with stock data for the given variant
+        # Query all warehouses and annotate stock data for the given variant
         warehouses = Warehouse.objects.annotate(
             total_quantity=Coalesce(
-                Stock.objects.filter(warehouse=F('id'), product_variant=product_variant)
-                .values('quantity')[:1], 0
+                Sum('stocks__quantity', filter=Q(stocks__product_variant=product_variant)), 
+                0
             ),
             reserved_quantity=Coalesce(
-                Stock.objects.filter(warehouse=F('id'), product_variant=product_variant)
-                .values('reserved')[:1], 0
+                Sum('stocks__reserved', filter=Q(stocks__product_variant=product_variant)), 
+                0
             )
         )
 
         # Prepare the response data
         data = []
         for warehouse in warehouses:
-            # Calculate available quantity
             available_quantity = warehouse.total_quantity - warehouse.reserved_quantity
             data.append({
+                "warehouse_id": warehouse.id,
                 "warehouse_name": warehouse.name,
-                "total_quantity": warehouse.total_quantity,
+                "quantity": warehouse.total_quantity,
                 "reserved_quantity": warehouse.reserved_quantity,
-                "available_quantity": available_quantity
+                "available_quantity": available_quantity,
             })
 
-        return Response(data)
+        return Response(data, status=status.HTTP_200_OK)
+    
+
+
+
+class UpdateStockWarehouseWise(generics.UpdateAPIView):
+    serializer_class = StockUpdateSerializer
+
+    def update(self, request, *args, **kwargs):
+        variant_id = kwargs.get('variant_id')
+        payload = request.data 
+
+        product_variant = get_object_or_404(ProductVariant, id=variant_id)
+
+        for item in payload:
+            warehouse_id = item.get("warehouse")
+            quantity = int(item.get("quantity"))
+
+            if quantity is None or quantity <= 0:
+                # Skip if quantity is not provided or is <= 0
+                continue
+
+            warehouse = get_object_or_404(Warehouse, id=warehouse_id)
+
+            try:
+                # Check if the stock already exists
+                stock = Stock.objects.get(warehouse=warehouse, product_variant=product_variant)
+                stock.quantity = quantity  # Update the stock quantity
+                stock.save()
+            except Stock.DoesNotExist:
+                # Create a new stock only if quantity > 0
+                Stock.objects.create(warehouse=warehouse, product_variant=product_variant, quantity=quantity)
+
+        return Response({"detail": "Stock updated successfully."}, status=status.HTTP_200_OK)

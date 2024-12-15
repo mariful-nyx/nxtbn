@@ -13,7 +13,7 @@ import django_filters
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from django.db.models.functions import Coalesce
-from django.db.models import F
+from django.db.models import F, Sum
 
 
 
@@ -69,32 +69,29 @@ class WarehouseStockByVariantAPIView(APIView):
         except ProductVariant.DoesNotExist:
             return Response({"error": "Variant not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Annotate warehouses with stock data for the given variant
-        warehouses = Warehouse.objects.annotate(
-            total_quantity=Coalesce(
-                Stock.objects.filter(warehouse=F('id'), product_variant=product_variant)
-                .values('quantity')[:1], 0
-            ),
-            reserved_quantity=Coalesce(
-                Stock.objects.filter(warehouse=F('id'), product_variant=product_variant)
-                .values('reserved')[:1], 0
+        # Aggregate stock data for the given product variant in each warehouse
+        stocks = (
+            Stock.objects.filter(product_variant=product_variant)
+            .values("warehouse__id", "warehouse__name")
+            .annotate(
+                total_quantity=Coalesce(Sum("quantity"), 0),
+                reserved_quantity=Coalesce(Sum("reserved"), 0),
             )
         )
 
         # Prepare the response data
         data = []
-        for warehouse in warehouses:
-            # Calculate available quantity
-            available_quantity = warehouse.total_quantity - warehouse.reserved_quantity
+        for stock in stocks:
+            available_quantity = stock["total_quantity"] - stock["reserved_quantity"]
             data.append({
-                "warehouse_id": warehouse.id,
-                "warehouse_name": warehouse.name,
-                "quantity": warehouse.total_quantity,
-                "reserved_quantity": warehouse.reserved_quantity,
-                "available_quantity": available_quantity
+                "warehouse_id": stock["warehouse__id"],
+                "warehouse_name": stock["warehouse__name"],
+                "quantity": stock["total_quantity"],
+                "reserved_quantity": stock["reserved_quantity"],
+                "available_quantity": available_quantity,
             })
 
-        return Response(data)
+        return Response(data, status=status.HTTP_200_OK)
     
 
 

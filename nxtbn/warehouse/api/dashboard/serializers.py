@@ -45,3 +45,7 @@ class StockDetailViewSerializer(serializers.ModelSerializer):
         model = Stock
         fields = ['id', 'warehouse', 'product_variant', 'quantity', 'reserved', 'available_for_new_order',]
 
+
+class StockUpdateSerializer(serializers.Serializer):
+    warehouse = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all(), required=True)
+    quantity = serializers.IntegerField(required=True)

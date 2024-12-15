@@ -1,8 +1,9 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import generics, status
 from nxtbn.product.models import ProductVariant
 from nxtbn.warehouse.models import Warehouse, Stock
-from nxtbn.warehouse.api.dashboard.serializers import WarehouseSerializer, StockSerializer, StockDetailViewSerializer
+from nxtbn.warehouse.api.dashboard.serializers import StockUpdateSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 
@@ -86,10 +87,43 @@ class WarehouseStockByVariantAPIView(APIView):
             # Calculate available quantity
             available_quantity = warehouse.total_quantity - warehouse.reserved_quantity
             data.append({
+                "warehouse_id": warehouse.id,
                 "warehouse_name": warehouse.name,
-                "total_quantity": warehouse.total_quantity,
+                "quantity": warehouse.total_quantity,
                 "reserved_quantity": warehouse.reserved_quantity,
                 "available_quantity": available_quantity
             })
 
         return Response(data)
+    
+
+
+class UpdateStockWarehouseWise(generics.UpdateAPIView):
+    serializer_class = StockUpdateSerializer
+
+    def update(self, request, *args, **kwargs):
+        variant_id = kwargs.get('variant_id')
+        payload = request.data 
+
+      
+        product_variant = get_object_or_404(ProductVariant, id=variant_id)
+
+        for item in payload:
+            warehouse_id = item.get("warehouse")
+            quantity = item.get("quantity")
+
+           
+            warehouse = get_object_or_404(Warehouse, id=warehouse_id)
+
+           
+            stock, created = Stock.objects.get_or_create(
+                warehouse=warehouse,
+                product_variant=product_variant,
+                defaults={"quantity": quantity}
+            )
+
+            if not created:
+                stock.quantity = quantity
+                stock.save()
+
+        return Response({"detail": "Stock updated successfully."}, status=status.HTTP_200_OK)

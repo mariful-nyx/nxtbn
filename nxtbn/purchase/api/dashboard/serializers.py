@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from nxtbn.purchase.models import PurchaseOrder
+from nxtbn.purchase.models import PurchaseOrder, PurchaseOrderItem
 
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
@@ -27,3 +27,32 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
     def get_created_by_name(self, obj):
         return f"{obj.created_by.first_name} {obj.created_by.last_name}"
 
+
+
+class PurchaseOrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseOrderItem
+        fields = ['variant', 'ordered_quantity', 'unit_cost']
+
+class PurchaseOrderCreateSerializer(serializers.ModelSerializer):
+    items = PurchaseOrderItemSerializer(many=True, write_only=True)
+
+    class Meta:
+        model = PurchaseOrder
+        fields = ['supplier', 'destination', 'expected_delivery_date', 'items']
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+              
+        items_data = validated_data.pop('items', [])
+
+       
+        purchase_order = PurchaseOrder.objects.create(
+            created_by=request.user,
+            **validated_data
+        )
+
+        for item_data in items_data:
+            PurchaseOrderItem.objects.create(purchase_order=purchase_order, **item_data)
+
+        return purchase_order

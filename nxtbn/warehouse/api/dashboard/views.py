@@ -128,7 +128,42 @@ class UpdateStockWarehouseWise(generics.UpdateAPIView):
         return Response({"detail": "Stock updated successfully."}, status=status.HTTP_200_OK)
     
 
-class StockReservationListAPIView(generics.ListAPIView):
+class StockReservationFilter(filters.FilterSet):
+    warehouse = filters.CharFilter(field_name='stock__warehouse', lookup_expr='iexact')
+    class Meta:
+        model = StockReservation
+        fields = [
+            'id',
+            'stock',
+            'purpose',
+            'transferred_to',
+            'warehouse',
+        ]
+
+
+
+class StockReservationFilterMixin:
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+        drf_filters.OrderingFilter
+    ] 
+    search_fields = [
+        'id',
+        'stock__product_variant__name',
+
+    ]
+    ordering_fields = [
+        'quantity',
+    ]
+    filterset_class = StockReservationFilter
+
+    def get_queryset(self):
+        return StockReservation.objects.all()
+    
+class StockReservationListAPIView(StockReservationFilterMixin, generics.ListCreateAPIView):
     serializer_class = StockReservationSerializer
     queryset = StockReservation.objects.all()
+    pagination_class = NxtbnPagination
+
     

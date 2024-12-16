@@ -269,7 +269,7 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
     track_inventory = models.BooleanField(default=False)
     allow_backorder = models.BooleanField(default=False, help_text="Allow orders even if out of stock.")
 
-    sku = models.CharField(max_length=50, unique=True)
+    sku = models.CharField(max_length=50, unique=True, null=True, blank=True)
    
     weight_value = models.DecimalField( # stores weight in grams
         max_digits=5,

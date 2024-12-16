@@ -1,6 +1,7 @@
 import re
 
 from typing import List
+from rest_framework import serializers
 from django.core.exceptions import ValidationError
 
 def parse_user_agent(request):
@@ -69,27 +70,19 @@ def parse_user_agent(request):
 
 
 def validate_variant_with_stocks(variants_payload: List[dict]):
-    """
-    Validates the order payload to ensure stock availability.
-
-    Args:
-        variants_payload (List[dict]): A list of dictionaries containing 'variant' and 'quantity'.
-
-    Raises:
-        ValidationError: If any variant does not have sufficient stock for the requested quantity,
-                         and it tracks inventory and does not allow backorders.
-    """
+    stock_errors = []
     for item in variants_payload:
         variant = item['variant']
         quantity = item['quantity']
 
         if variant.track_inventory and not variant.allow_backorder:
-            # Calculate the available stock for the variant
-            available_stock = sum(
-                stock.available_for_new_order() for stock in variant.warehouse_stocks.all()
-            )
-
-            if quantity > available_stock:
-                raise ValidationError(
-                    f"Insufficient stock for variant '{variant.sku}'. Requested: {quantity}, Available: {available_stock}."
+            if variant.track_inventory and not variant.allow_backorder and variant.get_valid_stock() < quantity:
+                product_name = variant.product.name
+                # Determine inventory name: prefer variant.name, fallback to sku
+                inventory_name = variant.name if variant.name else variant.sku
+                stock_errors.append(
+                    f"Product '{product_name}' with inventory '{inventory_name}' does not have sufficient stock for the requested quantity."
                 )
+    if stock_errors:
+        # Combine all stock error messages into one response
+        raise serializers.ValidationError(stock_errors)

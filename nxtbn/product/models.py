@@ -269,7 +269,7 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
     track_inventory = models.BooleanField(default=False)
     allow_backorder = models.BooleanField(default=False, help_text="Allow orders even if out of stock.")
 
-    sku = models.CharField(max_length=50, unique=True)
+    sku = models.CharField(max_length=50, unique=True, null=True, blank=True)
    
     weight_value = models.DecimalField( # stores weight in grams
         max_digits=5,
@@ -334,13 +334,18 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
         if self.product.images.exists():
             return self.product.product_thumbnail(request)
         
-    def reserve_stock(self, quantity):
-        """
-        Reserve stock for an order.
-        """
-        if self.track_inventory:
-            self.stock -= quantity
-            self.save()
+    def get_valid_stock(self): # stocks that available for sell
+        stock_data = self.warehouse_stocks.aggregate(
+            total_stock=Sum('quantity'),
+            total_reserved=Sum('reserved')
+        )
+
+        # Extract and handle possible None values
+        total_stock = stock_data.get('total_stock') or 0
+        total_reserved = stock_data.get('total_reserved') or 0
+        available_for_sell = total_stock - total_reserved
+        return available_for_sell
+            
 
 
 

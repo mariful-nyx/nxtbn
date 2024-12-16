@@ -432,23 +432,12 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
     def get_variants(self):
         variants_data = self.validated_data.get('variants')
         variants = []
-        stock_errors = []
 
         for variant_data in variants_data:
             try:
                 variant = ProductVariant.objects.get(alias=variant_data['alias'])
                 quantity = variant_data['quantity']
                 weight = variant.weight_value if variant.weight_value is not None else Decimal('0.00')
-
-                # Stock validation with backorder consideration
-                if variant.track_inventory and not variant.allow_backorder and variant.stock < quantity:
-                # if variant.track_inventory and variant.stock < quantity:
-                    product_name = variant.product.name
-                    # Determine inventory name: prefer variant.name, fallback to sku
-                    inventory_name = variant.name if variant.name else variant.sku
-                    stock_errors.append(
-                        f"Insufficient stock for product '{product_name}', inventory '{inventory_name}'."
-                    )
 
                 variants.append({
                     'variant': variant,
@@ -462,10 +451,6 @@ class OrderCalculation(ShippingFeeCalculator, TaxCalculator, DiscountCalculator,
                 raise serializers.ValidationError({
                     "variants": f"Variant with alias '{variant_data['alias']}' not found."
                 })
-
-        if stock_errors:
-            # Combine all stock error messages into one response
-            raise serializers.ValidationError(stock_errors)
 
         return variants
 

@@ -2,8 +2,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import generics, status
 from nxtbn.product.models import ProductVariant
-from nxtbn.warehouse.models import Warehouse, Stock
-from nxtbn.warehouse.api.dashboard.serializers import StockUpdateSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
+from nxtbn.warehouse.models import StockReservation, Warehouse, Stock
+from nxtbn.warehouse.api.dashboard.serializers import StockReservationSerializer, StockUpdateSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 
@@ -126,3 +126,9 @@ class UpdateStockWarehouseWise(generics.UpdateAPIView):
                 Stock.objects.create(warehouse=warehouse, product_variant=product_variant, quantity=quantity)
 
         return Response({"detail": "Stock updated successfully."}, status=status.HTTP_200_OK)
+    
+
+class StockReservationListAPIView(generics.ListAPIView):
+    serializer_class = StockReservationSerializer
+    queryset = StockReservation.objects.all()
+    

@@ -20,6 +20,13 @@ class WarehouseViewSet(viewsets.ModelViewSet):
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
 
+    def get_queryset(self):
+        no_pagination = self.request.query_params.get('no_pagination', None)
+        if no_pagination == 'true':
+            self.pagination_class = None
+
+        return super().get_queryset()
+
 
 class StockFilter(filters.FilterSet):
     warehouse = filters.CharFilter(field_name='warehouse__name', lookup_expr='iexact')

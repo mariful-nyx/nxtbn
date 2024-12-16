@@ -338,3 +338,10 @@ class SupplierModelViewSet(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer
     queryset = Supplier.objects.all()
     pagination_class = NxtbnPagination
+
+    def get_queryset(self):
+        no_pagination = self.request.query_params.get('no_pagination', None)
+        if no_pagination == 'true':
+            self.pagination_class = None
+
+        return super().get_queryset()

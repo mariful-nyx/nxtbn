@@ -1,6 +1,6 @@
 from django.db import models
 
-from nxtbn.product.models import Product, Supplier
+from nxtbn.product.models import ProductVariant, Supplier
 from nxtbn.purchase import PurchaseStatus
 from nxtbn.users.models import User
 from nxtbn.warehouse.models import Warehouse
@@ -24,7 +24,7 @@ class PurchaseOrder(models.Model):
 class PurchaseOrderItem(models.Model):
     """Line items for a purchase order"""
     purchase_order = models.ForeignKey(PurchaseOrder, related_name='items', on_delete=models.CASCADE)
-    variant = models.ForeignKey(Product, on_delete=models.PROTECT)
+    variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT)
     
     ordered_quantity = models.PositiveIntegerField()
     received_quantity = models.PositiveIntegerField(default=0)

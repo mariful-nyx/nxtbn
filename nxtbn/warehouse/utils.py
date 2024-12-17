@@ -55,7 +55,8 @@ def reserve_stock(order):
                         StockReservation.objects.create(
                             stock=stock,
                             quantity=required_quantity,
-                            purpose="Pending Order"
+                            purpose="Pending Order",
+                            order_line=item
                         )
 
                         order.reservation_status = OrderStockReservationStatus.RESERVED
@@ -67,7 +68,8 @@ def reserve_stock(order):
                         StockReservation.objects.create(
                             stock=stock,
                             quantity=available_quantity,
-                            purpose="Pending Order"
+                            purpose="Pending Order",
+                            order_line=item
                         )
 
                         required_quantity -= available_quantity
@@ -108,25 +110,11 @@ def release_stock(order):
         return order
 
 def deduct_reservation_on_dispatch(order):
-    """
-    Adjust stock for items in an order when the order is shipped.
-    Deduct reserved quantities from the available stock and remove reservations.
-
-    Args:
-        order: The order instance being shipped.
-
-    Returns:
-        The updated order instance with the reservation status set to `SHIPPED`.
-
-    Side Effects:
-        - Deducts reserved quantities permanently from `Stock`.
-        - Deletes `StockReservation` entries.
-        - Updates the order's reservation status to `SHIPPED`.
-    """
     with transaction.atomic():
         for item in order.line_items.all():
             if item.variant.track_inventory:
-                for reservation in item.reservations.all():
+                # Use the correct related name for accessing reservations
+                for reservation in item.stock_reservations.all():
                     stock = reservation.stock
 
                     if stock.reserved < reservation.quantity:

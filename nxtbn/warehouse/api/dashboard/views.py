@@ -1,9 +1,10 @@
+
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import generics, status
 from nxtbn.product.models import ProductVariant
 from nxtbn.warehouse.models import StockReservation, Warehouse, Stock
-from nxtbn.warehouse.api.dashboard.serializers import StockReservationSerializer, StockUpdateSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
+from nxtbn.warehouse.api.dashboard.serializers import StockReservationSerializer, StockUpdateSerializer, TransferStockReservationSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 
@@ -14,12 +15,14 @@ from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from django.db.models.functions import Coalesce
 from django.db.models import F, Sum, Q
+from rest_framework.exceptions import ValidationError
 
 
 
 class WarehouseViewSet(viewsets.ModelViewSet):
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
+    pagination_class = None
 
 
 class StockFilter(filters.FilterSet):
@@ -136,7 +139,6 @@ class StockReservationFilter(filters.FilterSet):
             'id',
             'stock',
             'purpose',
-            'transferred_to',
             'warehouse',
         ]
 
@@ -167,3 +169,81 @@ class StockReservationListAPIView(StockReservationFilterMixin, generics.ListCrea
     pagination_class = NxtbnPagination
 
     
+
+class MergeStockReservationAPIView(generics.UpdateAPIView):
+    """
+    API to transfer stock reservation from one warehouse to another.
+    """
+    queryset = StockReservation.objects.all()
+    serializer_class = TransferStockReservationSerializer
+
+    def update(self, request, *args, **kwargs):
+        reservation_id = kwargs.get('pk')
+        destination_id = request.data.get('destination')
+
+        # Validate destination warehouse
+        try:
+            destination_warehouse = Warehouse.objects.get(id=destination_id)
+        except Warehouse.DoesNotExist:
+            raise ValidationError({"destination": "Destination warehouse does not exist."})
+
+        # Validate the reservation instance
+        try:
+            reservation = StockReservation.objects.get(id=reservation_id)
+        except StockReservation.DoesNotExist:
+            raise ValidationError({"reservation": "Reservation does not exist."})
+
+        # Ensure the stock for the destination warehouse and product variant exists
+        destination_stock, created = Stock.objects.get_or_create(
+            warehouse=destination_warehouse,
+            product_variant=reservation.stock.product_variant,
+            defaults={"quantity": 0, "reserved": 0}
+        )
+
+        # Check if a reservation for the same order line already exists in the destination stock
+        existing_reservation = StockReservation.objects.filter(
+            stock=destination_stock, order_line=reservation.order_line
+        ).first()
+
+        if existing_reservation:
+            # Update the existing reservation's quantity
+            existing_reservation.quantity += reservation.quantity
+            existing_reservation.save()
+
+            # Adjust destination stock's reserved quantity
+            destination_stock.reserved += reservation.quantity
+            destination_stock.save()
+
+            # Adjust source stock's reserved quantity and delete the current reservation
+            source_stock = reservation.stock
+            source_stock.reserved -= reservation.quantity
+            source_stock.save()
+
+            reservation.delete()
+
+            return Response({"detail": "Stock reservation successfully merged and transferred."}, status=status.HTTP_200_OK)
+
+        # If no existing reservation, update the source stock
+        source_stock = reservation.stock
+        if reservation.quantity > source_stock.quantity:
+            raise ValidationError({
+                "detail": (
+                    "The reservation quantity exceeds the available stock at the source warehouse. "
+                    "You need to transfer stock from another warehouse first, "
+                    "and then you will be able to transfer the reservation, "
+                    "subject to the available quantity at your destination."
+                )
+            })
+
+        source_stock.reserved -= reservation.quantity
+        source_stock.save()
+
+        # Update the destination stock
+        destination_stock.reserved += reservation.quantity
+        destination_stock.save()
+
+        # Update the reservation to point to the destination stock
+        reservation.stock = destination_stock
+        reservation.save()
+
+        return Response({"detail": "Stock reservation successfully transferred."}, status=status.HTTP_200_OK)

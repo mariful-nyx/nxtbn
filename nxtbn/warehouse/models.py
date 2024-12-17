@@ -1,7 +1,9 @@
 from django.db import models
 from django.forms import ValidationError
+from django.db.models import Sum
 
 from nxtbn.core.models import AbstractBaseModel
+from nxtbn.order.models import Order, OrderLineItem
 from nxtbn.product.models import ProductVariant
 from nxtbn.users.models import User
 from nxtbn.warehouse import StockMovementStatus
@@ -59,32 +61,19 @@ class StockReservation(AbstractBaseModel):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name="reservations")
     quantity = models.PositiveIntegerField()
     purpose = models.CharField(max_length=50, help_text="Purpose of the reservation. e.g. 'Pending Order', 'Blocked Stock', 'Pre-booked Stock'")
-    transferred_to = models.ForeignKey(
-        Warehouse,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='transfers',
-        help_text="Destination warehouse for stock transfer during order fulfillment."
-    )
+    order_line = models.ForeignKey(OrderLineItem, on_delete=models.CASCADE, related_name="stock_reservations", null=True, blank=True)
 
     def __str__(self):
         return f"{self.quantity} reserved for {self.purpose}"
-
-    def save(self, *args, **kwargs):
-        if self.quantity > self.stock.quantity:
-            raise ValueError("Reservation quantity cannot exceed stock quantity.")
-        super().save(*args, **kwargs)
-
+    
     def delete(self, *args, **kwargs):
-        self.stock.reserved -= self.quantity
-        self.stock.save()
+        stock = self.stock
         super().delete(*args, **kwargs)
 
-    def create(self, *args, **kwargs):
-        self.stock.reserved += self.quantity
-        self.stock.save()
-        super().create(*args, **kwargs)
-
+        total_reserved = stock.reservations.aggregate(total=Sum('quantity'))['total'] or 0
+        if stock.reserved != total_reserved:
+            stock.reserved = total_reserved
+            stock.save(update_fields=['reserved'])
 
 
 class StockTransfer(models.Model):

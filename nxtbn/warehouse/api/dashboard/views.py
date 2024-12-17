@@ -1,4 +1,4 @@
-from django.forms import ValidationError
+
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import generics, status
@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from django.db.models.functions import Coalesce
 from django.db.models import F, Sum, Q
+from rest_framework.exceptions import ValidationError
 
 
 
@@ -169,7 +170,7 @@ class StockReservationListAPIView(StockReservationFilterMixin, generics.ListCrea
 
     
 
-class TransferStockReservationAPIView(generics.UpdateAPIView):
+class MergeStockReservationAPIView(generics.UpdateAPIView):
     """
     API to transfer stock reservation from one warehouse to another.
     """
@@ -226,7 +227,12 @@ class TransferStockReservationAPIView(generics.UpdateAPIView):
         source_stock = reservation.stock
         if reservation.quantity > source_stock.quantity:
             raise ValidationError({
-                "quantity": "Reservation quantity exceeds available stock at the source warehouse."
+                "detail": (
+                    "The reservation quantity exceeds the available stock at the source warehouse. "
+                    "You need to transfer stock from another warehouse first, "
+                    "and then you will be able to transfer the reservation, "
+                    "subject to the available quantity at your destination."
+                )
             })
 
         source_stock.reserved -= reservation.quantity

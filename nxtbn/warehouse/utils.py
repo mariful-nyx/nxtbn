@@ -56,7 +56,7 @@ def reserve_stock(order):
                             stock=stock,
                             quantity=required_quantity,
                             purpose="Pending Order",
-                            line_item=item
+                            order_line=item
                         )
 
                         order.reservation_status = OrderStockReservationStatus.RESERVED
@@ -68,7 +68,8 @@ def reserve_stock(order):
                         StockReservation.objects.create(
                             stock=stock,
                             quantity=available_quantity,
-                            purpose="Pending Order"
+                            purpose="Pending Order",
+                            order_line=item
                         )
 
                         required_quantity -= available_quantity

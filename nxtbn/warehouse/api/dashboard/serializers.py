@@ -63,3 +63,21 @@ class StockReservationSerializer(serializers.ModelSerializer):
             'purpose',
             'order_line',
         ]
+
+
+class TransferStockReservationSerializer(serializers.ModelSerializer):
+    destination = serializers.IntegerField(write_only=True, help_text="ID of the destination warehouse")
+
+    class Meta:
+        model = StockReservation
+        fields = ['id', 'stock', 'quantity', 'purpose', 'order_line', 'destination']
+        read_only_fields = ['id', 'stock', 'quantity', 'purpose', 'order_line']
+
+    def validate_destination(self, value):
+        """
+        Ensure the destination warehouse exists.
+        """
+        from nxtbn.warehouse.models import Warehouse
+        if not Warehouse.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Destination warehouse does not exist.")
+        return value

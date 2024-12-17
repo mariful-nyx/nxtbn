@@ -12,4 +12,5 @@ urlpatterns += [
     path('warehouse-wise-variant-stock/<int:variant_id>/', warehouse_views.WarehouseStockByVariantAPIView.as_view(), name='warehouse-wise-variant-stock'),
     path('upate-stock-warehosue-wise/<int:variant_id>/', warehouse_views.UpdateStockWarehouseWise.as_view(), name='update-stock-wirehouse-wise-variant-stock'),
     path('stock-reservation-list/', warehouse_views.StockReservationListAPIView.as_view(), name='update-stock-warehouse-wise-variant-stock'),
+    path('stock-reservation-transfer/<int:pk>/', warehouse_views.TransferStockReservationAPIView.as_view(), name='stock-reservation-detail'),
 ]

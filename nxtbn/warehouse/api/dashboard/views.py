@@ -20,6 +20,7 @@ from django.db.models import F, Sum, Q
 class WarehouseViewSet(viewsets.ModelViewSet):
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
+    pagination_class = None
 
 
 class StockFilter(filters.FilterSet):
@@ -136,7 +137,6 @@ class StockReservationFilter(filters.FilterSet):
             'id',
             'stock',
             'purpose',
-            'transferred_to',
             'warehouse',
         ]
 

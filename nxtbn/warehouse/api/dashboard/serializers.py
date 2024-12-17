@@ -61,5 +61,5 @@ class StockReservationSerializer(serializers.ModelSerializer):
             'stock',
             'quantity',
             'purpose',
-            'transferred_to',
+            'order_line',
         ]

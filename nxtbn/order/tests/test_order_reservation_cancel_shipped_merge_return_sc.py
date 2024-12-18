@@ -102,6 +102,9 @@ class OrderStockReservationTest(BaseTestCase):
         self.assertEqual(remained_stock, 11)
         self.assertEqual(reserved_stock, 7)
 
+        order = Order.objects.get(alias=order_less_than_stock_response_with_stock_tracking.data['order_alias'])
+        self.assertEqual(order.reservation_status, OrderStockReservationStatus.RESERVED)
+
 
         # Now Ship the successfull order
         order_status_update_url = reverse('order-status-update', args=[order_less_than_stock_response_with_stock_tracking.data['order_alias']])
@@ -147,6 +150,7 @@ class OrderStockReservationTest(BaseTestCase):
 
         return_request_response = self.auth_client.post(return_request_url, return_request_payload, format='json')
         self.assertEqual(return_request_response.status_code, status.HTTP_201_CREATED) # Return request is created
+        
         
         # Now receive the return
         return_line_items_status_update_url = reverse('return-line-item-status-update')
@@ -224,8 +228,8 @@ class OrderStockReservationTest(BaseTestCase):
             ]
         }
 
-        order_out_of_stock_response_with_stock_tracking = self.auth_client.post(self.order_api_url, order_payload_more_than_stock, format='json')
-        self.assertEqual(order_out_of_stock_response_with_stock_tracking.status_code, status.HTTP_200_OK) # success as backorder is allowed
+        order_out_of_stock_response_with_stock_tracking_bo = self.auth_client.post(self.order_api_url, order_payload_more_than_stock, format='json')
+        self.assertEqual(order_out_of_stock_response_with_stock_tracking_bo.status_code, status.HTTP_200_OK) # success as backorder is allowed
 
         # as order is successfully created, we should have 5 reserved quantity of 5 quantity in stock
         remained_stock_with_bo = ProductVariant.objects.get(alias=self.variant_track_order_backorder.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
@@ -235,6 +239,6 @@ class OrderStockReservationTest(BaseTestCase):
         self.assertEqual(reserved_stock_with_bo, 0)
 
         # make sure reservation is failed
-        order = Order.objects.get(alias=order_out_of_stock_response_with_stock_tracking.data['order_alias'])
+        order = Order.objects.get(alias=order_out_of_stock_response_with_stock_tracking_bo.data['order_alias'])
         self.assertEqual(order.reservation_status, OrderStockReservationStatus.FAILED)
         

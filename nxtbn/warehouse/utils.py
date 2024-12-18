@@ -100,7 +100,7 @@ def release_stock(order):
     with transaction.atomic():
         for item in order.line_items.all():
             if item.variant.track_inventory:
-                for reservation in item.reservations.all():
+                for reservation in item.stock_reservations.all():
                     stock = reservation.stock
                     adjust_stock(stock, reserved_delta=-reservation.quantity, quantity_delta=0)
                     reservation.delete()

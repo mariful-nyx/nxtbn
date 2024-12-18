@@ -53,6 +53,7 @@ class StockUpdateSerializer(serializers.Serializer):
 
 class StockReservationSerializer(serializers.ModelSerializer):
     stock = StockSerializer(read_only=True)
+    order = serializers.SerializerMethodField()
 
     class Meta:
         model = StockReservation
@@ -61,8 +62,17 @@ class StockReservationSerializer(serializers.ModelSerializer):
             'stock',
             'quantity',
             'purpose',
-            'order_line',
+            'order',
         ]
+
+    def get_order(self, obj):
+        order_line = obj.order_line
+        if order_line:
+            return {
+                "order_id": order_line.order.id,
+                "order_line_id": order_line.id,
+            }
+        return None
 
 
 

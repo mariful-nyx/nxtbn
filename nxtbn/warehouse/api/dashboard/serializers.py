@@ -70,6 +70,7 @@ class StockReservationSerializer(serializers.ModelSerializer):
         if order_line:
             return {
                 "order_id": order_line.order.id,
+                "order_alias": order_line.order.alias,
                 "order_line_id": order_line.id,
             }
         return None

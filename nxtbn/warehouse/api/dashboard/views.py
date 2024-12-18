@@ -201,14 +201,14 @@ class MergeStockReservationAPIView(generics.UpdateAPIView):
         )
 
         # Check if a reservation for the same order line already exists in the destination stock
-        existing_reservation = StockReservation.objects.filter(
+        destination_reservation = StockReservation.objects.filter(
             stock=destination_stock, order_line=reservation.order_line
         ).first()
 
-        if existing_reservation:
+        if destination_reservation:
             # Update the existing reservation's quantity
-            existing_reservation.quantity += reservation.quantity
-            existing_reservation.save()
+            destination_reservation.quantity += reservation.quantity
+            destination_reservation.save()
 
             # Adjust destination stock's reserved quantity
             destination_stock.reserved += reservation.quantity
@@ -225,6 +225,7 @@ class MergeStockReservationAPIView(generics.UpdateAPIView):
 
         # If no existing reservation, update the source stock
         source_stock = reservation.stock
+        print(reservation.quantity, source_stock.quantity)
         if reservation.quantity > source_stock.quantity:
             raise ValidationError({
                 "detail": (

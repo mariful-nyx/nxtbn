@@ -222,7 +222,7 @@ class OrderStockReservationTest(BaseTestCase):
                     "quantity": 7, # more than stock
                 },
                 {
-                    "alias": self.variant_track_order_backorder.alias,
+                    "alias": self.variant_track_order_without_backorder.alias,
                     "quantity": 8, # less than stock
                 },
             ]
@@ -237,6 +237,12 @@ class OrderStockReservationTest(BaseTestCase):
 
         self.assertEqual(remained_stock_with_bo, 5)
         self.assertEqual(reserved_stock_with_bo, 0)
+
+        remained_stock_without_bo = ProductVariant.objects.get(alias=self.variant_track_order_without_backorder.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
+        reserved_stock_without_bo = ProductVariant.objects.get(alias=self.variant_track_order_without_backorder.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
+
+        self.assertEqual(remained_stock_without_bo, 10)
+        self.assertEqual(reserved_stock_without_bo, 0)
 
         # make sure reservation is failed
         order = Order.objects.get(alias=order_out_of_stock_response_with_stock_tracking_bo.data['order_alias'])

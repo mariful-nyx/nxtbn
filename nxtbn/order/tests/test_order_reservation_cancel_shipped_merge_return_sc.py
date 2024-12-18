@@ -6,7 +6,8 @@ from rest_framework.reverse import reverse
 from nxtbn.core import PublishableStatus
 from nxtbn.core.utils import normalize_amount_currencywise
 from nxtbn.home.base_tests import BaseTestCase
-from nxtbn.order import OrderStatus
+from nxtbn.order import OrderStatus, ReturnReason, ReturnReceiveStatus
+from nxtbn.order.models import OrderLineItem, ReturnLineItem
 from nxtbn.product.models import Product, ProductVariant
 from rest_framework.test import APIClient
 from nxtbn.product.tests import ProductFactory, ProductTypeFactory, ProductVariantFactory
@@ -82,7 +83,7 @@ class OrderStockReservationTest(BaseTestCase):
         self.assertEqual(order_out_of_stock_response_with_stock_tracking.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-        payload_less_than_stock = {
+        order_payload_less_than_stock = {
                 "variants": [
                     {
                         "alias": self.variant.alias,
@@ -91,7 +92,7 @@ class OrderStockReservationTest(BaseTestCase):
                 ]
             }
 
-        order_less_than_stock_response_with_stock_tracking = self.auth_client.post(self.order_api_url, payload_less_than_stock, format='json')
+        order_less_than_stock_response_with_stock_tracking = self.auth_client.post(self.order_api_url, order_payload_less_than_stock, format='json')
         self.assertEqual(order_less_than_stock_response_with_stock_tracking.status_code, status.HTTP_200_OK)
 
         # as order is successfully created, we should have 7 reserved quantity of 11 quantity in stock
@@ -119,4 +120,51 @@ class OrderStockReservationTest(BaseTestCase):
         self.assertEqual(remained_stock_after_shipping, 4)
         self.assertEqual(reserved_stock_after_shipping, 0)
 
-        # TODO: Implement return request and return line item status update test cases
+        # Now try to return
+
+        # Before return, we need to make sure item is delivered
+        delivered = self.auth_client.patch(order_status_update_url, {"status": OrderStatus.DELIVERED}, format='json')
+        self.assertEqual(delivered.status_code, status.HTTP_200_OK)
+
+
+        return_request_url = reverse('return-request')
+        line_items = OrderLineItem.objects.filter(order__alias=order_less_than_stock_response_with_stock_tracking.data['order_alias'])
+
+      
+        return_request_payload = {
+            "reason": ReturnReason.DAMAGED,
+            "order": order_less_than_stock_response_with_stock_tracking.data['order_id'],
+            "line_items": [
+            {
+                "order_line_item": line_items[0].id,
+                "quantity": 3,
+                "max_quantity": 3,
+                "destination": self.warehosue_us_central.id,
+            }
+            ]
+        }
+
+
+        return_request_response = self.auth_client.post(return_request_url, return_request_payload, format='json')
+        self.assertEqual(return_request_response.status_code, status.HTTP_201_CREATED) # Return request is created
+        
+        # Now receive the return
+        return_line_items_status_update_url = reverse('return-line-item-status-update')
+
+        line_items_ids = list(ReturnLineItem.objects.filter(order_line_item__in=line_items).values_list('id', flat=True))
+        return_line_item_payload = {
+            "receiving_status": ReturnReceiveStatus.RECEIVED,
+            "line_item_ids": line_items_ids,
+        }
+
+        return_line_item_response = self.auth_client.put(return_line_items_status_update_url, return_line_item_payload, format='json')
+        self.assertEqual(return_line_item_response.status_code, status.HTTP_200_OK)
+
+        # Now stock should be 7 and reserved should be 0
+        remained_stock_after_return = ProductVariant.objects.get(alias=self.variant.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
+        reserved_stock_after_return = ProductVariant.objects.get(alias=self.variant.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
+
+        self.assertEqual(remained_stock_after_return, 7)
+        self.assertEqual(reserved_stock_after_return, 0)
+
+

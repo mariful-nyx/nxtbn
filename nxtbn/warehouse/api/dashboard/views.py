@@ -4,7 +4,7 @@ from rest_framework import viewsets
 from rest_framework import generics, status
 from nxtbn.product.models import ProductVariant
 from nxtbn.warehouse.models import StockReservation, Warehouse, Stock
-from nxtbn.warehouse.api.dashboard.serializers import StockReservationSerializer, StockUpdateSerializer, TransferStockReservationSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
+from nxtbn.warehouse.api.dashboard.serializers import StockReservationSerializer, StockUpdateSerializer, MergeStockReservationSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 
@@ -175,7 +175,7 @@ class MergeStockReservationAPIView(generics.UpdateAPIView):
     API to transfer stock reservation from one warehouse to another.
     """
     queryset = StockReservation.objects.all()
-    serializer_class = TransferStockReservationSerializer
+    serializer_class = MergeStockReservationSerializer
 
     def update(self, request, *args, **kwargs):
         reservation = self.get_object()

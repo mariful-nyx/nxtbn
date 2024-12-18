@@ -66,7 +66,7 @@ class StockReservationSerializer(serializers.ModelSerializer):
 
 
 
-class TransferStockReservationSerializer(serializers.ModelSerializer):
+class MergeStockReservationSerializer(serializers.ModelSerializer):
     destination = serializers.IntegerField(
         write_only=True, help_text="ID of the destination warehouse"
     )
@@ -83,6 +83,12 @@ class TransferStockReservationSerializer(serializers.ModelSerializer):
         """
         reservation = self.instance
         destination_id = data.get('destination')
+
+        # Validate if destionation warehouse and source warehosue are the same
+        if reservation.stock.warehouse.id == destination_id:
+            raise serializers.ValidationError({
+                "destination": "Destination warehouse cannot be the same as the source warehouse."
+            })
 
         # Validate destination warehouse
         try:

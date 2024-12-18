@@ -168,7 +168,7 @@ class StockReservationListAPIView(StockReservationFilterMixin, generics.ListCrea
     queryset = StockReservation.objects.all()
     pagination_class = NxtbnPagination
 
-    
+
 
 class MergeStockReservationAPIView(generics.UpdateAPIView):
     """
@@ -178,72 +178,40 @@ class MergeStockReservationAPIView(generics.UpdateAPIView):
     serializer_class = TransferStockReservationSerializer
 
     def update(self, request, *args, **kwargs):
-        reservation_id = kwargs.get('pk')
-        destination_id = request.data.get('destination')
+        reservation = self.get_object()
+        serializer = self.get_serializer(reservation, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
 
-        # Validate destination warehouse
-        try:
-            destination_warehouse = Warehouse.objects.get(id=destination_id)
-        except Warehouse.DoesNotExist:
-            raise ValidationError({"destination": "Destination warehouse does not exist."})
+        destination_stock = serializer.validated_data['destination_stock']
+        destination_reservation = serializer.validated_data.get('destination_reservation')
 
-        # Validate the reservation instance
-        try:
-            reservation = StockReservation.objects.get(id=reservation_id)
-        except StockReservation.DoesNotExist:
-            raise ValidationError({"reservation": "Reservation does not exist."})
+        # If a reservation already exists at the destination, merge it
+        if destination_reservation:
+            destination_reservation.quantity += reservation.quantity
+            destination_reservation.save()
 
-        # Ensure the stock for the destination warehouse and product variant exists
-        destination_stock, created = Stock.objects.get_or_create(
-            warehouse=destination_warehouse,
-            product_variant=reservation.stock.product_variant,
-            defaults={"quantity": 0, "reserved": 0}
-        )
-
-        # Check if a reservation for the same order line already exists in the destination stock
-        existing_reservation = StockReservation.objects.filter(
-            stock=destination_stock, order_line=reservation.order_line
-        ).first()
-
-        if existing_reservation:
-            # Update the existing reservation's quantity
-            existing_reservation.quantity += reservation.quantity
-            existing_reservation.save()
-
-            # Adjust destination stock's reserved quantity
-            destination_stock.reserved += reservation.quantity
-            destination_stock.save()
-
-            # Adjust source stock's reserved quantity and delete the current reservation
+            # Adjust the reserved quantities of source and destination stocks
             source_stock = reservation.stock
             source_stock.reserved -= reservation.quantity
             source_stock.save()
 
+            destination_stock.reserved += reservation.quantity
+            destination_stock.save()
+
+            # Delete the source reservation
             reservation.delete()
+        else:
+            # Update source stock reserved quantity
+            source_stock = reservation.stock
+            source_stock.reserved -= reservation.quantity
+            source_stock.save()
 
-            return Response({"detail": "Stock reservation successfully merged and transferred."}, status=status.HTTP_200_OK)
+            # Update destination stock reserved quantity
+            destination_stock.reserved += reservation.quantity
+            destination_stock.save()
 
-        # If no existing reservation, update the source stock
-        source_stock = reservation.stock
-        if reservation.quantity > source_stock.quantity:
-            raise ValidationError({
-                "detail": (
-                    "The reservation quantity exceeds the available stock at the source warehouse. "
-                    "You need to transfer stock from another warehouse first, "
-                    "and then you will be able to transfer the reservation, "
-                    "subject to the available quantity at your destination."
-                )
-            })
-
-        source_stock.reserved -= reservation.quantity
-        source_stock.save()
-
-        # Update the destination stock
-        destination_stock.reserved += reservation.quantity
-        destination_stock.save()
-
-        # Update the reservation to point to the destination stock
-        reservation.stock = destination_stock
-        reservation.save()
+            # Update reservation to point to destination stock
+            reservation.stock = destination_stock
+            reservation.save()
 
         return Response({"detail": "Stock reservation successfully transferred."}, status=status.HTTP_200_OK)

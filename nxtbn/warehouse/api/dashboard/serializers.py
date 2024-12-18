@@ -65,19 +65,67 @@ class StockReservationSerializer(serializers.ModelSerializer):
         ]
 
 
+
 class TransferStockReservationSerializer(serializers.ModelSerializer):
-    destination = serializers.IntegerField(write_only=True, help_text="ID of the destination warehouse")
+    destination = serializers.IntegerField(
+        write_only=True, help_text="ID of the destination warehouse"
+    )
 
     class Meta:
         model = StockReservation
         fields = ['id', 'stock', 'quantity', 'purpose', 'order_line', 'destination']
         read_only_fields = ['id', 'stock', 'quantity', 'purpose', 'order_line']
 
-    def validate_destination(self, value):
+    def validate(self, data):
         """
-        Ensure the destination warehouse exists.
+        Perform validation of the destination warehouse, source stock,
+        and ensure the reservation can be transferred.
         """
-        from nxtbn.warehouse.models import Warehouse
-        if not Warehouse.objects.filter(id=value).exists():
-            raise serializers.ValidationError("Destination warehouse does not exist.")
-        return value
+        reservation = self.instance
+        destination_id = data.get('destination')
+
+        # Validate destination warehouse
+        try:
+            destination_warehouse = Warehouse.objects.get(id=destination_id)
+        except Warehouse.DoesNotExist:
+            raise serializers.ValidationError({"destination": "Destination warehouse does not exist."})
+
+        # Validate destination stock
+        try:
+            destination_stock = Stock.objects.get(
+                warehouse=destination_warehouse,
+                product_variant=reservation.stock.product_variant,
+            )
+        except Stock.DoesNotExist:
+            raise serializers.ValidationError({
+                "destination": "Destination stock does not exist."
+            })
+
+        # Check if destination has sufficient stock
+        if destination_stock.quantity < reservation.quantity:
+            raise serializers.ValidationError({
+                "detail": (
+                    "The destination warehouse does not have enough stock to accommodate the reservation. "
+                    "Please transfer or add stock to the destination warehouse first."
+                )
+            })
+        
+        # check if destionation stock has enough space for the reservation
+        expected_new_reserved = destination_stock.reserved + reservation.quantity
+        if expected_new_reserved > destination_stock.quantity:
+            raise serializers.ValidationError({
+                "detail": (
+                    "The destination warehouse does not have enough space to accommodate the reservation. "
+                    "Please transfer or add stock to the destination warehouse first."
+                )
+            })
+
+        # Check if there's an existing reservation for the same order line
+        destination_reservation = StockReservation.objects.filter(
+            stock=destination_stock, order_line=reservation.order_line
+        ).first()
+
+        data['destination_stock'] = destination_stock
+        data['destination_reservation'] = destination_reservation
+
+        return data

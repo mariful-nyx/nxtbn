@@ -118,3 +118,5 @@ class OrderStockReservationTest(BaseTestCase):
 
         self.assertEqual(remained_stock_after_shipping, 4)
         self.assertEqual(reserved_stock_after_shipping, 0)
+
+        # TODO: Implement return request and return line item status update test cases

@@ -1,4 +1,5 @@
-from nxtbn.order import OrderStockReservationStatus
+from nxtbn.order import OrderStockReservationStatus, ReturnReceiveStatus
+from nxtbn.order.models import ReturnLineItem
 from nxtbn.warehouse.models import Warehouse, Stock, StockReservation
 
 from django.db import transaction
@@ -131,3 +132,33 @@ def deduct_reservation_on_dispatch(order):
         order.reservation_status = OrderStockReservationStatus.SHIPPED
         order.save()
         return order
+    
+
+
+def adjust_stocks_returned_items(line_items_instances):
+    with transaction.atomic():
+        for return_line_item in line_items_instances:
+            order_line_item = return_line_item.order_line_item
+            variant = order_line_item.variant
+            quantity_to_return = return_line_item.quantity
+
+            if not variant.track_inventory:
+                continue
+
+            # Get the stock entry for the variant in the warehouse
+            stock = Stock.objects.filter(
+                product_variant=variant,
+                warehouse=return_line_item.destination
+            ).first()
+
+            if not stock:
+                raise ValidationError(
+                    f"No stock record found for product variant {variant.name}."
+                )
+
+            # Adjust the stock quantity
+            adjust_stock(stock, reserved_delta=0, quantity_delta=quantity_to_return)
+
+            # Mark the receiving status as received for the return line item
+            return_line_item.receiving_status = ReturnReceiveStatus.RECEIVED
+            return_line_item.save()

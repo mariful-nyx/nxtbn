@@ -24,6 +24,7 @@ from money.money import Currency, Money
 from babel.numbers import get_currency_precision, format_currency
 
 
+
 class Address(AbstractAddressModels):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="addresses")
     # Customizable Receiver Information / may redundent with user model. if no user/auth, fill first_name and last_name
@@ -447,6 +448,13 @@ class ReturnLineItem(models.Model):
         help_text="Amount refunded for this line item"
     )
     receiving_status = models.CharField(choices=ReturnReceiveStatus.choices, default=ReturnReceiveStatus.NOT_RECEIVED, max_length=20)
+    destination = models.ForeignKey(
+        'warehouse.Warehouse',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Warehouse where the return line item will be received."
+    )
 
     def get_descriptive_name(self):
         return self.order_line_item.get_descriptive_name()

@@ -38,6 +38,8 @@ from datetime import datetime
 from babel.numbers import get_currency_precision
 
 from calendar import monthrange, day_name
+from nxtbn.warehouse.utils import adjust_stocks_returned_items
+
 
 
 class OrderFilter(filters.FilterSet):
@@ -522,6 +524,8 @@ class ReturnLineItemStatusUpdateAPIView(generics.UpdateAPIView):
             )
 
         line_items.update(receiving_status=receiving_status)
+
+        adjust_stocks_returned_items(line_items)
 
         return Response(
             {"message": "Receiving status updated successfully."},

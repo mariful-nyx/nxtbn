@@ -296,7 +296,7 @@ class OrderPaymentMethodSerializer(serializers.ModelSerializer):
 class ReturnLineItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReturnLineItem
-        fields = ['id', 'order_line_item', 'quantity', 'refunded_amount']
+        fields = ['id', 'order_line_item', 'quantity', 'refunded_amount', 'destination',]
         read_only_fields = ['refunded_amount']
 
 class ReturnRequestSerializer(serializers.ModelSerializer):
@@ -372,10 +372,17 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
 
 class ReturnLineItemDetailsSerializer(serializers.ModelSerializer):
     order_line_item = OrderLineItemSerializer()
+    destination = serializers.SerializerMethodField()
     class Meta:
         model = ReturnLineItem
-        fields = ['id', 'order_line_item', 'quantity', 'refunded_amount', 'receiving_status']
+        fields = ['id', 'order_line_item', 'quantity', 'refunded_amount', 'receiving_status', 'destination']
         read_only_fields = ['refunded_amount']
+
+    def get_destination(self, obj):
+        return obj.destination.name
+
+
+
 class ReturnRequestDetailsSerializer(serializers.ModelSerializer):
     line_items = ReturnLineItemDetailsSerializer(many=True)
     reason_details = serializers.CharField(required=False)

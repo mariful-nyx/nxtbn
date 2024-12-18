@@ -20,7 +20,7 @@ from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
 from django.test.utils import override_settings
 
 
-@override_settings(RESERVE_STOCK_ON_ORDER=False)
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single currency mode either USD, JPY, KWD
     
     """
@@ -195,7 +195,7 @@ class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single curren
 
 
 
-@override_settings(RESERVE_STOCK_ON_ORDER=False)
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
     """
         Test Case for Order Create API with multiple products/variants in a single currency mode.

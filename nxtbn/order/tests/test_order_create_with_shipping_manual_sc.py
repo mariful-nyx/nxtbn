@@ -28,7 +28,7 @@ from nxtbn.users.utils.jwt_utils import JWTManager
 from django.test.utils import override_settings
 
 
-@override_settings(RESERVE_STOCK_ON_ORDER=False)
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class OrderCreateShippingRateManual(BaseTestCase): # as admin
     """
         Test case to ensure shipping rates are accurately calculated based on product weights, quantities, and regions.

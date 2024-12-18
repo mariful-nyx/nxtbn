@@ -20,7 +20,7 @@ from babel.numbers import get_currency_precision, format_currency
 from django.test.utils import override_settings
 
 
-@override_settings(RESERVE_STOCK_ON_ORDER=False)
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class OrderCreateShippingRateTaxable(BaseTestCase): #single currency: to different single currency test, change settings.BASE_CURRENCY to 'USD' or 'EUR' or 'JPY' or 'KWD' or 'OMR' etc.
     """
         Test case to ensure shipping rates are accurately calculated based on product weights, quantities, and regions.

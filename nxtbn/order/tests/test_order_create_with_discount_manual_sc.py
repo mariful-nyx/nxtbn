@@ -15,7 +15,7 @@ from babel.numbers import get_currency_precision
 from django.test.utils import override_settings
 
 
-@override_settings(RESERVE_STOCK_ON_ORDER=False)
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class TestOrderCreateWithDiscountManually(BaseTestCase): # admin_order_create
     def setUp(self):
         super().setUp()

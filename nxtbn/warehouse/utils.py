@@ -145,17 +145,12 @@ def adjust_stocks_returned_items(line_items_instances):
             if not variant.track_inventory:
                 continue
 
-            # Get the stock entry for the variant in the warehouse
-            stock = Stock.objects.filter(
+            stock, created = Stock.objects.get_or_create(
                 product_variant=variant,
-                warehouse=return_line_item.destination
-            ).first()
-
-            if not stock:
-                raise ValidationError(
-                    f"No stock record found for product variant {variant.name}."
-                )
-
+                warehouse=return_line_item.destination,
+                defaults={"quantity": 0, "reserved": 0}
+            )
+            
             # Adjust the stock quantity
             adjust_stock(stock, reserved_delta=0, quantity_delta=quantity_to_return)
 

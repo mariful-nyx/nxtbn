@@ -109,6 +109,16 @@ class TransferStockReservationSerializer(serializers.ModelSerializer):
                     "Please transfer or add stock to the destination warehouse first."
                 )
             })
+        
+        # check if destionation stock has enough space for the reservation
+        expected_new_reserved = destination_stock.reserved + reservation.quantity
+        if expected_new_reserved > destination_stock.quantity:
+            raise serializers.ValidationError({
+                "detail": (
+                    "The destination warehouse does not have enough space to accommodate the reservation. "
+                    "Please transfer or add stock to the destination warehouse first."
+                )
+            })
 
         # Check if there's an existing reservation for the same order line
         destination_reservation = StockReservation.objects.filter(

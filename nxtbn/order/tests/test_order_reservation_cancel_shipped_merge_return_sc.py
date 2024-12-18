@@ -6,8 +6,8 @@ from rest_framework.reverse import reverse
 from nxtbn.core import PublishableStatus
 from nxtbn.core.utils import normalize_amount_currencywise
 from nxtbn.home.base_tests import BaseTestCase
-from nxtbn.order import OrderStatus, ReturnReason, ReturnReceiveStatus
-from nxtbn.order.models import OrderLineItem, ReturnLineItem
+from nxtbn.order import OrderStatus, OrderStockReservationStatus, ReturnReason, ReturnReceiveStatus
+from nxtbn.order.models import Order, OrderLineItem, ReturnLineItem
 from nxtbn.product.models import Product, ProductVariant
 from rest_framework.test import APIClient
 from nxtbn.product.tests import ProductFactory, ProductTypeFactory, ProductVariantFactory
@@ -181,6 +181,17 @@ class OrderStockReservationTest(BaseTestCase):
             currency=settings.BASE_CURRENCY,
             price=normalize_amount_currencywise(100.00, settings.BASE_CURRENCY),
             cost_per_unit=50.00,
+        )
+        self.variant_track_order_without_backorder = ProductVariantFactory(
+            product=ProductFactory(
+                product_type=self.product_type,
+                status=PublishableStatus.PUBLISHED,
+            ),
+            track_inventory=True,
+            allow_backorder=False,
+            currency=settings.BASE_CURRENCY,
+            price=normalize_amount_currencywise(100.00, settings.BASE_CURRENCY),
+            cost_per_unit=50.00,
         )   
         
 
@@ -193,12 +204,22 @@ class OrderStockReservationTest(BaseTestCase):
             quantity=5,
             reserved=0,
         )
+        StockFactory(
+            warehouse=self.warehosue_us_east_ohio,
+            product_variant=self.variant_track_order_without_backorder,
+            quantity=10,
+            reserved=0,
+        )
 
         order_payload_more_than_stock = {
             "variants": [
                 {
                     "alias": self.variant_track_order_backorder.alias,
-                    "quantity": 7, # Expect success as we have 5 quantity in stock but backorder is allowed
+                    "quantity": 7, # more than stock
+                },
+                {
+                    "alias": self.variant_track_order_backorder.alias,
+                    "quantity": 8, # less than stock
                 },
             ]
         }
@@ -207,9 +228,13 @@ class OrderStockReservationTest(BaseTestCase):
         self.assertEqual(order_out_of_stock_response_with_stock_tracking.status_code, status.HTTP_200_OK) # success as backorder is allowed
 
         # as order is successfully created, we should have 5 reserved quantity of 5 quantity in stock
-        remained_stock = ProductVariant.objects.get(alias=self.variant_track_order_backorder.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
-        reserved_stock = ProductVariant.objects.get(alias=self.variant_track_order_backorder.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
+        remained_stock_with_bo = ProductVariant.objects.get(alias=self.variant_track_order_backorder.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
+        reserved_stock_with_bo = ProductVariant.objects.get(alias=self.variant_track_order_backorder.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
 
-        self.assertEqual(remained_stock, 5)
-        self.assertEqual(reserved_stock, 7) # Failed, it has to be fixed
+        self.assertEqual(remained_stock_with_bo, 5)
+        self.assertEqual(reserved_stock_with_bo, 0)
+
+        # make sure reservation is failed
+        order = Order.objects.get(alias=order_out_of_stock_response_with_stock_tracking.data['order_alias'])
+        self.assertEqual(order.reservation_status, OrderStockReservationStatus.FAILED)
         

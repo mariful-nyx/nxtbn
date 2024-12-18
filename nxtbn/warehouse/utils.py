@@ -26,62 +26,68 @@ def adjust_stock(stock, reserved_delta, quantity_delta):
     stock.quantity += quantity_delta
     stock.save()
 
+
 def reserve_stock(order):
     """
     Reserve stock for the given order by deducting available stock from warehouses.
     If stock is insufficient for any item, the operation will rollback and raise a ValidationError.
     """
-    with transaction.atomic():
-        for item in order.line_items.all():
-            required_quantity = item.quantity
+    try:
+        with transaction.atomic():
+            for item in order.line_items.all():
+                required_quantity = item.quantity
 
-            if item.variant.track_inventory:
-                # Fetch stocks for the product variant ordered by available quantity
-                stocks = Stock.objects.filter(
-                    product_variant=item.variant
-                ).order_by('quantity')
+                if item.variant.track_inventory:
+                    # Fetch stocks for the product variant ordered by available quantity
+                    stocks = Stock.objects.filter(
+                        product_variant=item.variant
+                    ).order_by('quantity')
 
-                for stock in stocks:
-                    if required_quantity <= 0:
-                        break
+                    for stock in stocks:
+                        if required_quantity <= 0:
+                            break
 
-                    available_quantity = stock.quantity - stock.reserved
-                    if available_quantity <= 0:
-                        continue
+                        available_quantity = stock.quantity - stock.reserved
+                        if available_quantity <= 0:
+                            continue
 
-                    if available_quantity >= required_quantity:
-                        # Deduct the required quantity and reserve it
-                        adjust_stock(stock, reserved_delta=required_quantity, quantity_delta=0)
+                        if available_quantity >= required_quantity:
+                            # Deduct the required quantity and reserve it
+                            adjust_stock(stock, reserved_delta=required_quantity, quantity_delta=0)
 
-                        StockReservation.objects.create(
-                            stock=stock,
-                            quantity=required_quantity,
-                            purpose="Pending Order",
-                            order_line=item
-                        )
+                            StockReservation.objects.create(
+                                stock=stock,
+                                quantity=required_quantity,
+                                purpose="Pending Order",
+                                order_line=item
+                            )
 
-                        order.reservation_status = OrderStockReservationStatus.RESERVED
-                        required_quantity = 0
-                    else:
-                        # Partially reserve stock and continue with the remaining quantity
-                        adjust_stock(stock, reserved_delta=available_quantity, quantity_delta=0)
+                            required_quantity = 0
+                        else:
+                            # Partially reserve stock and continue with the remaining quantity
+                            adjust_stock(stock, reserved_delta=available_quantity, quantity_delta=0)
 
-                        StockReservation.objects.create(
-                            stock=stock,
-                            quantity=available_quantity,
-                            purpose="Pending Order",
-                            order_line=item
-                        )
+                            StockReservation.objects.create(
+                                stock=stock,
+                                quantity=available_quantity,
+                                purpose="Pending Order",
+                                order_line=item
+                            )
 
-                        required_quantity -= available_quantity
+                            required_quantity -= available_quantity
 
-                if required_quantity > 0:
-                    # If we couldn't reserve the full quantity, rollback and raise an error
-                    order.reservation_status = OrderStockReservationStatus.FAILED
-                    raise ValidationError(f"Insufficient stock for {item.variant.name}")
+                    if required_quantity > 0:
+                        # If we couldn't reserve the full quantity, rollback and raise an error
+                        raise ValidationError(f"Insufficient stock for {item.variant.name}")
 
-        # Save the order's reservation status after successful reservation
+            # Save the order's reservation status after successful reservation
+            order.reservation_status = OrderStockReservationStatus.RESERVED
+            order.save()
+    except ValidationError:
+        # Update the order's reservation status to FAILED outside the transaction
+        order.reservation_status = OrderStockReservationStatus.FAILED
         order.save()
+        raise
 
 def release_stock(order):
     """

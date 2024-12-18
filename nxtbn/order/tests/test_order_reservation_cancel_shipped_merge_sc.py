@@ -6,14 +6,16 @@ from rest_framework.reverse import reverse
 from nxtbn.core import PublishableStatus
 from nxtbn.core.utils import normalize_amount_currencywise
 from nxtbn.home.base_tests import BaseTestCase
-from nxtbn.product.models import Product
+from nxtbn.order import OrderStatus
+from nxtbn.product.models import Product, ProductVariant
 from rest_framework.test import APIClient
 from nxtbn.product.tests import ProductFactory, ProductTypeFactory, ProductVariantFactory
 from nxtbn.shipping.tests import ShippingMethodFactory
 from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
-from nxtbn.warehouse.tests import WarehouseFactory
+from nxtbn.warehouse.tests import StockFactory, WarehouseFactory
 
 from django.test.utils import override_settings
+from django.db.models import Sum
 
 
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
@@ -22,104 +24,97 @@ class OrderStockReservationTest(BaseTestCase):
         super().setUp()
         self.adminLogin()
 
-        self.country = 'US'
-        self.state = 'NY'
-
-       
-
         self.product_type = ProductTypeFactory(
             name="Physical Product Type",
-            track_stock=True,
-            taxable=True,
-            physical_product=True,
         )
 
 
-        self.variant_with_stock_tracking = ProductVariantFactory(
+        self.variant = ProductVariantFactory(
             product=ProductFactory(
                 product_type=self.product_type,
                 status=PublishableStatus.PUBLISHED,
             ),
             track_inventory=True,
+            allow_backorder=False   ,
             currency=settings.BASE_CURRENCY,
             price=normalize_amount_currencywise(100.00, settings.BASE_CURRENCY),
             cost_per_unit=50.00,
-        )
-
-    
-        self.variant_without_stock_tracking = ProductVariantFactory(
-            product=ProductFactory(
-                product_type=self.product_type,
-                status=PublishableStatus.PUBLISHED,
-            ),
-            track_inventory=True,
-            currency=settings.BASE_CURRENCY,
-            price=normalize_amount_currencywise(50.00, settings.BASE_CURRENCY),
-            cost_per_unit=30.00,
-        )
-
-        self.variant_with_stock_trackin_backorder_allowed = ProductVariantFactory(
-            product=ProductFactory(
-                product_type=self.product_type,
-                status=PublishableStatus.PUBLISHED,
-            ),
-            track_inventory=True,
-            currency=settings.BASE_CURRENCY,
-            price=normalize_amount_currencywise(50.00, settings.BASE_CURRENCY),
-            cost_per_unit=30.00,
-        )
+        )   
+        
 
         self.warehosue_us_central= WarehouseFactory()
         self.warehosue_us_east= WarehouseFactory()
         self.warehosue_us_west= WarehouseFactory()
+        
 
+        StockFactory(
+            warehouse=self.warehosue_us_central,
+            product_variant=self.variant,
+            quantity=5,
+            reserved=0,
+        )
 
+        StockFactory(
+            warehouse=self.warehosue_us_east,
+            product_variant=self.variant,
+            quantity=6,
+            reserved=0,
+        )
+       
 
 
 
         self.order_api_url = reverse('admin_order_create')
         self.order_estimate_api_url = reverse('admin_order_estimate')
 
-    def test_order_stock_reservation_and_warehouse_update(self):
-        """
-        Test case to validate stock reservation and warehouse management during order creation.
-        """
-        currency = settings.BASE_CURRENCY
-
+    def test_order_stock_tracking_with_disallowed_backorder(self):
         
-        order_payload_with_stock_tracking = {
+        payload_more_than_stock = {
             "variants": [
                 {
-                    "alias": self.variant_with_stock_tracking.alias,
-                    "quantity": 10,
+                    "alias": self.variant.alias,
+                    "quantity": 15, # Expect bad request as we have only 11 quantity in stock
                 },
             ]
         }
 
-        order_payload_with_stock_tracking_backorder_allowed = {
-            "variants": [
-                {
-                    "alias": self.variant_with_stock_trackin_backorder_allowed.alias,
-                    "quantity": 10,
-                },
-            ]
-        }
+        order_out_of_stock_response_with_stock_tracking = self.auth_client.post(self.order_api_url, payload_more_than_stock, format='json')
+        self.assertEqual(order_out_of_stock_response_with_stock_tracking.status_code, status.HTTP_400_BAD_REQUEST)
 
-        order_payload_without_stock_tracking = {
-            "variants": [
-                {
-                    "alias": self.variant_without_stock_tracking.alias,
-                    "quantity": 10,
-                },
-            ]
-        }
 
-        order_response_with_stock_tracking = self.client.post(self.order_api_url, order_payload_with_stock_tracking)
-        order_response_with_stock_tracking_backorder_allowed = self.client.post(self.order_api_url, order_payload_with_stock_tracking_backorder_allowed)
-        order_response_without_stock_tracking = self.client.post(self.order_api_url, order_payload_without_stock_tracking)
+        payload_less_than_stock = {
+                "variants": [
+                    {
+                        "alias": self.variant.alias,
+                        "quantity": 7, # Expect success as we have 11 quantity in stock
+                    },
+                ]
+            }
 
-        print(order_response_with_stock_tracking)
+        order_less_than_stock_response_with_stock_tracking = self.auth_client.post(self.order_api_url, payload_less_than_stock, format='json')
+        self.assertEqual(order_less_than_stock_response_with_stock_tracking.status_code, status.HTTP_200_OK)
 
-        # self.assertEqual(order_response_with_stock_tracking.status_code, status.HTTP_201_CREATED)
-        # self.assertEqual(order_response_with_stock_tracking_backorder_allowed.status_code, status.HTTP_201_CREATED)
-        # self.assertEqual(order_response_without_stock_tracking.status_code, status.HTTP_201_CREATED)
+        # as order is successfully created, we should have 7 reserved quantity of 11 quantity in stock
+        remained_stock = ProductVariant.objects.get(alias=self.variant.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
+        reserved_stock = ProductVariant.objects.get(alias=self.variant.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
+
+        self.assertEqual(remained_stock, 11)
+        self.assertEqual(reserved_stock, 7)
+
+
+        # Now Ship the successfull order
+        order_status_update_url = reverse('order-status-update', args=[order_less_than_stock_response_with_stock_tracking.data['order_alias']])
+        approve = self.auth_client.patch(order_status_update_url, {"status": OrderStatus.APPROVED}, format='json')
+        processing = self.auth_client.patch(order_status_update_url, {"status": OrderStatus.PROCESSING}, format='json')
+        approved = self.auth_client.patch(order_status_update_url, {"status": OrderStatus.SHIPPED}, format='json')
+
+        self.assertEqual(approve.status_code, status.HTTP_200_OK)
+        self.assertEqual(processing.status_code, status.HTTP_200_OK)
+        self.assertEqual(approved.status_code, status.HTTP_200_OK)
+
+        # as it is shipped, reserved quantity should be 0 and stock should be 4
+        remained_stock_after_shipping = ProductVariant.objects.get(alias=self.variant.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
+        reserved_stock_after_shipping = ProductVariant.objects.get(alias=self.variant.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
+
+        self.assertEqual(remained_stock_after_shipping, 4)
+        self.assertEqual(reserved_stock_after_shipping, 0)

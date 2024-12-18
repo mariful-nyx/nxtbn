@@ -1,5 +1,5 @@
 from rest_framework import generics, viewsets
-from nxtbn.purchase.api.dashboard.serializers import PurchaseOrderCreateSerializer, PurchaseOrderSerializer
+from nxtbn.purchase.api.dashboard.serializers import PurchaseOrderCreateSerializer, PurchaseOrderSerializer, PurchaseOrderDetailSerializer
 from nxtbn.purchase.models import PurchaseOrder
 from nxtbn.core.paginator import NxtbnPagination
 
@@ -12,4 +12,9 @@ class PurchaseViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return PurchaseOrderCreateSerializer
-        return self.get_serializer_class
+        if self.action == "retrieve":
+            return PurchaseOrderDetailSerializer
+        
+        return PurchaseOrderSerializer
+
+        

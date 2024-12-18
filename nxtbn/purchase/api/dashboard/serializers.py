@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from nxtbn.purchase.models import PurchaseOrder, PurchaseOrderItem
-
+from nxtbn.product.api.dashboard.serializers import SupplierSerializer, ProductVariantSerializer
+from nxtbn.users.api.dashboard.serializers import UserSerializer
+from nxtbn.warehouse.api.dashboard.serializers import WarehouseSerializer
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
     supplier_name = serializers.SerializerMethodField()
@@ -56,3 +58,30 @@ class PurchaseOrderCreateSerializer(serializers.ModelSerializer):
             PurchaseOrderItem.objects.create(purchase_order=purchase_order, **item_data)
 
         return purchase_order
+    
+
+class PurchaseOrderItemDetailSerializer(serializers.ModelSerializer):
+    variant = ProductVariantSerializer(read_only=True)
+    class Meta:
+        model = PurchaseOrderItem
+        fields = ['variant', 'ordered_quantity', 'unit_cost']
+
+
+class PurchaseOrderDetailSerializer(serializers.ModelSerializer):
+    supplier = SupplierSerializer(read_only=True)
+    destination = WarehouseSerializer(read_only=True)
+    created_by = UserSerializer(read_only=True)
+    items = PurchaseOrderItemDetailSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = PurchaseOrder
+        fields = [
+            'id',
+            'supplier',
+            'destination',
+            'status',
+            'expected_delivery_date',
+            'created_by',
+            'total_cost',
+            'items'
+        ]

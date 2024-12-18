@@ -367,6 +367,7 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_ALWAYS_EAGER = get_env_var("CELERY_TASK_ALWAYS_EAGER", default=False, var_type=bool) # Make it true during test runner or development if you don't want to use message broker like redis or rabiitmq
 
 
 CACHES = {

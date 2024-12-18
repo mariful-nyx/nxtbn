@@ -68,7 +68,7 @@ class OrderStockReservationTest(BaseTestCase):
         self.order_api_url = reverse('admin_order_create')
         self.order_estimate_api_url = reverse('admin_order_estimate')
 
-    def test_order_stock_tracking_with_disallowed_backorder(self):
+    def test_order_stock_tracking_with_disallowed_backorder_return(self):
         
         payload_more_than_stock = {
             "variants": [
@@ -168,3 +168,48 @@ class OrderStockReservationTest(BaseTestCase):
         self.assertEqual(reserved_stock_after_return, 0)
 
 
+
+    def test_order_back_order_allowed(self):
+        # test backorder. in stock 5 but ordered 7. 2 should be backordered. Allowing order even if stock is less than ordered quantity
+        self.variant_track_order_backorder = ProductVariantFactory(
+            product=ProductFactory(
+                product_type=self.product_type,
+                status=PublishableStatus.PUBLISHED,
+            ),
+            track_inventory=True,
+            allow_backorder=True,
+            currency=settings.BASE_CURRENCY,
+            price=normalize_amount_currencywise(100.00, settings.BASE_CURRENCY),
+            cost_per_unit=50.00,
+        )   
+        
+
+        self.warehosue_us_east_ohio= WarehouseFactory()
+        
+
+        StockFactory(
+            warehouse=self.warehosue_us_east_ohio,
+            product_variant=self.variant_track_order_backorder,
+            quantity=5,
+            reserved=0,
+        )
+
+        order_payload_more_than_stock = {
+            "variants": [
+                {
+                    "alias": self.variant_track_order_backorder.alias,
+                    "quantity": 7, # Expect success as we have 5 quantity in stock but backorder is allowed
+                },
+            ]
+        }
+
+        order_out_of_stock_response_with_stock_tracking = self.auth_client.post(self.order_api_url, order_payload_more_than_stock, format='json')
+        self.assertEqual(order_out_of_stock_response_with_stock_tracking.status_code, status.HTTP_200_OK) # success as backorder is allowed
+
+        # as order is successfully created, we should have 5 reserved quantity of 5 quantity in stock
+        remained_stock = ProductVariant.objects.get(alias=self.variant_track_order_backorder.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
+        reserved_stock = ProductVariant.objects.get(alias=self.variant_track_order_backorder.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
+
+        self.assertEqual(remained_stock, 5)
+        self.assertEqual(reserved_stock, 7) # Failed, it has to be fixed
+        

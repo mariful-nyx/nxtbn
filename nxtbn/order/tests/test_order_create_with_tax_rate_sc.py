@@ -33,7 +33,6 @@ class OrderCreateTaxableProductNoTrackingStockAPI(BaseTestCase): # Single curren
 
     def setUp(self):
         super().setUp()
-        self.auth_client = APIClient()
         self.adminLogin()
 
         # Define common properties

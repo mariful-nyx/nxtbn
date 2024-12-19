@@ -2,6 +2,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import generics, status
+from nxtbn.order.models import Order
 from nxtbn.product.models import ProductVariant
 from nxtbn.warehouse.models import StockReservation, Warehouse, Stock
 from nxtbn.warehouse.api.dashboard.serializers import StockReservationSerializer, StockUpdateSerializer, MergeStockReservationSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
@@ -16,6 +17,8 @@ from django_filters import rest_framework as filters
 from django.db.models.functions import Coalesce
 from django.db.models import F, Sum, Q
 from rest_framework.exceptions import ValidationError
+
+from nxtbn.warehouse.utils import reserve_stock
 
 
 
@@ -215,3 +218,11 @@ class MergeStockReservationAPIView(generics.UpdateAPIView):
             reservation.save()
 
         return Response({"detail": "Stock reservation successfully transferred."}, status=status.HTTP_200_OK)
+
+
+class RetryReservationAPIView(APIView):
+    def post(self, request, alias):
+        order = get_object_or_404(Order, alias=alias)
+        reserve_stock(order)
+        return Response({"detail": "Stock reservation retried successfully."}, status=status.HTTP_200_OK)
+        

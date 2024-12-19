@@ -304,4 +304,80 @@ class OrderStockReservationTest(BaseTestCase):
 
         self.assertEqual(remained_stock_after_shipping_without_bo, 7)
         self.assertEqual(reserved_stock_after_shipping_without_bo, 0)
-        
+
+
+    def test_order_stock_tracking_with_cancelled_order(self):
+        self.variant_temp = ProductVariantFactory(
+            product=ProductFactory(
+                product_type=self.product_type,
+                status=PublishableStatus.PUBLISHED,
+            ),
+            track_inventory=True,
+            allow_backorder=False,
+            currency=settings.BASE_CURRENCY,
+            price=normalize_amount_currencywise(100.00, settings.BASE_CURRENCY),
+            cost_per_unit=50.00,
+        )
+
+        StockFactory(
+            warehouse=self.warehosue_us_east,
+            product_variant=self.variant_temp,
+            quantity=5,
+            reserved=0,
+        )
+
+        order_payload = {
+            "variants": [
+                {
+                    "alias": self.variant_temp.alias,
+                    "quantity": 5, # exactly in stock
+                },
+            ]
+        }
+
+        order_response = self.auth_client.post(self.order_api_url, order_payload, format='json')
+        self.assertEqual(order_response.status_code, status.HTTP_200_OK)
+
+        # cancel the order
+        order_status_update_url = reverse('order-status-update', args=[order_response.data['order_alias']])
+        cancel = self.auth_client.put(order_status_update_url, {"status": OrderStatus.CANCELLED}, format='json')
+        self.assertEqual(cancel.status_code, status.HTTP_200_OK)
+
+        # as order is cancelled, reserved quantity should be 0 and stock should be 5
+        remained_stock_after_cancel = ProductVariant.objects.get(alias=self.variant_temp.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
+        reserved_stock_after_cancel = ProductVariant.objects.get(alias=self.variant_temp.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
+
+        self.assertEqual(remained_stock_after_cancel, 5)
+        self.assertEqual(reserved_stock_after_cancel, 0)
+
+    def test_order_without_tracking_stock(self):
+        self.variant_not_track_inventory = ProductVariantFactory(
+            product=ProductFactory(
+                product_type=self.product_type,
+                status=PublishableStatus.PUBLISHED,
+            ),
+            track_inventory=False,
+            allow_backorder=False,
+            currency=settings.BASE_CURRENCY,
+            price=normalize_amount_currencywise(100.00, settings.BASE_CURRENCY),
+            cost_per_unit=50.00,
+        )
+
+        order_payload = {
+            "variants": [
+                {
+                    "alias": self.variant_not_track_inventory.alias,
+                    "quantity": 5,
+                },
+            ]
+        }
+
+        order_response = self.auth_client.post(self.order_api_url, order_payload, format='json')
+        self.assertEqual(order_response.status_code, status.HTTP_200_OK)
+
+        # as order is created, reserved quantity should be 0 and stock should be 0
+        remained_stock = ProductVariant.objects.get(alias=self.variant_not_track_inventory.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total'] or 0
+        reserved_stock = ProductVariant.objects.get(alias=self.variant_not_track_inventory.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total'] or 0
+
+        self.assertEqual(remained_stock, 0)
+        self.assertEqual(reserved_stock, 0)

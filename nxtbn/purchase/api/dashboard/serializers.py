@@ -48,6 +48,9 @@ class PurchaseOrderCreateSerializer(serializers.ModelSerializer):
               
         items_data = validated_data.pop('items', [])
 
+        if not items_data:
+            raise serializers.ValidationError("Items are required")
+
        
         purchase_order = PurchaseOrder.objects.create(
             created_by=request.user,

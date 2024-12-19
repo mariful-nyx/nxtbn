@@ -3,7 +3,7 @@ from nxtbn.order.models import ReturnLineItem
 from nxtbn.warehouse.models import Warehouse, Stock, StockReservation
 
 from django.db import transaction
-from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError
 
 def adjust_stock(stock, reserved_delta, quantity_delta):
     """
@@ -90,20 +90,9 @@ def reserve_stock(order):
         raise
 
 def release_stock(order):
-    """
-    Release reserved stock for an order and restore the quantities to available stock.
-
-    Args:
-        order: The order instance whose stock reservations are to be released.
-
-    Returns:
-        The updated order instance with the reservation status set to `RELEASED`.
-
-    Side Effects:
-        - Restores stock quantities in the `Stock` model.
-        - Deletes `StockReservation` entries.
-        - Updates the order's reservation status to `RELEASED`.
-    """
+    if order.reservation_status != OrderStockReservationStatus.RESERVED:
+        raise ValidationError("Order stock is not reserved; nothing to release.")
+    
     with transaction.atomic():
         for item in order.line_items.all():
             if item.variant.track_inventory:
@@ -117,6 +106,9 @@ def release_stock(order):
         return order
 
 def deduct_reservation_on_dispatch(order):
+    if order.reservation_status != OrderStockReservationStatus.RESERVED:
+        raise ValidationError("Order stock must be reserved before dispatching.")
+
     with transaction.atomic():
         for item in order.line_items.all():
             if item.variant.track_inventory:

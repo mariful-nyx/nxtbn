@@ -202,13 +202,13 @@ class OrderStockReservationTest(BaseTestCase):
         self.warehosue_us_east_ohio= WarehouseFactory()
         
 
-        StockFactory(
+        stock_with_bo = StockFactory(
             warehouse=self.warehosue_us_east_ohio,
             product_variant=self.variant_track_order_backorder,
             quantity=5,
             reserved=0,
         )
-        StockFactory(
+        stock_without_bo = StockFactory(
             warehouse=self.warehosue_us_east_ohio,
             product_variant=self.variant_track_order_without_backorder,
             quantity=10,
@@ -258,3 +258,50 @@ class OrderStockReservationTest(BaseTestCase):
         self.assertEqual(processing.status_code, status.HTTP_200_OK)
 
         self.assertEqual(shipped.status_code, status.HTTP_400_BAD_REQUEST) # as order is not reserved, it should not be shipped
+
+        # Now increase stock 5 item in both and re-try reserve stock for order
+        stock_with_bo.quantity += 5
+        stock_with_bo.save()
+
+        stock_without_bo.quantity += 5
+        stock_without_bo.save()
+
+        # retry reserve stock
+        retry_reservation_url = reverse('retry-stock-reservation', args=[order_out_of_stock_response_with_stock_tracking_bo.data['order_alias']])
+        retry_reservation_response = self.auth_client.post(retry_reservation_url, format='json')
+        self.assertEqual(retry_reservation_response.status_code, status.HTTP_200_OK)
+
+        # now check if it is reserved as expected
+        order = Order.objects.get(alias=order_out_of_stock_response_with_stock_tracking_bo.data['order_alias'])
+        self.assertEqual(order.reservation_status, OrderStockReservationStatus.RESERVED)
+
+        # check stock and reserved quantity
+        remained_stock_with_bo = ProductVariant.objects.get(alias=self.variant_track_order_backorder.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
+        reserved_stock_with_bo = ProductVariant.objects.get(alias=self.variant_track_order_backorder.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
+
+        self.assertEqual(remained_stock_with_bo, 10)
+        self.assertEqual(reserved_stock_with_bo, 7)
+
+        remained_stock_without_bo = ProductVariant.objects.get(alias=self.variant_track_order_without_backorder.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
+        reserved_stock_without_bo = ProductVariant.objects.get(alias=self.variant_track_order_without_backorder.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
+
+        self.assertEqual(remained_stock_without_bo, 15)
+        self.assertEqual(reserved_stock_without_bo, 8)
+
+        # as enough stock is available and order is reserved, now ship the order
+        shipped = self.auth_client.put(order_status_update_url, {"status": OrderStatus.SHIPPED}, format='json')
+        self.assertEqual(shipped.status_code, status.HTTP_200_OK)
+
+        # as it is shipped, reserved quantity should be 0 and stock should be 3 and 7
+        remained_stock_after_shipping_with_bo = ProductVariant.objects.get(alias=self.variant_track_order_backorder.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
+        reserved_stock_after_shipping_with_bo = ProductVariant.objects.get(alias=self.variant_track_order_backorder.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
+
+        self.assertEqual(remained_stock_after_shipping_with_bo, 3)
+        self.assertEqual(reserved_stock_after_shipping_with_bo, 0)
+
+        remained_stock_after_shipping_without_bo = ProductVariant.objects.get(alias=self.variant_track_order_without_backorder.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total']
+        reserved_stock_after_shipping_without_bo = ProductVariant.objects.get(alias=self.variant_track_order_without_backorder.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total']
+
+        self.assertEqual(remained_stock_after_shipping_without_bo, 7)
+        self.assertEqual(reserved_stock_after_shipping_without_bo, 0)
+        

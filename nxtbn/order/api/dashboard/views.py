@@ -570,3 +570,4 @@ class ReturnRequestBulkUpdateAPIView(generics.UpdateAPIView):
             {"message": "Return requests updated successfully."},
             status=status.HTTP_200_OK
         )
+    

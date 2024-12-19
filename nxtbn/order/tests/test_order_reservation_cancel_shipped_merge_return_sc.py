@@ -381,3 +381,64 @@ class OrderStockReservationTest(BaseTestCase):
 
         self.assertEqual(remained_stock, 0)
         self.assertEqual(reserved_stock, 0)
+
+        # Now Ship the successfull order
+        order_status_update_url = reverse('order-status-update', args=[order_response.data['order_alias']])
+        approve = self.auth_client.patch(order_status_update_url, {"status": OrderStatus.APPROVED}, format='json')
+        processing = self.auth_client.patch(order_status_update_url, {"status": OrderStatus.PROCESSING}, format='json')
+        shipped = self.auth_client.patch(order_status_update_url, {"status": OrderStatus.SHIPPED}, format='json')
+
+        self.assertEqual(approve.status_code, status.HTTP_200_OK)
+        self.assertEqual(processing.status_code, status.HTTP_200_OK)
+        self.assertEqual(shipped.status_code, status.HTTP_200_OK)
+
+
+        # as it is shipped, reserved quantity should be 0 and stock should be 0
+        remained_stock_after_shipping = ProductVariant.objects.get(alias=self.variant_not_track_inventory.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total'] or 0
+        reserved_stock_after_shipping = ProductVariant.objects.get(alias=self.variant_not_track_inventory.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total'] or 0
+
+        self.assertEqual(remained_stock_after_shipping, 0)
+        self.assertEqual(reserved_stock_after_shipping, 0)
+
+        # mark it as delivered
+        delivered = self.auth_client.patch(order_status_update_url, {"status": OrderStatus.DELIVERED}, format='json')
+
+        # now try to return
+        return_request_url = reverse('return-request')
+        line_items = OrderLineItem.objects.filter(order__alias=order_response.data['order_alias'])
+
+        return_request_payload = {
+            "reason": ReturnReason.DAMAGED,
+            "order": order_response.data['order_id'],
+            "line_items": [
+            {
+                "order_line_item": line_items[0].id,
+                "quantity": 3,
+                "max_quantity": 3,
+                "destination": self.warehosue_us_east.id,
+            }
+            ]
+        }
+
+        return_request_response = self.auth_client.post(return_request_url, return_request_payload, format='json')
+        self.assertEqual(return_request_response.status_code, status.HTTP_201_CREATED)
+        
+        # Now receive the return
+        return_line_items_status_update_url = reverse('return-line-item-status-update')
+
+        line_items_ids = list(ReturnLineItem.objects.filter(order_line_item__in=line_items).values_list('id', flat=True))
+        return_line_item_payload = {
+            "receiving_status": ReturnReceiveStatus.RECEIVED,
+            "line_item_ids": line_items_ids,
+        }
+
+        return_line_item_response = self.auth_client.put(return_line_items_status_update_url, return_line_item_payload, format='json')
+        self.assertEqual(return_line_item_response.status_code, status.HTTP_200_OK)
+
+        # as it is received, stock should be 0
+        remained_stock_after_return = ProductVariant.objects.get(alias=self.variant_not_track_inventory.alias).warehouse_stocks.aggregate(total=Sum('quantity'))['total'] or 0
+        reserved_stock_after_return = ProductVariant.objects.get(alias=self.variant_not_track_inventory.alias).warehouse_stocks.aggregate(total=Sum('reserved'))['total'] or 0
+
+        self.assertEqual(remained_stock_after_return, 0)
+        self.assertEqual(reserved_stock_after_return, 0)
+        

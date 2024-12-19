@@ -157,6 +157,7 @@ class OrderDetailsSerializer(serializers.ModelSerializer):
             'is_overdue',
             'total_paid_amount',
             'device_meta',
+            'reservation_status',
         )
 
     def get_total_price(self, obj):

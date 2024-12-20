@@ -69,7 +69,7 @@ class PurchaseOrderItemDetailSerializer(serializers.ModelSerializer):
     variant = ProductVariantSerializer(read_only=True)
     class Meta:
         model = PurchaseOrderItem
-        fields = ['variant', 'ordered_quantity', 'unit_cost']
+        fields = ['variant', 'ordered_quantity', 'received_quantity', 'rejected_quantity', 'unit_cost']
 
 
 class PurchaseOrderDetailSerializer(serializers.ModelSerializer):

@@ -77,4 +77,31 @@ class PurchaseViewSet(viewsets.ModelViewSet):
             return Response({
                 "error": str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['patch'], url_path='cancel')
+    def cancel(self, request, pk=None):
+        """Cancels the purchase order."""
+        try:
+            purchase_order = self.get_object()
+            
+            if purchase_order.status in [PurchaseStatus.RECEIVED, PurchaseStatus.CANCELLED, PurchaseStatus.PENDING]:
+                return Response({
+                    "error": "Purchase order is already received, cancelled or marked as ordered."
+                }, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                purchase_order.status = PurchaseStatus.CANCELLED
+                purchase_order.save()
+
+            return Response({
+                "message": "Purchase order cancelled successfully.",
+                "purchase_order": PurchaseOrderSerializer(purchase_order).data
+            }, status=status.HTTP_200_OK)
+        except PurchaseOrder.DoesNotExist:
+            return Response({
+                "error": "Purchase order not found."
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                "error": str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
         

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from nxtbn.purchase import PurchaseStatus
 from nxtbn.purchase.models import PurchaseOrder, PurchaseOrderItem
 from nxtbn.product.api.dashboard.serializers import SupplierSerializer, ProductVariantSerializer
 from nxtbn.users.api.dashboard.serializers import UserSerializer
@@ -54,6 +55,7 @@ class PurchaseOrderCreateSerializer(serializers.ModelSerializer):
        
         purchase_order = PurchaseOrder.objects.create(
             created_by=request.user,
+            status=PurchaseStatus.DRAFT,
             **validated_data
         )
 

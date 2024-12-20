@@ -28,6 +28,7 @@ class PurchaseOrderItem(models.Model):
     
     ordered_quantity = models.PositiveIntegerField()
     received_quantity = models.PositiveIntegerField(default=0)
+    rejected_quantity = models.PositiveIntegerField(default=0)
     
     unit_cost = models.DecimalField(max_digits=10, decimal_places=2)
     

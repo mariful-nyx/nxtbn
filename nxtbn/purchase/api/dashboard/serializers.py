@@ -90,3 +90,13 @@ class PurchaseOrderDetailSerializer(serializers.ModelSerializer):
             'total_cost',
             'items'
         ]
+
+
+class PurchaseOrderItemUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseOrderItem
+        fields = ['id', 'received_quantity', 'rejected_quantity']
+
+
+class InventoryReceivingSerializer(serializers.Serializer):
+    items = PurchaseOrderItemUpdateSerializer(many=True)

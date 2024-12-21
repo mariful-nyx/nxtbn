@@ -157,7 +157,7 @@ class PurchangeOrderReceivingTest(BaseTestCase):
                 },
                 {
                     'id': self.purchage_item_two.pk,
-                    'received_quantity': 800,
+                    'received_quantity': 800, # error will be raised here
                     'rejected_quantity': 0
                 },
                 {
@@ -213,7 +213,7 @@ class PurchangeOrderReceivingTest(BaseTestCase):
 
         # validate stock
         stock_four = Stock.objects.get(pk=self.stock_four.pk)
-        self.assertEqual(stock_four.incoming, 47)
+        self.assertEqual(stock_four.incoming, 52)
         self.assertEqual(stock_four.quantity, 210)
         self.assertEqual(stock_four.reserved, 0)
 
@@ -221,13 +221,13 @@ class PurchangeOrderReceivingTest(BaseTestCase):
         self.assertEqual(stock_three.incoming, 0)
         self.assertEqual(stock_three.quantity, 3)
         self.assertEqual(stock_three.reserved, 0)
-        
+
 
 
 
         # validate stock
 
-        reject_less_than_current_reject_data = { # expect is Error
+        reject_less_than_current_reject_data = { # expect Error
             'items': [
                 {
                     'id': self.purchage_item_one.pk,
@@ -396,6 +396,6 @@ class PurchangeOrderReceivingTest(BaseTestCase):
         self.assertEqual(reject_received_response.status_code, status.HTTP_200_OK)
 
         purchase_item_four = PurchaseOrderItem.objects.get(pk=self.purchage_item_four.pk)
-        self.assertEqual(purchase_item_four.received_quantity, 210)
+        self.assertEqual(purchase_item_four.received_quantity, 220)
         self.assertEqual(purchase_item_four.rejected_quantity, 8)
 

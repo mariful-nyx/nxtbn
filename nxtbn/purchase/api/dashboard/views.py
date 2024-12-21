@@ -2,6 +2,7 @@ from rest_framework import generics, viewsets, status
 from nxtbn.purchase.api.dashboard.serializers import InventoryReceivingSerializer, PurchaseOrderCreateSerializer, PurchaseOrderSerializer, PurchaseOrderDetailSerializer
 from nxtbn.purchase.models import PurchaseOrder, PurchaseOrderItem
 from nxtbn.core.paginator import NxtbnPagination
+from nxtbn.warehouse.models import Stock
 
 
 class PurchaseViewSet(viewsets.ModelViewSet):
@@ -65,6 +66,18 @@ class PurchaseViewSet(viewsets.ModelViewSet):
                 purchase_order.status = PurchaseStatus.PENDING
                 purchase_order.save()
 
+                # Update stock levels as incoming stock with assosiate warehouse
+                for item in purchase_order.items.all():
+                    stock, created = Stock.objects.get_or_create(
+                        warehouse=purchase_order.destination,
+                        defaults={'incoming': item.ordered_quantity},
+                        product_variant=item.variant,
+                    )
+                    if not created:
+                        stock.incoming += item.ordered_quantity
+                        stock.save()
+
+
             return Response({
                 "message": "Purchase order marked as ordered successfully.",
                 "purchase_order": PurchaseOrderSerializer(purchase_order).data
@@ -113,6 +126,13 @@ class InventoryReceivingAPI(generics.UpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+
+        if instance.status != PurchaseStatus.PENDING:
+            return Response(
+                {"error": "Only purchase orders with status 'PENDING' can be received."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = self.get_serializer(data=request.data, context={'instance': instance})
         serializer.is_valid(raise_exception=True)
 

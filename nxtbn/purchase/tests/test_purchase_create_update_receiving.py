@@ -22,7 +22,8 @@ from babel.numbers import get_currency_precision, format_currency
 
 from django.test.utils import override_settings
 
-from nxtbn.warehouse.tests import WarehouseFactory
+from nxtbn.warehouse.models import Stock
+from nxtbn.warehouse.tests import StockFactory, WarehouseFactory
 
 
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
@@ -63,6 +64,8 @@ class PurchangeOrderReceivingTest(BaseTestCase):
             status=PurchaseStatus.DRAFT
         )
 
+        # Purchase Order Items
+
         self.purchage_item_one = PurchaseOrderItemFactory(
             purchase_order=self.purchange,
             variant=self.product_variant_one,
@@ -96,9 +99,53 @@ class PurchangeOrderReceivingTest(BaseTestCase):
             unit_cost=Decimal('100.00')
         )
 
+        # # stock
+        # self.stock_one = StockFactory(
+        #     warehouse=self.warehouse,
+        #     product_variant=self.product_variant_one,
+        #     quantity=0,
+        #     reserved=0,
+        #     incoming=0
+        # )
+        # self.stock_two = StockFactory(
+        #     warehouse=self.warehouse,
+        #     product_variant=self.product_variant_two,
+        #     quantity=0,
+        #     reserved=0,
+        #     incoming=0
+        # )
+        # self.stock_three = StockFactory(
+        #     warehouse=self.warehouse,
+        #     product_variant=self.product_variant_three,
+        #     quantity=0,
+        #     reserved=0,
+        #     incoming=0
+        # )
+        self.stock_four = StockFactory(
+            warehouse=self.warehouse,
+            product_variant=self.product_variant_four,
+            quantity=10,
+            reserved=0,
+            incoming=2
+        )
+
+
        
 
     def test_purchange_receiving_update(self):
+
+        # Mark the purchase as ordered
+        url = reverse('purchaseorder-mark-as-ordered', kwargs={'pk': self.purchange.pk})
+        response = self.auth_client.patch(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # validate stock incomming as purchase  marked as ordered
+        stock_four = Stock.objects.get(pk=self.stock_four.pk)
+        self.assertEqual(stock_four.incoming, 252)
+        self.stock_three = Stock.objects.get(product_variant=self.product_variant_three, warehouse=self.warehouse)
+        self.assertEqual(self.stock_three.incoming, 3)
+
+
 
         url = reverse('inventory-receiving', kwargs={'pk': self.purchange.pk})
         data_with_exed = { # expect error coz received_quantity is more than ordered_quantity
@@ -128,6 +175,8 @@ class PurchangeOrderReceivingTest(BaseTestCase):
         response = self.auth_client.put(url, data_with_exed, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        
+
     
         success_data = { # expect is successfull
             'items': [
@@ -156,9 +205,27 @@ class PurchangeOrderReceivingTest(BaseTestCase):
         response = self.auth_client.put(url, success_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+
+        # validate purchase order items
         purchase_item_four = PurchaseOrderItem.objects.get(pk=self.purchage_item_four.pk)
         self.assertEqual(purchase_item_four.received_quantity, 200)
         self.assertEqual(purchase_item_four.rejected_quantity, 5)
+
+        # validate stock
+        stock_four = Stock.objects.get(pk=self.stock_four.pk)
+        self.assertEqual(stock_four.incoming, 47)
+        self.assertEqual(stock_four.quantity, 210)
+        self.assertEqual(stock_four.reserved, 0)
+
+        stock_three = Stock.objects.get(product_variant=self.product_variant_three, warehouse=self.warehouse)
+        self.assertEqual(stock_three.incoming, 0)
+        self.assertEqual(stock_three.quantity, 3)
+        self.assertEqual(stock_three.reserved, 0)
+        
+
+
+
+        # validate stock
 
         reject_less_than_current_reject_data = { # expect is Error
             'items': [

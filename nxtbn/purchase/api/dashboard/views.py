@@ -113,7 +113,7 @@ class InventoryReceivingAPI(generics.UpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, context={'instance': instance})
         serializer.is_valid(raise_exception=True)
 
         items_data = serializer.validated_data['items']

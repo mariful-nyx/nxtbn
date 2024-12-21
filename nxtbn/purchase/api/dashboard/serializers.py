@@ -121,12 +121,18 @@ class PurchaseOrderItemUpdateSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 f"Received quantity ({received_quantity}) cannot be less than the current received quantity ({order_item.received_quantity})."
             )
+        
+        if rejected_quantity < order_item.rejected_quantity:
+            raise serializers.ValidationError(
+                f"Rejected quantity ({rejected_quantity}) cannot be less than the current rejected quantity ({order_item.rejected_quantity})."
+            )
 
         adjusted_quantity = order_item.ordered_quantity - received_quantity
         if rejected_quantity > adjusted_quantity:
             raise serializers.ValidationError(
                 f"Rejected quantity ({rejected_quantity}) cannot exceed the adjusted quantity ({adjusted_quantity})."
             )
+        
 
         return data
 

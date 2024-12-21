@@ -66,18 +66,21 @@ class PurchangeOrderReceivingTest(BaseTestCase):
             purchase_order=self.purchange,
             variant=self.product_variant_one,
             ordered_quantity=10,
+            received_quantity=0,
             unit_cost=Decimal('100.00')
         )
         self.purchage_item_two = PurchaseOrderItemFactory(
             purchase_order=self.purchange,
             variant=self.product_variant_two,
             ordered_quantity=8,
+            received_quantity=0,
             unit_cost=Decimal('100.00')
         )
         self.purchage_item_three = PurchaseOrderItemFactory(
             purchase_order=self.purchange,
             variant=self.product_variant_three,
             ordered_quantity=3,
+            received_quantity=0,
             unit_cost=Decimal('100.00')
         )
         self.purchage_item_four = PurchaseOrderItemFactory(
@@ -89,8 +92,37 @@ class PurchangeOrderReceivingTest(BaseTestCase):
 
        
 
-    def test_purchange_receiving(self):
+    def test_purchange_receiving_update(self):
+
         url = reverse('inventory-receiving', kwargs={'pk': self.purchange.pk})
+        data_with_exed = { # expect error coz received_quantity is more than ordered_quantity
+            'items': [
+                {
+                    'id': self.purchage_item_one.pk,
+                    'received_quantity': 10,
+                    'rejected_quantity': 0
+                },
+                {
+                    'id': self.purchage_item_two.pk,
+                    'received_quantity': 800,
+                    'rejected_quantity': 0
+                },
+                {
+                    'id': self.purchage_item_three.pk,
+                    'received_quantity': 3,
+                    'rejected_quantity': 0
+                },
+                {
+                    'id': self.purchage_item_four.pk,
+                    'received_quantity': 250,
+                    'rejected_quantity': 0
+                }
+            ]
+        }
+        response = self.auth_client.put(url, data_with_exed, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    
         data = {
             'items': [
                 {
@@ -117,5 +149,5 @@ class PurchangeOrderReceivingTest(BaseTestCase):
         }
         response = self.auth_client.put(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         
+

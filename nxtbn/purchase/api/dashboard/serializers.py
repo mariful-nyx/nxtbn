@@ -97,6 +97,40 @@ class PurchaseOrderItemUpdateSerializer(serializers.Serializer):
     received_quantity = serializers.IntegerField()
     rejected_quantity = serializers.IntegerField()
 
+    def validate(self, data):
+        item_id = data['id']
+        received_quantity = data['received_quantity']
+        rejected_quantity = data['rejected_quantity']
+
+    
+        instance = self.context.get('instance')
+
+        try:
+            order_item = instance.items.get(id=item_id)
+        except PurchaseOrderItem.DoesNotExist:
+            raise serializers.ValidationError(
+                f"Item with id {item_id} does not exist in the purchase order."
+            )
+
+        if received_quantity > order_item.ordered_quantity:
+            raise serializers.ValidationError(
+                f"Received quantity ({received_quantity}) cannot exceed ordered quantity ({order_item.ordered_quantity})."
+            )
+
+        if received_quantity < order_item.received_quantity:
+            raise serializers.ValidationError(
+                f"Received quantity ({received_quantity}) cannot be less than the current received quantity ({order_item.received_quantity})."
+            )
+
+        adjusted_quantity = order_item.ordered_quantity - received_quantity
+        if rejected_quantity > adjusted_quantity:
+            raise serializers.ValidationError(
+                f"Rejected quantity ({rejected_quantity}) cannot exceed the adjusted quantity ({adjusted_quantity})."
+            )
+
+        return data
+
+
 
 class InventoryReceivingSerializer(serializers.Serializer):
     items = PurchaseOrderItemUpdateSerializer(many=True)

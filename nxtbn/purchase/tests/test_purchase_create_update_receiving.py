@@ -328,3 +328,7 @@ class PurchangeOrderReceivingTest(BaseTestCase):
         reject_received_response = self.auth_client.put(url, reject_received_data, format='json')
         self.assertEqual(reject_received_response.status_code, status.HTTP_200_OK)
 
+        purchase_item_four = PurchaseOrderItem.objects.get(pk=self.purchage_item_four.pk)
+        self.assertEqual(purchase_item_four.received_quantity, 210)
+        self.assertEqual(purchase_item_four.rejected_quantity, 8)
+

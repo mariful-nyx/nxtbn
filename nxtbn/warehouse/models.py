@@ -38,6 +38,9 @@ class Stock(AbstractBaseModel):
             "3. Pre-booked Stock: Stock promised to a customer or distributor but not yet shipped."
         )
     )
+    incoming = models.IntegerField(
+        default=0, help_text="Quantity of this product variant that is expected to arrive because of purchase order or return or transfer"
+    )
 
     def clean(self):
         # Check if a Stock instance with the same warehouse and product_variant already exists

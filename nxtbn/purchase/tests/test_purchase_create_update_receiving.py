@@ -190,7 +190,7 @@ class PurchangeOrderReceivingTest(BaseTestCase):
                 {
                     'id': self.purchage_item_two.pk,
                     'received_quantity': 4,
-                    'rejected_quantity': 1
+                    'rejected_quantity': 0
                 },
                 {
                     'id': self.purchage_item_three.pk,
@@ -224,7 +224,7 @@ class PurchangeOrderReceivingTest(BaseTestCase):
                 {
                     'id': self.purchage_item_two.pk,
                     'received_quantity': 4,
-                    'rejected_quantity': 1
+                    'rejected_quantity': 0
                 },
                 {
                     'id': self.purchage_item_three.pk,
@@ -252,7 +252,7 @@ class PurchangeOrderReceivingTest(BaseTestCase):
                 {
                     'id': self.purchage_item_two.pk,
                     'received_quantity': 4,
-                    'rejected_quantity': 1
+                    'rejected_quantity': 0
                 },
                 {
                     'id': self.purchage_item_three.pk,
@@ -280,7 +280,7 @@ class PurchangeOrderReceivingTest(BaseTestCase):
                 {
                     'id': self.purchage_item_two.pk,
                     'received_quantity': 4,
-                    'rejected_quantity': 1
+                    'rejected_quantity': 0
                 },
                 {
                     'id': self.purchage_item_three.pk,
@@ -308,7 +308,7 @@ class PurchangeOrderReceivingTest(BaseTestCase):
                 {
                     'id': self.purchage_item_two.pk,
                     'received_quantity': 4,
-                    'rejected_quantity': 1
+                    'rejected_quantity': 0
                 },
                 {
                     'id': self.purchage_item_three.pk,
@@ -336,7 +336,7 @@ class PurchangeOrderReceivingTest(BaseTestCase):
                 {
                     'id': self.purchage_item_two.pk,
                     'received_quantity': 4,
-                    'rejected_quantity': 1
+                    'rejected_quantity': 0
                 },
                 {
                     'id': self.purchage_item_three.pk,
@@ -354,17 +354,22 @@ class PurchangeOrderReceivingTest(BaseTestCase):
         reject_more_adjusted_response = self.auth_client.put(url, reject_more_than_adjusted_data, format='json')
         self.assertEqual(reject_more_adjusted_response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        reject_received_data = { # expect success
+        # Mark the purchase as received and closed
+        url_mark_as_received = reverse('purchaseorder-mark-as-received', kwargs={'pk': self.purchange.pk})
+        response = self.auth_client.patch(url_mark_as_received, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST) # expect error because received quantity + rejected quantity and ordered quantity are not equal
+
+        final_draft_data = { # expect success
             'items': [
                 {
                     'id': self.purchage_item_one.pk,
-                    'received_quantity': 5,
+                    'received_quantity': 10,
                     'rejected_quantity': 0
                 },
                 {
                     'id': self.purchage_item_two.pk,
-                    'received_quantity': 4,
-                    'rejected_quantity': 1
+                    'received_quantity': 8,
+                    'rejected_quantity': 0
                 },
                 {
                     'id': self.purchage_item_three.pk,
@@ -374,17 +379,17 @@ class PurchangeOrderReceivingTest(BaseTestCase):
                 {
                     'id': self.purchage_item_four.pk,
                     'received_quantity': 210, 
-                    'rejected_quantity': 8
+                    'rejected_quantity': 40
                 }
             ]
         }
 
-        reject_received_response = self.auth_client.put(url, reject_received_data, format='json')
-        self.assertEqual(reject_received_response.status_code, status.HTTP_200_OK)
+        final_draft_response = self.auth_client.put(url, final_draft_data, format='json')
+        self.assertEqual(final_draft_response.status_code, status.HTTP_200_OK)
 
         purchase_item_four = PurchaseOrderItem.objects.get(pk=self.purchage_item_four.pk)
         self.assertEqual(purchase_item_four.received_quantity, 210)
-        self.assertEqual(purchase_item_four.rejected_quantity, 8)
+        self.assertEqual(purchase_item_four.rejected_quantity, 40)
 
 
         # Mark the purchase as received and closed
@@ -398,3 +403,6 @@ class PurchangeOrderReceivingTest(BaseTestCase):
         self.assertEqual(stock_four.quantity, 220)
 
 
+        # as it is closed now we can not update it, so try to update it and expect error
+        final_draft_response = self.auth_client.put(url, final_draft_data, format='json')
+        self.assertEqual(final_draft_response.status_code, status.HTTP_400_BAD_REQUEST)

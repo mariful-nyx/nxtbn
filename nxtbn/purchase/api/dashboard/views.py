@@ -135,6 +135,7 @@ class PurchaseViewSet(viewsets.ModelViewSet):
             When we receive it, it will be marked as received and the stock levels will be updated.
             Incoming stock will be reduced and quantity will be increased based on the received quantity.
             After marking as received, the purchase order will be closed and no further changes can be made.
+            It can not be marked as received and closed if received quantity and ordered quantity  are not equal
         """
         try:
             with transaction.atomic():
@@ -150,6 +151,11 @@ class PurchaseViewSet(viewsets.ModelViewSet):
 
                 # Update stock levels as received stock with associated warehouse
                 for item in purchase_order.items.all():
+                    # validate if received quantity + rejected quantity is equal to ordered quantity
+                    if item.ordered_quantity != item.received_quantity + item.rejected_quantity:
+                        raise ValueError(f"Received quantity and rejected quantity should sum to ordered quantity for item {item.variant.id}")
+                    
+
                     stock = Stock.objects.get(warehouse=purchase_order.destination, product_variant=item.variant)
                     stock.incoming -= item.ordered_quantity
                     stock.quantity += item.received_quantity

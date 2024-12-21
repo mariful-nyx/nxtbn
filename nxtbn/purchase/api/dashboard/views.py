@@ -108,7 +108,7 @@ class PurchaseViewSet(viewsets.ModelViewSet):
 
 class InventoryReceivingAPI(generics.UpdateAPIView):
     serializer_class = InventoryReceivingSerializer
-    lookup_field = 'id'
+    lookup_field = 'pk'
     queryset = PurchaseOrder.objects.all()
 
     def update(self, request, *args, **kwargs):

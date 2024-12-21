@@ -1,6 +1,7 @@
 from rest_framework import generics, viewsets, status
 from nxtbn.purchase.api.dashboard.serializers import InventoryReceivingSerializer, PurchaseOrderCreateSerializer, PurchaseOrderSerializer, PurchaseOrderDetailSerializer
 from nxtbn.purchase.models import PurchaseOrder, PurchaseOrderItem
+from django.db import transaction
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.warehouse.models import Stock
 
@@ -30,6 +31,12 @@ from nxtbn.purchase.models import PurchaseOrder
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.purchase import PurchaseStatus
 
+
+from django.db import transaction
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status, viewsets
+
 class PurchaseViewSet(viewsets.ModelViewSet):
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
@@ -41,7 +48,10 @@ class PurchaseViewSet(viewsets.ModelViewSet):
             return Response({
                 "error": "Only purchase orders with status 'DRAFT' can be deleted."
             }, status=status.HTTP_400_BAD_REQUEST)
-        self.perform_destroy(instance)
+
+        with transaction.atomic():
+            self.perform_destroy(instance)
+        
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_class(self):
@@ -56,17 +66,18 @@ class PurchaseViewSet(viewsets.ModelViewSet):
     def mark_as_ordered(self, request, pk=None):
         """Marks the purchase order as ordered."""
         try:
-            purchase_order = self.get_object()
-            
-            if purchase_order.status in [PurchaseStatus.RECEIVED, PurchaseStatus.CANCELLED]:
-                return Response({
-                    "error": "Purchase order is already received or cancelled."
-                }, status=status.HTTP_400_BAD_REQUEST)
-            else:
+            with transaction.atomic():
+                purchase_order = self.get_object()
+                
+                if purchase_order.status in [PurchaseStatus.RECEIVED, PurchaseStatus.CANCELLED]:
+                    return Response({
+                        "error": "Purchase order is already received or cancelled."
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
                 purchase_order.status = PurchaseStatus.PENDING
                 purchase_order.save()
 
-                # Update stock levels as incoming stock with assosiate warehouse
+                # Update stock levels as incoming stock with associated warehouse
                 for item in purchase_order.items.all():
                     stock, created = Stock.objects.get_or_create(
                         warehouse=purchase_order.destination,
@@ -76,7 +87,6 @@ class PurchaseViewSet(viewsets.ModelViewSet):
                     if not created:
                         stock.incoming += item.ordered_quantity
                         stock.save()
-
 
             return Response({
                 "message": "Purchase order marked as ordered successfully.",
@@ -95,13 +105,14 @@ class PurchaseViewSet(viewsets.ModelViewSet):
     def cancel(self, request, pk=None):
         """Cancels the purchase order."""
         try:
-            purchase_order = self.get_object()
-            
-            if purchase_order.status in [PurchaseStatus.RECEIVED, PurchaseStatus.CANCELLED, PurchaseStatus.PENDING]:
-                return Response({
-                    "error": "Purchase order is already received, cancelled or marked as ordered."
-                }, status=status.HTTP_400_BAD_REQUEST)
-            else:
+            with transaction.atomic():
+                purchase_order = self.get_object()
+                
+                if purchase_order.status in [PurchaseStatus.RECEIVED, PurchaseStatus.CANCELLED, PurchaseStatus.PENDING]:
+                    return Response({
+                        "error": "Purchase order is already received, cancelled, or marked as ordered."
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
                 purchase_order.status = PurchaseStatus.CANCELLED
                 purchase_order.save()
 
@@ -117,6 +128,7 @@ class PurchaseViewSet(viewsets.ModelViewSet):
             return Response({
                 "error": str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+
         
 
 class InventoryReceivingAPI(generics.UpdateAPIView):
@@ -137,20 +149,27 @@ class InventoryReceivingAPI(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
 
         items_data = serializer.validated_data['items']
-        for item_data in items_data:
-            item_id = item_data['id']
-            received_quantity = item_data['received_quantity']
-            rejected_quantity = item_data['rejected_quantity']
 
-            try:
-                order_item = instance.items.get(id=item_id)
-                order_item.received_quantity = received_quantity
-                order_item.rejected_quantity = rejected_quantity
-                order_item.save()
-            except PurchaseOrderItem.DoesNotExist:
-                return Response(
-                    {"error": f"Item with id {item_id} does not exist in the purchase order."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        with transaction.atomic():
+            for item_data in items_data:
+                item_id = item_data['id']
+                received_quantity = item_data['received_quantity']
+                rejected_quantity = item_data['rejected_quantity']
+
+                try:
+                    order_item = instance.items.get(id=item_id)
+                    order_item.received_quantity = received_quantity
+                    order_item.rejected_quantity = rejected_quantity
+                    order_item.save()
+
+                    # Update stock levels
+                    stock = Stock.objects.get(warehouse=instance.destination, product_variant=order_item.variant)
+                    stock.incoming -= received_quantity
+                    stock.quantity += received_quantity
+                    stock.save()
+                except PurchaseOrderItem.DoesNotExist:
+                    raise serializers.ValidationError(f"Item with id {item_id} does not exist in the purchase order.")
+                except Stock.DoesNotExist:
+                    raise serializers.ValidationError(f"Stock entry not found for item id {item_id}.")
 
         return Response({"message": "Inventory receiving updated successfully."}, status=status.HTTP_200_OK)

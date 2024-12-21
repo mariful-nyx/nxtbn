@@ -69,7 +69,7 @@ class PurchaseViewSet(viewsets.ModelViewSet):
             with transaction.atomic():
                 purchase_order = self.get_object()
                 
-                if purchase_order.status in [PurchaseStatus.RECEIVED, PurchaseStatus.CANCELLED]:
+                if purchase_order.status in [PurchaseStatus.RECEIVED_AND_CLOSED, PurchaseStatus.CANCELLED]:
                     return Response({
                         "error": "Purchase order is already received or cancelled."
                     }, status=status.HTTP_400_BAD_REQUEST)
@@ -98,7 +98,7 @@ class PurchaseViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({
-                "error": str(e)
+                "error": "An error occurred while marking the purchase order as ordered."
             }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['patch'], url_path='cancel')
@@ -126,7 +126,46 @@ class PurchaseViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({
-                "error": str(e)
+                "error": "An error occurred while cancelling the purchase order."
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=True, methods=['patch'], url_path='mark-as-received')
+    def mark_as_received(self, request, pk=None):
+        """
+            When we receive it, it will be marked as received and the stock levels will be updated.
+            Incoming stock will be reduced and quantity will be increased based on the received quantity.
+            After marking as received, the purchase order will be closed and no further changes can be made.
+        """
+        try:
+            with transaction.atomic():
+                purchase_order = self.get_object()
+                
+                if purchase_order.status != PurchaseStatus.PENDING:
+                    return Response({
+                        "error": "Only purchase orders with status 'PENDING' can be marked as received."
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+                purchase_order.status = PurchaseStatus.RECEIVED_AND_CLOSED
+                purchase_order.save()
+
+                # Update stock levels as received stock with associated warehouse
+                for item in purchase_order.items.all():
+                    stock = Stock.objects.get(warehouse=purchase_order.destination, product_variant=item.variant)
+                    stock.incoming -= item.ordered_quantity
+                    stock.quantity += item.received_quantity
+                    stock.save()
+
+            return Response({
+                "message": "Purchase order marked as received successfully.",
+                "purchase_order": PurchaseOrderSerializer(purchase_order).data
+            }, status=status.HTTP_200_OK)
+        except PurchaseOrder.DoesNotExist:
+            return Response({
+                "error": "Purchase order not found."
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                "error": "An error occurred while marking the purchase order as received."
             }, status=status.HTTP_400_BAD_REQUEST)
 
         
@@ -161,12 +200,6 @@ class InventoryReceivingAPI(generics.UpdateAPIView):
                     order_item.received_quantity = received_quantity
                     order_item.rejected_quantity = rejected_quantity
                     order_item.save()
-
-                    # Update stock levels
-                    stock = Stock.objects.get(warehouse=instance.destination, product_variant=order_item.variant)
-                    stock.incoming -= received_quantity
-                    stock.quantity += received_quantity
-                    stock.save()
                 except PurchaseOrderItem.DoesNotExist:
                     raise serializers.ValidationError(f"Item with id {item_id} does not exist in the purchase order.")
                 except Stock.DoesNotExist:

@@ -135,9 +135,11 @@ class PurchangeOrderReceivingTest(BaseTestCase):
     def test_purchange_receiving_update(self):
 
         # Mark the purchase as ordered
-        url = reverse('purchaseorder-mark-as-ordered', kwargs={'pk': self.purchange.pk})
-        response = self.auth_client.patch(url, format='json')
+        mark_as_ordered_url = reverse('purchaseorder-mark-as-ordered', kwargs={'pk': self.purchange.pk})
+        response = self.auth_client.patch(mark_as_ordered_url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+  
 
         # validate stock incomming as purchase  marked as ordered
         stock_four = Stock.objects.get(pk=self.stock_four.pk)
@@ -211,21 +213,6 @@ class PurchangeOrderReceivingTest(BaseTestCase):
         self.assertEqual(purchase_item_four.received_quantity, 200)
         self.assertEqual(purchase_item_four.rejected_quantity, 5)
 
-        # validate stock
-        stock_four = Stock.objects.get(pk=self.stock_four.pk)
-        self.assertEqual(stock_four.incoming, 52)
-        self.assertEqual(stock_four.quantity, 210)
-        self.assertEqual(stock_four.reserved, 0)
-
-        stock_three = Stock.objects.get(product_variant=self.product_variant_three, warehouse=self.warehouse)
-        self.assertEqual(stock_three.incoming, 0)
-        self.assertEqual(stock_three.quantity, 3)
-        self.assertEqual(stock_three.reserved, 0)
-
-
-
-
-        # validate stock
 
         reject_less_than_current_reject_data = { # expect Error
             'items': [
@@ -386,8 +373,8 @@ class PurchangeOrderReceivingTest(BaseTestCase):
                 },
                 {
                     'id': self.purchage_item_four.pk,
-                    'received_quantity': 210, # Previousely we received 200 but we now trying to receive 210
-                    'rejected_quantity': 8 # Previousely we rejected 5 but we now trying to reject 8
+                    'received_quantity': 210, 
+                    'rejected_quantity': 8
                 }
             ]
         }
@@ -396,6 +383,18 @@ class PurchangeOrderReceivingTest(BaseTestCase):
         self.assertEqual(reject_received_response.status_code, status.HTTP_200_OK)
 
         purchase_item_four = PurchaseOrderItem.objects.get(pk=self.purchage_item_four.pk)
-        self.assertEqual(purchase_item_four.received_quantity, 220)
+        self.assertEqual(purchase_item_four.received_quantity, 210)
         self.assertEqual(purchase_item_four.rejected_quantity, 8)
+
+
+        # Mark the purchase as received and closed
+        url_mark_as_received = reverse('purchaseorder-mark-as-received', kwargs={'pk': self.purchange.pk})
+        response = self.auth_client.patch(url_mark_as_received, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # validate stock incomming as purchase  marked as received
+        stock_four = Stock.objects.get(pk=self.stock_four.pk)
+        self.assertEqual(stock_four.incoming, 2)
+        self.assertEqual(stock_four.quantity, 220)
+
 

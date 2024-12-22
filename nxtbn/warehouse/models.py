@@ -42,6 +42,9 @@ class Stock(AbstractBaseModel):
         default=0, help_text="Quantity of this product variant that is expected to arrive because of purchase order or return or transfer"
     )
 
+    class Meta:
+        unique_together = ('warehouse', 'product_variant')
+
     def clean(self):
         # Check if a Stock instance with the same warehouse and product_variant already exists
         if Stock.objects.filter(warehouse=self.warehouse, product_variant=self.product_variant).exists():

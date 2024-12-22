@@ -3,23 +3,8 @@ from nxtbn.purchase.api.dashboard.serializers import InventoryReceivingSerialize
 from nxtbn.purchase.models import PurchaseOrder, PurchaseOrderItem
 from django.db import transaction
 from nxtbn.core.paginator import NxtbnPagination
-from nxtbn.warehouse.models import Stock
-
-
-class PurchaseViewSet(viewsets.ModelViewSet):
-    queryset = PurchaseOrder.objects.all()
-    serializer_class = PurchaseOrderSerializer
-    pagination_class = NxtbnPagination
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return PurchaseOrderCreateSerializer
-        if self.action == "retrieve":
-            return PurchaseOrderDetailSerializer
-        
-        return PurchaseOrderSerializer
-    
-    from rest_framework import generics, viewsets, status
+from nxtbn.warehouse.models import Stock   
+from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from nxtbn.purchase.api.dashboard.serializers import (

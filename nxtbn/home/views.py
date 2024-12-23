@@ -6,20 +6,22 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.template import TemplateDoesNotExist
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse
-
+from django.template.loader import engines
+from django.contrib.admin.views.decorators import staff_member_required
 
 def home(request):
     return redirect(reverse('nxtbn_dashboard'))
 
 def nxtbn_dashboard(request, *args, **kwargs):
     try:
-        return render(request, 'index.html')
+        return render(request, 'dashboard.html')
     except TemplateDoesNotExist:
         return render(request, 'templatefailback.html')
 
-from django.template.loader import engines
+
 
 def reload_templates():
     """Reloads the templates to reflect changes instantly"""
@@ -27,6 +29,7 @@ def reload_templates():
         if hasattr(engine, 'engine'):
             engine.engine.template_loaders = engine.engine.get_template_loaders(engine.engine.loaders)
 
+@staff_member_required
 def upload_admin(request):
     if request.method == 'POST':
         print("POST received with file: ", request.FILES.get('dashboard-upload'))

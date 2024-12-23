@@ -38,7 +38,6 @@
 
 ## Documentation
 - nxtbn documentation [https://docs.nxtbn.com/](https://docs.nxtbn.com/)
--  Dashboard: [Download](https://nxtbn.com/source-code-pricing)
 
 
 Welcome to **Next Billion Native Commerce (nxtbn)**, the ultimate solution for businesses looking for a flexible, scalable, and open-source E-commerce CMS. Built with Django and ReactJS, nxtbn stands out as the leading choice for enterprises seeking scalability and adaptability. 🚀

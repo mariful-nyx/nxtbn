@@ -413,9 +413,12 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             variant_serializer = VariantCreatePayloadSerializer(data=variant_data)
             if not variant_serializer.is_valid():
                 raise serializers.ValidationError(variant_serializer.errors)
-
-            # Check for existing SKUs in the database
+            
             sku = variant_data.get('sku')
+            if variant_data.get('price') < 0:
+                raise serializers.ValidationError(f"This variant({sku}) price is invalid !")
+
+            # Check for existing SKUs in the database\
             if sku and ProductVariant.objects.filter(sku=sku).exists():
                 raise serializers.ValidationError(f"SKU '{sku}' already exists. Please use a different SKU.")
 

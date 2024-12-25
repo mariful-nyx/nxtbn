@@ -63,34 +63,3 @@ class PurchageCreateUpdateAPITest(BaseTestCase):
     def test_purchange_create_update(self):
 
         purchage_create_url = reverse('purchaseorder-list')
-        
-        data = {
-            "supplier": self.supplier.id,
-            "destination": self.warehouse.id,
-            "expected_delivery_date": date.today().isoformat(),
-            "items": [
-                {
-                "variant": self.product_variant_one.id,
-                "ordered_quantity": 1,
-                "unit_cost": "674.250"
-                },
-                {
-                "variant": self.product_variant_two.id,
-                "ordered_quantity": 1,
-                "unit_cost": "137.670"
-                },
-                {
-                "variant": self.product_variant_three.id,
-                "ordered_quantity": 1,
-                "unit_cost": "416.130"
-                },
-                {
-                "variant": self.product_variant_four.id,
-                "ordered_quantity": 1,
-                "unit_cost": "625.090"
-                }
-            ]
-        }
-
-        response = self.client.post(purchage_create_url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)

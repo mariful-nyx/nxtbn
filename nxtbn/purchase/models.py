@@ -1,5 +1,6 @@
 from django.db import models
 
+from nxtbn.core.models import AbstractBaseModel
 from nxtbn.product.models import ProductVariant, Supplier
 from nxtbn.purchase import PurchaseStatus
 from nxtbn.users.models import User
@@ -7,7 +8,7 @@ from nxtbn.warehouse.models import Warehouse
 
 
 
-class PurchaseOrder(models.Model):
+class PurchaseOrder(AbstractBaseModel):
     """Represents a purchase order from a supplier"""    
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
     destination = models.ForeignKey(Warehouse, on_delete=models.PROTECT)
@@ -17,6 +18,11 @@ class PurchaseOrder(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     
     total_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
     
     def __str__(self):
         return f"PO-{self.id} ({self.status})"

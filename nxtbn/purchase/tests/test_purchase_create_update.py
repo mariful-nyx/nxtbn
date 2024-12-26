@@ -119,6 +119,14 @@ class PurchageCreateUpdateAPITest(BaseTestCase):
         purchase_detail_response = self.auth_client.get(purchase_detail_url, format='json')
         self.assertEqual(len(purchase_detail_response.json()["items"]), 2)
 
+        self.assertEqual(purchase_detail_response.json()["items"][0]["ordered_quantity"], 10)
+        self.assertEqual(purchase_detail_response.json()["items"][1]["ordered_quantity"], 300)
+        self.assertEqual(purchase_detail_response.json()["items"][0]['variant']['id'], self.product_variant_one.id)
+
+       
+        with self.assertRaises(PurchaseOrderItem.DoesNotExist):
+            PurchaseOrderItem.objects.get(purchase_order_id=purchase_order_id, variant=self.product_variant_three.id)
+
 
     def test_puchase_create_with_blank_items(self):
         purchase_create_url = reverse('purchaseorder-list')
@@ -131,34 +139,3 @@ class PurchageCreateUpdateAPITest(BaseTestCase):
         }
         response_purchase_create = self.auth_client.post(purchase_create_url, payload, format='json')
         self.assertEqual(response_purchase_create.status_code, status.HTTP_400_BAD_REQUEST)
-
-    # def test_puchase_create_with_same_variant(self):
-    #     purchase_create_url = reverse('purchaseorder-list')
-
-    #     variant = ProductVariantFactory(
-    #         product=self.product,
-    #         price=Decimal('100.00'),
-    #         cost_per_unit=Decimal('100.00'),
-    #         sku='ABC-43' # same sku
-    #     )
-
-    #     if variant:
-    #         payload = {
-    #             "supplier": self.supplier.id,
-    #             "destination": self.warehouse.id,
-    #             "expected_delivery_date": (datetime.datetime.now() + datetime.timedelta(days=7)).strftime('%Y-%m-%d'), # invalid date
-    #             "items": [
-    #                 {
-    #                     "ordered_quantity": 0,
-    #                     "unit_cost": variant.cost_per_unit,
-    #                     "variant": variant.id
-    #                 },
-    #                 {
-    #                     "ordered_quantity": 0,
-    #                     "unit_cost": variant.cost_per_unit,
-    #                     "variant": variant.id
-    #                 },
-    #             ] # same variant 
-    #         }
-    #         response_purchase_create = self.auth_client.post(purchase_create_url, payload, format='json')
-    #         self.assertEqual(response_purchase_create.status_code, status.HTTP_400_BAD_REQUEST)

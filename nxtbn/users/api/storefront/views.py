@@ -20,6 +20,7 @@ from nxtbn.users.utils.jwt_utils import JWTManager
 
 class SignupView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
+    authentication_classes = []
     serializer_class = SignupSerializer
 
     def __init__(self, **kwargs):
@@ -72,6 +73,7 @@ class SignupView(generics.CreateAPIView):
 
 class LoginView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
+    authentication_classes = []
     serializer_class = LoginRequestSerializer
 
     def __init__(self, **kwargs):

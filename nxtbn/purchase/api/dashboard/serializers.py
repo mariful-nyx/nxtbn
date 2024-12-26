@@ -77,19 +77,9 @@ class PurchaseOrderCreateSerializer(serializers.ModelSerializer):
         
         items = attrs.get('items')
         if len(items) <= 0:
-            raise serializers.ValidationError('Items is null.')
+            raise serializers.ValidationError('Items are required')
         
-        seen_skus = set()
-        for item in items:
-            part = str(item['variant']).split('(')[-1].split(')')[0]  # Extract text between '(' and ')'
-            sku = part.split(' ')[1].strip() 
-
-            # Check if SKU or alias is already seen
-            if sku in seen_skus:
-                raise serializers.ValidationError(f"Duplicate found: Variant-{sku} already exists.")
-            else:
-                seen_skus.add(sku)
-            
+      
         return super().validate(attrs)
     
 

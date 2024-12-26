@@ -213,8 +213,13 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
         """
         Returns the price range of the product variants in a human-readable format.
         """
+
+        if not self.default_variant:
+            return "No variants available."
+
         if not self.variants.exists():
             return "No variants available."
+        
 
         price_range = self.product_price_range()
         min_price = price_range['min_price']

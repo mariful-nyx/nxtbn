@@ -27,6 +27,7 @@ from django_filters import rest_framework as filters
 class LoginView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = DashboardLoginSerializer
+    authentication_classes = []
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

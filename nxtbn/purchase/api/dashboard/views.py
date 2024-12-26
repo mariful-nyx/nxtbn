@@ -1,5 +1,5 @@
 from rest_framework import generics, viewsets, status
-from nxtbn.purchase.api.dashboard.serializers import InventoryReceivingSerializer, PurchaseOrderCreateSerializer, PurchaseOrderSerializer, PurchaseOrderDetailSerializer
+from nxtbn.purchase.api.dashboard.serializers import InventoryReceivingSerializer, PurchaseOrderCreateSerializer, PurchaseOrderSerializer, PurchaseOrderDetailSerializer, PurchaseOrderUpdateSerializer
 from nxtbn.purchase.models import PurchaseOrder, PurchaseOrderItem
 from django.db import transaction
 from nxtbn.core.paginator import NxtbnPagination
@@ -42,7 +42,9 @@ class PurchaseViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return PurchaseOrderCreateSerializer
-        if self.action == "retrieve":
+        elif self.action == 'update' or self.action == 'partial_update':
+            return PurchaseOrderUpdateSerializer
+        elif self.action == "retrieve":
             return PurchaseOrderDetailSerializer
         
         return PurchaseOrderSerializer

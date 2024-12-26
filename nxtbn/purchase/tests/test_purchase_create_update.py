@@ -18,10 +18,8 @@ from nxtbn.shipping.models import ShippingRate
 from nxtbn.shipping.tests import ShippingMethodFactory, ShippingRateFactory
 from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
 from babel.numbers import get_currency_precision, format_currency
-
-
+import datetime
 from django.test.utils import override_settings
-
 from nxtbn.warehouse.models import Stock
 from nxtbn.warehouse.tests import StockFactory, WarehouseFactory
 from datetime import date
@@ -60,6 +58,129 @@ class PurchageCreateUpdateAPITest(BaseTestCase):
 
        
 
-    def test_purchange_create_update(self):
+    def test_purchase_create_update(self):
+        """Test case for create purchase order"""
+        purchase_create_url = reverse('purchaseorder-list')
 
-        purchage_create_url = reverse('purchaseorder-list')
+        payload = {
+            "supplier": self.supplier.id,
+            "destination": self.warehouse.id,
+            "expected_delivery_date": (datetime.datetime.now()+datetime.timedelta(days=7)).strftime('%Y-%m-%d'),
+            "items": [
+                {
+                    "ordered_quantity": 0,
+                    "unit_cost": self.product_variant_one.cost_per_unit,
+                    "variant": self.product_variant_one.id
+                },
+                {
+                    "ordered_quantity": 0,
+                    "unit_cost": self.product_variant_two.cost_per_unit,
+                    "variant": self.product_variant_two.id
+                },
+                {
+                    "ordered_quantity": 0,
+                    "unit_cost": self.product_variant_three.cost_per_unit,
+                    "variant": self.product_variant_three.id
+                },
+                {
+                    "ordered_quantity": 0,
+                    "unit_cost": self.product_variant_four.cost_per_unit,
+                    "variant": self.product_variant_four.id
+                },
+            ]
+        }
+        response_purchase_create = self.auth_client.post(purchase_create_url, payload, format='json')
+        self.assertEqual(response_purchase_create.status_code, status.HTTP_201_CREATED)
+
+        """Test case for update purchase order"""
+        purchase_order_id = response_purchase_create.json()['id']
+        purchase_detail_url = reverse('purchaseorder-detail', kwargs={'pk': purchase_order_id})
+
+        updated_payload = {
+            "supplier": self.supplier.id,
+            "destination": self.warehouse.id,
+            "expected_delivery_date": (datetime.datetime.now()+datetime.timedelta(days=5)).strftime('%Y-%m-%d'),
+            "items": [
+                {
+                    "ordered_quantity": 0,
+                    "unit_cost": self.product_variant_one.cost_per_unit,
+                    "variant": self.product_variant_one.id
+                },
+                {
+                    "ordered_quantity": 0,
+                    "unit_cost": self.product_variant_two.cost_per_unit,
+                    "variant": self.product_variant_two.id
+                },
+            ]
+        }
+        response_purchase_update = self.auth_client.put(purchase_detail_url, updated_payload, format='json')
+        self.assertEqual(response_purchase_update.status_code, status.HTTP_200_OK)
+        
+        purchase_detail_response = self.auth_client.get(purchase_detail_url, format='json')
+        self.assertEqual(len(purchase_detail_response.json()["items"]), 2)
+
+    def test_puchase_create_with_invalid_expected_delivery_date(self):
+        purchase_create_url = reverse('purchaseorder-list')
+
+        payload = {
+            "supplier": self.supplier.id,
+            "destination": self.warehouse.id,
+            "expected_delivery_date": (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'), # invalid date
+            "items": [
+                {
+                    "ordered_quantity": 0,
+                    "unit_cost": self.product_variant_one.cost_per_unit,
+                    "variant": self.product_variant_one.id
+                },
+                {
+                    "ordered_quantity": 0,
+                    "unit_cost": self.product_variant_two.cost_per_unit,
+                    "variant": self.product_variant_two.id
+                },
+            ]
+        }
+        response_purchase_create = self.auth_client.post(purchase_create_url, payload, format='json')
+        self.assertEqual(response_purchase_create.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_puchase_create_with_blank_items(self):
+        purchase_create_url = reverse('purchaseorder-list')
+
+        payload = {
+            "supplier": self.supplier.id,
+            "destination": self.warehouse.id,
+            "expected_delivery_date": (datetime.datetime.now() + datetime.timedelta(days=7)).strftime('%Y-%m-%d'), # invalid date
+            "items": [] # blank item
+        }
+        response_purchase_create = self.auth_client.post(purchase_create_url, payload, format='json')
+        self.assertEqual(response_purchase_create.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_puchase_create_with_same_variant(self):
+        purchase_create_url = reverse('purchaseorder-list')
+
+        variant = ProductVariantFactory(
+            product=self.product,
+            price=Decimal('100.00'),
+            cost_per_unit=Decimal('100.00'),
+            sku='ABC-43' # same sku
+        )
+
+        if variant:
+            payload = {
+                "supplier": self.supplier.id,
+                "destination": self.warehouse.id,
+                "expected_delivery_date": (datetime.datetime.now() + datetime.timedelta(days=7)).strftime('%Y-%m-%d'), # invalid date
+                "items": [
+                    {
+                        "ordered_quantity": 0,
+                        "unit_cost": variant.cost_per_unit,
+                        "variant": variant.id
+                    },
+                    {
+                        "ordered_quantity": 0,
+                        "unit_cost": variant.cost_per_unit,
+                        "variant": variant.id
+                    },
+                ] # same variant 
+            }
+            response_purchase_create = self.auth_client.post(purchase_create_url, payload, format='json')
+            self.assertEqual(response_purchase_create.status_code, status.HTTP_400_BAD_REQUEST)

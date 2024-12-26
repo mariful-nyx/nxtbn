@@ -49,12 +49,13 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        if settings.IS_MULTI_CURRENCY:
-            context['exchange_rate'] = currency_Backend().get_exchange_rate(self.request.currency)
-        else:
-            context['exchange_rate'] = 1.0
-        
+        context['exchange_rate'] = self.get_exchange_rate()
         return context
+
+    def get_exchange_rate(self):
+        if settings.IS_MULTI_CURRENCY:
+            return currency_Backend().get_exchange_rate(self.request.currency)
+        return 1.0
 
 
     def paginate_and_serialize(self, queryset): # Custom
@@ -79,7 +80,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         
 
     @action(detail=False, methods=['get'], url_path='withvariant')
-    def list_products_with_variant(self, request):
+    def withvariant(self, request):
         queryset = self.filter_queryset(self.queryset)
         return self.paginate_and_serialize(queryset)
     

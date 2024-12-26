@@ -130,6 +130,17 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_created')
     last_modified_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_modified', null=True, blank=True)
     name = models.CharField(max_length=255, help_text="The name of the product.")
+    name_when_in_relation = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=(
+            "The name used for this product when it is related to another product. "
+            "For example, if you have a black t-shirt with size variants and a white t-shirt with size variants, "
+            "you can refer to them as 'black' and 'white' respectively."
+            "This field is only used when the product is related to another product."
+        )
+    )
     summary = models.TextField(max_length=500, help_text="A brief summary of the product.")
     description = models.TextField(max_length=5000)
     images = models.ManyToManyField(Image, blank=True)

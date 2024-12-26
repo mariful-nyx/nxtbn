@@ -4,6 +4,11 @@ from nxtbn.purchase.models import PurchaseOrder, PurchaseOrderItem
 from nxtbn.product.api.dashboard.serializers import SupplierSerializer, ProductVariantSerializer
 from nxtbn.users.api.dashboard.serializers import UserSerializer
 from nxtbn.warehouse.api.dashboard.serializers import WarehouseSerializer
+from nxtbn.product.models import Supplier
+from nxtbn.warehouse.models import Warehouse
+from django.db import transaction
+import datetime
+import re
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
     supplier_name = serializers.SerializerMethodField()
@@ -42,7 +47,7 @@ class PurchaseOrderCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PurchaseOrder
-        fields = ['supplier', 'destination', 'expected_delivery_date', 'items']
+        fields = ['id', 'supplier', 'destination', 'expected_delivery_date', 'items']
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -63,6 +68,86 @@ class PurchaseOrderCreateSerializer(serializers.ModelSerializer):
             PurchaseOrderItem.objects.create(purchase_order=purchase_order, **item_data)
 
         return purchase_order
+    
+    def validate(self, attrs):
+        expected_delivery_date = attrs.get('expected_delivery_date')
+        expected_delivery_datetime = datetime.datetime.combine(expected_delivery_date, datetime.time())
+        if expected_delivery_datetime <= datetime.datetime.now():
+            raise serializers.ValidationError('Invalid Expected delivery date, it is equal or less than current date.')
+        
+        items = attrs.get('items')
+        if len(items) <= 0:
+            raise serializers.ValidationError('Items is null.')
+        
+        seen_skus = set()
+        for item in items:
+            part = str(item['variant']).split('(')[-1].split(')')[0]  # Extract text between '(' and ')'
+            sku = part.split(' ')[1].strip() 
+
+            # Check if SKU or alias is already seen
+            if sku in seen_skus:
+                raise serializers.ValidationError(f"Duplicate found: Variant-{sku} already exists.")
+            else:
+                seen_skus.add(sku)
+            
+        return super().validate(attrs)
+    
+
+class PurchaseOrderUpdateSerializer(serializers.ModelSerializer):
+    supplier = serializers.PrimaryKeyRelatedField(queryset=Supplier.objects.all(), write_only=True)
+    destination = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all(), write_only=True)
+    items = PurchaseOrderItemSerializer(many=True, write_only=True)
+
+    class Meta:
+        model = PurchaseOrder
+        fields = ['id', 'supplier', 'destination', 'expected_delivery_date', 'items']
+
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items', [])
+
+        with transaction.atomic():
+            # Update the purchase order fields
+            instance.supplier = validated_data.get('supplier', instance.supplier)
+            instance.destination = validated_data.get('destination', instance.destination)
+            instance.expected_delivery_date = validated_data.get('expected_delivery_date', instance.expected_delivery_date)
+
+            # Save the updated purchase order instance
+            instance.save()
+
+            # List to keep track of new items to avoid deletion
+            new_item_ids = []
+
+            # Process each item in the provided items data
+            for item_data in items_data:
+                item_id = item_data.get('id', None)
+
+                # If the item has an ID, it's an existing item to update
+                if item_id:
+                    try:
+                        item = instance.items.get(id=item_id)
+                        item.ordered_quantity = item_data.get('ordered_quantity', item.ordered_quantity)
+                        item.unit_cost = item_data.get('unit_cost', item.unit_cost)
+                        item.save()
+                        new_item_ids.append(item.id)
+                    except PurchaseOrderItem.DoesNotExist:
+                        pass  
+                else:
+                    # If there's no ID, create a new item
+                    new_item = PurchaseOrderItem.objects.create(
+                        purchase_order=instance,
+                        variant=item_data['variant'],
+                        ordered_quantity=item_data['ordered_quantity'],
+                        unit_cost=item_data['unit_cost'],
+                    )
+                    new_item_ids.append(new_item.id)
+
+            # Remove items that are no longer part of the request
+            for item in instance.items.all():
+                if item.id not in new_item_ids:
+                    item.delete()
+
+        # Return the updated purchase order instance
+        return instance
     
 
 class PurchaseOrderItemDetailSerializer(serializers.ModelSerializer):

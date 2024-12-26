@@ -77,19 +77,9 @@ class PurchaseOrderCreateSerializer(serializers.ModelSerializer):
         
         items = attrs.get('items')
         if len(items) <= 0:
-            raise serializers.ValidationError('Items is null.')
+            raise serializers.ValidationError('Items are required')
         
-        seen_skus = set()
-        for item in items:
-            part = str(item['variant']).split('(')[-1].split(')')[0]  # Extract text between '(' and ')'
-            sku = part.split(' ')[1].strip() 
-
-            # Check if SKU or alias is already seen
-            if sku in seen_skus:
-                raise serializers.ValidationError(f"Duplicate found: Variant-{sku} already exists.")
-            else:
-                seen_skus.add(sku)
-            
+      
         return super().validate(attrs)
     
 
@@ -111,14 +101,12 @@ class PurchaseOrderUpdateSerializer(serializers.ModelSerializer):
             instance.destination = validated_data.get('destination', instance.destination)
             instance.expected_delivery_date = validated_data.get('expected_delivery_date', instance.expected_delivery_date)
 
-            # Save the updated purchase order instance
-            instance.save()
-
             # List to keep track of new items to avoid deletion
             new_item_ids = []
 
             # Process each item in the provided items data
             for item_data in items_data:
+                variant = item_data.get('variant')
                 item_id = item_data.get('id', None)
 
                 # If the item has an ID, it's an existing item to update
@@ -132,14 +120,22 @@ class PurchaseOrderUpdateSerializer(serializers.ModelSerializer):
                     except PurchaseOrderItem.DoesNotExist:
                         pass  
                 else:
-                    # If there's no ID, create a new item
-                    new_item = PurchaseOrderItem.objects.create(
-                        purchase_order=instance,
-                        variant=item_data['variant'],
-                        ordered_quantity=item_data['ordered_quantity'],
-                        unit_cost=item_data['unit_cost'],
-                    )
-                    new_item_ids.append(new_item.id)
+                    # Check if the variant already exists in the purchase order
+                    existing_item = instance.items.filter(variant=variant).first()
+                    if existing_item:
+                        existing_item.ordered_quantity = item_data['ordered_quantity']
+                        existing_item.unit_cost = item_data['unit_cost']
+                        existing_item.save()
+                        new_item_ids.append(existing_item.id)
+                    else:
+                        # If there's no ID and no existing item, create a new item
+                        new_item = PurchaseOrderItem.objects.create(
+                            purchase_order=instance,
+                            variant=variant,
+                            ordered_quantity=item_data['ordered_quantity'],
+                            unit_cost=item_data['unit_cost'],
+                        )
+                        new_item_ids.append(new_item.id)
 
             # Remove items that are no longer part of the request
             for item in instance.items.all():

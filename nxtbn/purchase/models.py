@@ -37,6 +37,9 @@ class PurchaseOrderItem(models.Model):
     rejected_quantity = models.PositiveIntegerField(default=0)
     
     unit_cost = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        unique_together = ['purchase_order', 'variant']
     
     def __str__(self):
         return f"{self.variant.name} - {self.ordered_quantity}"

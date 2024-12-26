@@ -80,7 +80,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         
 
     @action(detail=False, methods=['get'], url_path='withvariant')
-    def list_products_with_variant(self, request):
+    def withvariant(self, request):
         queryset = self.filter_queryset(self.queryset)
         return self.paginate_and_serialize(queryset)
     

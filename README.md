@@ -44,7 +44,7 @@
 Launch nxtbn quickly using Docker without the need to clone the repository:
 
 ```sh
-docker run -p 8000:8000 --name nxtbn_backend nxtbn/nxtbn:latest
+docker run --name nxtbn_backend -p 8000:8000 -v static_data:/backend/staticfiles -v $(pwd)/dist/media:/backend/media nxtbn/nxtbn:latest
 ```
 
 

@@ -39,6 +39,15 @@
 ## Documentation
 - nxtbn documentation [https://docs.nxtbn.com/](https://docs.nxtbn.com/)
 
+## 🚀 Quick Start with Docker
+
+Launch nxtbn quickly using Docker without the need to clone the repository:
+
+```sh
+docker run -p 8000:8000 --name nxtbn_backend nxtbn/nxtbn:latest
+```
+
+
 
 Welcome to **Next Billion Native Commerce (nxtbn)**, the ultimate solution for businesses looking for a flexible, scalable, and open-source E-commerce CMS. Built with Django and ReactJS, nxtbn stands out as the leading choice for enterprises seeking scalability and adaptability. 🚀
 

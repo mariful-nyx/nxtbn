@@ -30,9 +30,17 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         ]
     def get_supplier_name(self, obj):
         return obj.supplier.name
+    
     def get_destination_name(self, obj):
         return obj.destination.name
+    
     def get_created_by_name(self, obj):
+        if not obj.created_by:
+            return "N/A"
+        
+        if not obj.created_by.first_name and not obj.created_by.last_name:
+            return obj.created_by.username
+
         return f"{obj.created_by.first_name} {obj.created_by.last_name}"
 
 

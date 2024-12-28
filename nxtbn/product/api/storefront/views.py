@@ -10,6 +10,7 @@ from rest_framework.exceptions import APIException
 from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
+from django.contrib.postgres.search import TrigramSimilarity
 
 
 from nxtbn.core.paginator import NxtbnPagination
@@ -76,6 +77,9 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         
         if self.action == 'with_related':
             return ProductDetailWithRelatedLinkMinimalSerializer
+        
+        if self.action == 'with_recommended':
+            return ProductWithDefaultVariantSerializer
 
         return ProductWithVariantSerializer
         
@@ -90,9 +94,18 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         product = self.get_object()
         serializer = self.get_serializer(product)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'], url_path='with-recommended') # list
+    def with_recommended(self, request, slug=None):
+        product = self.get_object()
+        queryset = Product.objects.annotate(
+            similarity=TrigramSimilarity('name', product.name)
+        ).order_by('-similarity')[:20]
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     
-
 class CollectionListView(generics.ListAPIView):
     permission_classes = (AllowAny,)
     pagination_class = None
@@ -105,16 +118,3 @@ class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-
-
-class RecommendedProductWiseListView(generics.ListAPIView):
-    permission_classes = (AllowAny,)
-    pagination_class = None
-    serializer_class = ProductWithDefaultVariantSerializer
-
-    def get_queryset(self):
-        product_slug = self.kwargs.get('slug')
-        if product_slug:
-            product = Product.objects.get(slug=product_slug)
-            return Product.objects.filter(name__icontains=product.name).exclude(id=product.id)
-        raise APIException(_('Product not found'))

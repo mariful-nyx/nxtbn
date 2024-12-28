@@ -45,7 +45,6 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'summary',
-            'description',
             'category',
             'brand',
             'slug',

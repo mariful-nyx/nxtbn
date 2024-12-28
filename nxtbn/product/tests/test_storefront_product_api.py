@@ -42,3 +42,13 @@ class ProductListWithDefaultVariantOnlyAPITest(BaseTestCase):
         
         for product in response.data['results']:
             self.assertNotIn('variants', product) # only default variant should be present, not all variants
+
+
+    def get_product_list_api_with_variant_only(self):
+        url = reverse('product-withvariant')
+        response = self.auth_client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        for product in response.data:
+            self.assertIn('variants', product)
+            self.assertNotIn('default_variant', product) # only variants should be present, not default variant

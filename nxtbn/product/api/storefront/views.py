@@ -13,7 +13,7 @@ from django_filters import rest_framework as filters
 
 
 from nxtbn.core.paginator import NxtbnPagination
-from nxtbn.product.api.storefront.serializers import CategorySerializer, CollectionSerializer, ProductDetailSerializer, ProductWithDefaultVariantSerializer, ProductWithVariantSerializer
+from nxtbn.product.api.storefront.serializers import CategorySerializer, CollectionSerializer, ProductDetailSerializer, ProductWithDefaultVariantSerializer, ProductWithVariantSerializer, ProductDetailWithRelatedLinkMinimalSerializer
 from nxtbn.product.models import Category, Collection, Product
 from nxtbn.product.models import Supplier
 from nxtbn.core.currency.backend import currency_Backend
@@ -46,6 +46,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     ]
     filterset_class = ProductFilter
     ordering_fields = ['name', 'created_at']
+    lookup_field = 'slug'
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -69,6 +70,13 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list':
             return  ProductWithDefaultVariantSerializer
+        
+        if self.action == 'retrieve':
+            return ProductDetailSerializer
+        
+        if self.action == 'with_related':
+            return ProductDetailWithRelatedLinkMinimalSerializer
+
         return ProductWithVariantSerializer
         
 
@@ -76,6 +84,15 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     def withvariant(self, request):
         queryset = self.filter_queryset(self.queryset)
         return self.paginate_and_serialize(queryset)
+    
+    @action(detail=True, methods=['get'], url_path='with-related')
+    def with_related(self, request, slug=None):
+        # Use the lookup_field to fetch the object
+        product = self.get_object()
+        serializer = self.get_serializer(product)
+        return Response(serializer.data)
+
+
     
 
 class CollectionListView(generics.ListAPIView):

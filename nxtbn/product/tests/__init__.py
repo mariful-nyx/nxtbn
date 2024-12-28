@@ -42,7 +42,7 @@ class CategoryFactory(DjangoModelFactory):
     class Meta:
         model = Category
 
-    name = factory.Faker("word")
+    name =  factory.LazyAttribute(lambda o: f"{fake.word()} {fake.word()}")
     description = factory.Faker("sentence")
     # parent = factory.Maybe(
     #     factory.Faker("boolean"),
@@ -76,7 +76,7 @@ class ProductTypeFactory(DjangoModelFactory):
     class Meta:
         model = ProductType
 
-    name = factory.Faker("word")
+    name = factory.LazyAttribute(lambda o: f"{fake.word()} {fake.word()}")
     taxable = fake.boolean()
     physical_product = fake.boolean()
     track_stock = fake.boolean()
@@ -88,7 +88,7 @@ class ProductFactory(DjangoModelFactory):
     class Meta:
         model = Product
 
-    name = factory.Faker("word")
+    name = factory.LazyAttribute(lambda o: f"{fake.word()} {fake.word()}")
     summary = factory.Faker("sentence")
     description = factory.Faker("paragraph")
     created_by = factory.SubFactory(UserFactory)
@@ -118,7 +118,8 @@ class ProductVariantFactory(DjangoModelFactory):
     product = factory.SubFactory(ProductFactory)
     name = factory.Faker("word")
     sku = factory.Faker("ean13")
-    price = normalize_amount_currencywise(random.uniform(10, 1000), settings.BASE_CURRENCY),
-    currency = "USD"
+    price = normalize_amount_currencywise(random.uniform(10, 1000), settings.BASE_CURRENCY)
+    cost_per_unit = normalize_amount_currencywise(random.uniform(10, 1000), settings.BASE_CURRENCY)
+    currency = settings.BASE_CURRENCY
     # stock = factory.Faker("random_int", min=0, max=100)
     track_inventory = fake.boolean()

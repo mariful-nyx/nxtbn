@@ -18,7 +18,7 @@ from django.test.utils import override_settings
 
 
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
-class ProductListWithDefaultVariantOnlyAPITest(BaseTestCase):
+class ProductListAPITest(BaseTestCase):
 
     def setUp(self):
         super().setUp()
@@ -52,3 +52,28 @@ class ProductListWithDefaultVariantOnlyAPITest(BaseTestCase):
         for product in response.data:
             self.assertIn('variants', product)
             self.assertNotIn('default_variant', product) # only variants should be present, not default variant
+
+
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+class ProductDetailAPITest(BaseTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.adminLogin()
+        self.product = ProductFactory()
+        self.product_type = ProductTypeFactory()
+        self.product.product_type = self.product_type
+        self.product.save()
+
+    def test_product_detail(self):
+        url = reverse('product-detail', args=[self.product.slug])
+        response = self.auth_client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], self.product.id)
+        self.assertEqual(response.data['name'], self.product.name)
+        self.assertEqual(response.data['summary'], self.product.summary)
+        self.assertEqual(response.data['description'], self.product.description)
+        self.assertEqual(response.data['category'], self.product.category.id)
+        self.assertIn('variants', response.data)
+        
+

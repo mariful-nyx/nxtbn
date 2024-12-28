@@ -82,8 +82,6 @@ class ProductSlugSerializer(serializers.ModelSerializer):
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True)
-    default_variant = ProductVariantSerializer(read_only=True)
-    related_to = ProductSlugSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -97,7 +95,5 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'collections',
             'images',
             'created_by',
-            'default_variant',
             'variants',
-            'related_to',
         )

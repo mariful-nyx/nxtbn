@@ -46,6 +46,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     ]
     filterset_class = ProductFilter
     ordering_fields = ['name', 'created_at']
+    lookup_field = 'slug'
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -69,6 +70,9 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list':
             return  ProductWithDefaultVariantSerializer
+        
+        if self.action == 'retrieve':
+            return ProductDetailSerializer
         return ProductWithVariantSerializer
         
 

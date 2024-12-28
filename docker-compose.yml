@@ -6,12 +6,6 @@ services:
     container_name: nxtbn_backend
     ports:
       - "8000:8000"
-    # environment:
-      # DATABASE_NAME: ${DATABASE_NAME}
-      # DATABASE_USER: ${DATABASE_USER}
-      # DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      # DATABASE_HOST: ${DATABASE_HOST}
-      # DATABASE_PORT: ${DATABASE_PORT}
     volumes:
       - static_data:/backend/staticfiles
       - "./dist/media:/backend/media" 

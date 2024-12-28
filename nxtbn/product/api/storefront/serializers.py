@@ -24,7 +24,11 @@ class ProductVariantSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()
     class Meta:
         model = ProductVariant
-        fields = '__all__'
+        fields = [
+            'id',
+            'name',
+            'price',
+        ]
  
     def get_price(self, obj):
         target_currency = self.context['request'].currency
@@ -63,9 +67,6 @@ class ProductWithDefaultVariantSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'summary',
-            'description',
-            'category',
-            'brand',
             'slug',
             'default_variant',
             'product_thumbnail'

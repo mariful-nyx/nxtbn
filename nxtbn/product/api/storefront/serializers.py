@@ -97,3 +97,29 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'created_by',
             'variants',
         )
+
+
+class ProductSlugRelatedNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ('id', 'slug', 'name_when_in_relation',)
+
+class ProductDetailWithRelatedLinkMinimalSerializer(serializers.ModelSerializer):
+    variants = ProductVariantSerializer(many=True)
+    related_links = ProductSlugRelatedNameSerializer(many=True, source='related_to')
+
+    class Meta:
+        model = Product
+        fields = (
+            'id',
+            'name',
+            'summary',
+            'description',
+            'brand',
+            'category',
+            'collections',
+            'images',
+            'created_by',
+            'variants',
+            'related_links',
+        )

@@ -13,7 +13,7 @@ from django_filters import rest_framework as filters
 
 
 from nxtbn.core.paginator import NxtbnPagination
-from nxtbn.product.api.storefront.serializers import CategorySerializer, CollectionSerializer, ProductDetailSerializer, ProductWithDefaultVariantSerializer, ProductWithVariantSerializer
+from nxtbn.product.api.storefront.serializers import CategorySerializer, CollectionSerializer, ProductDetailSerializer, ProductWithDefaultVariantSerializer, ProductWithVariantSerializer, ProductDetailWithRelatedLinkMinimalSerializer
 from nxtbn.product.models import Category, Collection, Product
 from nxtbn.product.models import Supplier
 from nxtbn.core.currency.backend import currency_Backend
@@ -73,6 +73,10 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         
         if self.action == 'retrieve':
             return ProductDetailSerializer
+        
+        if self.action == 'with_related':
+            return ProductDetailWithRelatedLinkMinimalSerializer
+
         return ProductWithVariantSerializer
         
 
@@ -80,6 +84,12 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     def withvariant(self, request):
         queryset = self.filter_queryset(self.queryset)
         return self.paginate_and_serialize(queryset)
+    
+    @action(detail=True, methods=['get'], url_path='with-related')
+    def with_related(self, request, slug=None):
+        queryset = self.filter_queryset(self.queryset.filter(slug=slug))
+        return self.paginate_and_serialize(queryset)
+
     
 
 class CollectionListView(generics.ListAPIView):

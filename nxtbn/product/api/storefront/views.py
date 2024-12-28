@@ -87,8 +87,11 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail=True, methods=['get'], url_path='with-related')
     def with_related(self, request, slug=None):
-        queryset = self.filter_queryset(self.queryset.filter(slug=slug))
-        return self.paginate_and_serialize(queryset)
+        # Use the lookup_field to fetch the object
+        product = self.get_object()
+        serializer = self.get_serializer(product)
+        return Response(serializer.data)
+
 
     
 

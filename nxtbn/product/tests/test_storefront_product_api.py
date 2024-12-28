@@ -75,5 +75,45 @@ class ProductDetailAPITest(BaseTestCase):
         self.assertEqual(response.data['description'], self.product.description)
         self.assertEqual(response.data['category'], self.product.category.id)
         self.assertIn('variants', response.data)
-        
 
+
+    def test_product_detail_with_related(self):
+        black_shirt = ProductFactory(
+            name='black t-shirt',
+            name_when_in_relation='black'
+        )
+        
+        ProductVariantFactory(product=black_shirt, name='black t-shirt - small',)
+        ProductVariantFactory(product=black_shirt, name='black t-shirt - medium',)
+        ProductVariantFactory(product=black_shirt, name='black t-shirt - large',)
+        black_shirt.default_variant = ProductVariantFactory(product=black_shirt, name='black t-shirt - x-large',)
+
+        white_shirt = ProductFactory(
+            name='white t-shirt',
+        )
+
+        ProductVariantFactory(product=white_shirt, name='white t-shirt - small',)
+        ProductVariantFactory(product=white_shirt, name='white t-shirt - medium',)
+        ProductVariantFactory(product=white_shirt, name='white t-shirt - large',)
+        white_shirt.default_variant = ProductVariantFactory(product=white_shirt, name='white t-shirt - x-large',)
+
+        white_shirt.related_to.add(black_shirt)
+        black_shirt.related_to.add(white_shirt)
+
+
+        url = reverse('product-with-related', args=[black_shirt.slug])
+        response = self.auth_client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+        self.assertEqual(response.data['id'], black_shirt.id)
+        self.assertEqual(response.data['name'], black_shirt.name)
+        self.assertEqual(response.data['summary'], black_shirt.summary)
+        self.assertEqual(response.data['description'], black_shirt.description)
+        self.assertIn('variants', response.data)
+        self.assertIn('related_links', response.data)
+        self.assertEqual(len(response.data['related_links']), 1)
+        
+        self.assertEqual(response.data['related_links'][0]['id'], white_shirt.id)
+        self.assertEqual(response.data['related_links'][0]['slug'], white_shirt.slug)
+        self.assertEqual(response.data['related_links'][0]['name_when_in_relation'], white_shirt.name_when_in_relation)

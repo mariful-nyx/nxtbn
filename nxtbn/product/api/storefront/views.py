@@ -58,8 +58,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         return 1.0
 
 
-    def paginate_and_serialize(self, queryset): # Custom
-        # Helper function to handle pagination and serialization
+    def paginate_and_serialize(self, queryset): # NXTBN specific
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -68,15 +67,9 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
     
     def get_serializer_class(self):
-        # Select the serializer dynamically based on the action
-        if self.action == 'default':
+        if self.action == 'list':
             return  ProductWithDefaultVariantSerializer
         return ProductWithVariantSerializer
-
-    @action(detail=False, methods=['get'], url_path='default')
-    def default(self, request):
-        queryset = self.filter_queryset(self.queryset)
-        return self.paginate_and_serialize(queryset)
         
 
     @action(detail=False, methods=['get'], url_path='withvariant')

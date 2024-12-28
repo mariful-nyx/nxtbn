@@ -54,6 +54,7 @@ class LoginView(generics.GenericAPIView):
                 {
                     "user": user_data,
                     'store_url': settings.STORE_URL,
+                    'VERSION': settings.VERSION,
                     "token": {
                         "access": access_token,
                         "refresh": refresh_token,

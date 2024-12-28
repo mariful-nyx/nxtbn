@@ -173,6 +173,7 @@ class TokenRefreshView(generics.GenericAPIView):
                 {
                     "user": user_data,
                     'store_url': settings.STORE_URL,
+                    'VERSION': settings.VERSION,
                     "token": {
                         "access": access_token,
                         "refresh": new_refresh_token,

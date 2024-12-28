@@ -80,18 +80,16 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         return ProductWithVariantSerializer
         
 
-    @action(detail=False, methods=['get'], url_path='withvariant')
+    @action(detail=False, methods=['get'], url_path='withvariant') # list
     def withvariant(self, request):
         queryset = self.filter_queryset(self.queryset)
         return self.paginate_and_serialize(queryset)
     
-    @action(detail=True, methods=['get'], url_path='with-related')
+    @action(detail=True, methods=['get'], url_path='with-related') # details 
     def with_related(self, request, slug=None):
-        # Use the lookup_field to fetch the object
         product = self.get_object()
         serializer = self.get_serializer(product)
         return Response(serializer.data)
-
 
     
 
@@ -108,8 +106,15 @@ class CategoryListView(generics.ListAPIView):
     serializer_class = CategorySerializer
 
 
-class ProductDetailView(generics.RetrieveAPIView):
+
+class RecommendedProductWiseListView(generics.ListAPIView):
     permission_classes = (AllowAny,)
-    queryset = Product.objects.all()
-    serializer_class = ProductDetailSerializer
-    lookup_field = 'slug'
+    pagination_class = None
+    serializer_class = ProductWithDefaultVariantSerializer
+
+    def get_queryset(self):
+        product_slug = self.kwargs.get('slug')
+        if product_slug:
+            product = Product.objects.get(slug=product_slug)
+            return Product.objects.filter(name__icontains=product.name).exclude(id=product.id)
+        raise APIException(_('Product not found'))

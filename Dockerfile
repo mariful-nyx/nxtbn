@@ -23,8 +23,15 @@ COPY ./ /backend
 WORKDIR /backend
 
 
+
 RUN chmod +x /backend/scripts/entrypoint.sh
+
+RUN mkdir -p /backend/media
 RUN chmod +x /backend/media
 
 
 CMD ["/backend/scripts/entrypoint.sh"]
+
+# docker build -t nxtbn/nxtbn:latest .
+# docker login
+# docker push nxtbn/nxtbn:latest

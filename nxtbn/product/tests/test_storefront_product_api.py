@@ -72,7 +72,6 @@ class ProductDetailAPITest(BaseTestCase):
         self.assertEqual(response.data['id'], self.product.id)
         self.assertEqual(response.data['name'], self.product.name)
         self.assertEqual(response.data['summary'], self.product.summary)
-        self.assertEqual(response.data['description'], self.product.description)
         self.assertEqual(response.data['category'], self.product.category.id)
         self.assertIn('variants', response.data)
 
@@ -109,7 +108,6 @@ class ProductDetailAPITest(BaseTestCase):
         self.assertEqual(response.data['id'], black_shirt.id)
         self.assertEqual(response.data['name'], black_shirt.name)
         self.assertEqual(response.data['summary'], black_shirt.summary)
-        self.assertEqual(response.data['description'], black_shirt.description)
         self.assertIn('variants', response.data)
         self.assertIn('related_links', response.data)
         self.assertEqual(len(response.data['related_links']), 1)

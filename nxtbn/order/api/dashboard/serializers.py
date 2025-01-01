@@ -353,10 +353,11 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
                 )
         return line_items
     
-    def validate_order(self, value):
-        if value.status != OrderStatus.DELIVERED:
+    def validate(self, attrs):
+        order = attrs.get('order')
+        if order.status != OrderStatus.DELIVERED:
             raise serializers.ValidationError("Return requests can only be initiated for delivered orders.")
-        return value
+        return attrs
     
     def create(self, validated_data):
         line_items_data = validated_data.pop('line_items')

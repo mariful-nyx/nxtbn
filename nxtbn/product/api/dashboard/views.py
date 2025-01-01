@@ -108,7 +108,7 @@ class ProductFilterMixin:
             return Product.objects.all().annotate(
                 total_sales=Sum(F('variants__orderlineitems__quantity'))
             )
-        return Product.objects.all()
+        return Product.objects.all().order_by('-created_at')
 
 class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
     permission_classes = (NxtbnAdminPermission,)

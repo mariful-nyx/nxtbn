@@ -73,13 +73,13 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == 'list':
             return  ProductWithDefaultVariantSerializer
         
-        if self.action == 'retrieve':
+        if self.action == 'retrieve': # Single product
             return ProductDetailSerializer
         
-        if self.action == 'with_related':
+        if self.action == 'with_related': # Single product
             return ProductDetailWithRelatedLinkMinimalSerializer
         
-        if self.action == 'with_recommended':
+        if self.action == 'with_recommended': # Single product
             return ProductWithDefaultVariantSerializer
 
         return ProductWithVariantSerializer

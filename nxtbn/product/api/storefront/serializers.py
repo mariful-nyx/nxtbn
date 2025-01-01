@@ -96,6 +96,9 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'images',
             'created_by',
             'variants',
+            'meta_title',
+            'meta_description',
+            'slug',
         )
 
 
@@ -122,4 +125,7 @@ class ProductDetailWithRelatedLinkMinimalSerializer(serializers.ModelSerializer)
             'created_by',
             'variants',
             'related_links',
+            'meta_title',
+            'meta_description',
+            'slug',
         )

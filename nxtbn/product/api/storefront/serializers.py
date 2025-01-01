@@ -74,6 +74,21 @@ class ProductWithDefaultVariantSerializer(serializers.ModelSerializer):
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
     
+class ProductWithDefaultVariantImageListSerializer(serializers.ModelSerializer):
+    product_thumbnail = serializers.SerializerMethodField()
+    images = ImageSerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = (
+            'id',
+            'name',
+            'summary',
+            'slug',
+            'default_variant',
+            'images',
+        )
+    
 class ProductSlugSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
@@ -105,6 +120,30 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
+    
+
+class ProductDetailImageListSerializer(serializers.ModelSerializer):
+    variants = ProductVariantSerializer(many=True)
+    description_html = serializers.CharField(read_only=True)
+    images = ImageSerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = (
+            'id',
+            'name',
+            'summary',
+            'description_html',
+            'brand',
+            'category',
+            'collections',
+            'created_by',
+            'variants',
+            'meta_title',
+            'meta_description',
+            'slug',
+            'images',
+        )
 
 
 class ProductSlugRelatedNameSerializer(serializers.ModelSerializer):
@@ -116,6 +155,35 @@ class ProductDetailWithRelatedLinkMinimalSerializer(serializers.ModelSerializer)
     variants = ProductVariantSerializer(many=True)
     related_links = ProductSlugRelatedNameSerializer(many=True, source='related_to')
     product_thumbnail = serializers.SerializerMethodField()
+    description_html = serializers.CharField(read_only=True)
+    class Meta:
+        model = Product
+        fields = (
+            'id',
+            'name',
+            'summary',
+            'description',
+            'brand',
+            'category',
+            'collections',
+            'created_by',
+            'variants',
+            'related_links',
+            'meta_title',
+            'meta_description',
+            'slug',
+            'product_thumbnail',
+            'description_html',
+        )
+
+    def get_product_thumbnail(self, obj):
+        return obj.product_thumbnail(self.context['request'])
+
+
+class ProductDetailWithRelatedLinkImageListMinimalSerializer(serializers.ModelSerializer):
+    variants = ProductVariantSerializer(many=True)
+    related_links = ProductSlugRelatedNameSerializer(many=True, source='related_to')
+    images = ImageSerializer(many=True)
     class Meta:
         model = Product
         fields = (
@@ -133,7 +201,7 @@ class ProductDetailWithRelatedLinkMinimalSerializer(serializers.ModelSerializer)
             'meta_title',
             'meta_description',
             'slug',
-            'product_thumbnail',
+            'description_html',
         )
 
     def get_product_thumbnail(self, obj):

@@ -76,7 +76,6 @@ class ProductWithDefaultVariantSerializer(serializers.ModelSerializer):
         return obj.product_thumbnail(self.context['request'])
     
 class ProductWithDefaultVariantImageListSerializer(serializers.ModelSerializer):
-    product_thumbnail = serializers.SerializerMethodField()
     images = ImageSerializer(many=True)
 
     class Meta:

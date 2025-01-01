@@ -158,7 +158,7 @@ class PurchaseViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({
-                "error": "An error occurred while marking the purchase order as received."
+                "error": str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
 
         

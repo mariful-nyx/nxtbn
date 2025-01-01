@@ -162,7 +162,7 @@ class VariantCreatePayloadSerializer(serializers.Serializer):
     # compare_at_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
     price = serializers.DecimalField(max_digits=10, decimal_places=3)
     cost_per_unit = serializers.DecimalField(max_digits=10, decimal_places=3)
-    sku = serializers.CharField(max_length=255, required=False)
+    sku = serializers.CharField(max_length=255, required=False, allow_null=True)
     # stock = serializers.IntegerField(required=False)
     # weight_unit = serializers.CharField(max_length=10, required=False, allow_null=True)
     weight_value = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)

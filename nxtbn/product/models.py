@@ -1,3 +1,4 @@
+import json
 from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
@@ -8,12 +9,15 @@ from django.db.models import Sum
 from babel.numbers import get_currency_precision, format_currency
 
 
+from django.utils.html import escape, format_html
+
 
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes
 from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.core.models import AbstractMetadata, AbstractSEOModel, AbstractUUIDModel, PublishableModel, AbstractBaseUUIDModel, AbstractBaseModel, NameDescriptionAbstract, no_nested_values
 from nxtbn.filemanager.models import Document, Image
 from nxtbn.product import DimensionUnits, StockStatus, WeightUnits
+from nxtbn.product.utils import json_to_html
 from nxtbn.tax.models import TaxClass
 from nxtbn.users.admin import User
 
@@ -176,6 +180,9 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
     class Meta:
         ordering = ('name',)
 
+    def description_html(self):
+        return json_to_html(self.description)
+
     def get_stock_details(self):
         from nxtbn.warehouse.models import Stock
         
@@ -243,9 +250,6 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
             return f"{format_currency(min_price, self.default_variant.currency, locale=locale)} - {format_currency(max_price, self.default_variant.currency, locale=locale)}"
         return f"{min_price} - {max_price}"
         
-
-    def __str__(self):
-        return self.name
     
     def get_absolute_url(self):
         """
@@ -254,6 +258,12 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
         It is designed to be used in Jinja templates, and is automatically included in the sitemap.
         """
         return reverse("product_detail", args=[self.slug])
+    
+        
+    
+    
+    def __str__(self):
+        return self.name
 
 
 class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.Model):

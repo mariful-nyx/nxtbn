@@ -26,6 +26,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         model = ProductVariant
         fields = [
             'id',
+            'alias',
             'name',
             'price',
         ]

@@ -83,6 +83,7 @@ class ProductSlugSerializer(serializers.ModelSerializer):
 class ProductDetailSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True)
     description_html = serializers.CharField(read_only=True)
+    product_thumbnail = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -94,13 +95,16 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'brand',
             'category',
             'collections',
-            'images',
             'created_by',
             'variants',
             'meta_title',
             'meta_description',
             'slug',
+            'product_thumbnail',
         )
+
+    def get_product_thumbnail(self, obj):
+        return obj.product_thumbnail(self.context['request'])
 
 
 class ProductSlugRelatedNameSerializer(serializers.ModelSerializer):
@@ -111,7 +115,7 @@ class ProductSlugRelatedNameSerializer(serializers.ModelSerializer):
 class ProductDetailWithRelatedLinkMinimalSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True)
     related_links = ProductSlugRelatedNameSerializer(many=True, source='related_to')
-
+    product_thumbnail = serializers.SerializerMethodField()
     class Meta:
         model = Product
         fields = (
@@ -129,4 +133,8 @@ class ProductDetailWithRelatedLinkMinimalSerializer(serializers.ModelSerializer)
             'meta_title',
             'meta_description',
             'slug',
+            'product_thumbnail',
         )
+
+    def get_product_thumbnail(self, obj):
+        return obj.product_thumbnail(self.context['request'])

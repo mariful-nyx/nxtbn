@@ -82,6 +82,7 @@ class ProductSlugSerializer(serializers.ModelSerializer):
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True)
+    description_html = serializers.CharField(read_only=True)
 
     class Meta:
         model = Product
@@ -89,7 +90,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'summary',
-            'description',
+            'description_html',
             'brand',
             'category',
             'collections',

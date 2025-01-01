@@ -1,3 +1,4 @@
+import json
 from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
@@ -8,6 +9,7 @@ from django.db.models import Sum
 from babel.numbers import get_currency_precision, format_currency
 
 
+from django.utils.html import escape
 
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes
 from nxtbn.core.mixin import MonetaryMixin
@@ -243,9 +245,6 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
             return f"{format_currency(min_price, self.default_variant.currency, locale=locale)} - {format_currency(max_price, self.default_variant.currency, locale=locale)}"
         return f"{min_price} - {max_price}"
         
-
-    def __str__(self):
-        return self.name
     
     def get_absolute_url(self):
         """
@@ -254,6 +253,71 @@ class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
         It is designed to be used in Jinja templates, and is automatically included in the sitemap.
         """
         return reverse("product_detail", args=[self.slug])
+    
+    def description_html(self):
+        """
+        Converts the SlateJS content stored in the `description` field into HTML.
+        """
+        if not self.description:
+            return ""
+
+        try:
+            slate_content = json.loads(self.description)
+        except json.JSONDecodeError:
+            return ""
+
+        def render_node(node):
+            """
+            Recursively renders a SlateJS node to HTML.
+            """
+            node_type = node.get("type", "paragraph")
+            children = node.get("children", [])
+            rendered_children = "".join(render_node(child) for child in children)
+
+            if node_type == "paragraph":
+                return f"<p>{rendered_children}</p>"
+            elif node_type == "h1":
+                return f"<h1>{rendered_children}</h1>"
+            elif node_type == "h2":
+                return f"<h2>{rendered_children}</h2>"
+            elif node_type == "code":
+                return f"<pre><code>{escape(rendered_children)}</code></pre>"
+            elif node_type == "link":
+                url = node.get("url", "#")
+                return f"<a href='{escape(url)}'>{rendered_children}</a>"
+            elif node_type == "image":
+                url = node.get("url", "")
+                return f"<img src='{escape(url)}' alt='{escape(rendered_children)}' />"
+            elif node_type == "bold":
+                return f"<strong>{rendered_children}</strong>"
+            elif node_type == "italic":
+                return f"<em>{rendered_children}</em>"
+            elif node_type == "underline":
+                return f"<u>{rendered_children}</u>"
+            elif node_type == "text":
+                # Apply text-level formatting
+                text = escape(node.get("text", ""))
+                if node.get("bold"):
+                    text = f"<strong>{text}</strong>"
+                if node.get("italic"):
+                    text = f"<em>{text}</em>"
+                if node.get("underline"):
+                    text = f"<u>{text}</u>"
+                if "color" in node:
+                    color = escape(node["color"])
+                    text = f"<span style='color: {color};'>{text}</span>"
+                if "backgroundColor" in node:
+                    bg_color = escape(node["backgroundColor"])
+                    text = f"<span style='background-color: {bg_color};'>{text}</span>"
+                return text
+            else:
+                return rendered_children  # Default fallback
+
+        # Generate HTML from the SlateJS content
+        return "".join(render_node(node) for node in slate_content)
+    
+    def __str__(self):
+        return self.name
 
 
 class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.Model):

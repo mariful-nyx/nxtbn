@@ -206,4 +206,14 @@ class StockTransferSerializer(serializers.ModelSerializer):
             item.delete()
 
         return instance
-    
+
+
+
+class StockTransferItemUpdateSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    received_quantity = serializers.IntegerField()
+    rejected_quantity = serializers.IntegerField()
+
+
+class StockTransferReceivingSerializer(serializers.Serializer):
+     items = StockTransferItemUpdateSerializer(many=True)

@@ -17,4 +17,5 @@ urlpatterns += [
     path('stock-transfer-list/', warehouse_views.StockTransferListCreateAPIView.as_view(), name='stock-transfer-list'),
     path('stock-transfer-detail/<int:pk>/', warehouse_views.StockTransferRetrieveUpdateAPIView.as_view(), name='stock-transfer-detail'),
     path('stock-transfer-mark-as-in-transit/<int:pk>/', warehouse_views.StockTransferMarkAsInTransitAPIView.as_view(), name='stock-transfer-mark-as-in-transit'),
+    path('stock-transfer-receive/<int:pk>/', warehouse_views.StockTransferReceivingAPI.as_view(), name='stock-transfer-receive'),
 ]

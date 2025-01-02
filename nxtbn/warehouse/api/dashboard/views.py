@@ -6,8 +6,8 @@ from rest_framework import generics, status
 from nxtbn.order.models import Order
 from nxtbn.product.models import ProductVariant
 from nxtbn.warehouse import StockMovementStatus
-from nxtbn.warehouse.models import StockReservation, StockTransfer, Warehouse, Stock
-from nxtbn.warehouse.api.dashboard.serializers import StockReservationSerializer, StockTransferSerializer, StockUpdateSerializer, MergeStockReservationSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
+from nxtbn.warehouse.models import StockReservation, StockTransfer, StockTransferItem, Warehouse, Stock
+from nxtbn.warehouse.api.dashboard.serializers import StockReservationSerializer, StockTransferReceivingSerializer, StockTransferSerializer, StockUpdateSerializer, MergeStockReservationSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 
@@ -261,3 +261,43 @@ class StockTransferMarkAsInTransitAPIView(APIView):
 
 
         return Response({"detail": "Stock transfer marked as in-transit."}, status=status.HTTP_200_OK)
+    
+
+
+class StockTransferReceivingAPI(generics.UpdateAPIView):
+    serializer_class = StockTransferReceivingSerializer
+    lookup_field = 'pk'
+    queryset = StockTransfer.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        if instance.status != StockMovementStatus.PENDING:
+            return Response(
+                {"error": "Only stock transfer with status 'PENDING' can be received."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = self.get_serializer(data=request.data, context={'instance': instance})
+        serializer.is_valid(raise_exception=True)
+
+        items_data = serializer.validated_data['items']
+
+        with transaction.atomic():
+            for item_data in items_data:
+                item_id = item_data['id']
+                received_quantity = item_data['received_quantity']
+                rejected_quantity = item_data['rejected_quantity']
+
+                try:
+                    order_item = instance.items.get(id=item_id)
+                    order_item.received_quantity = received_quantity
+                    order_item.rejected_quantity = rejected_quantity
+                    order_item.save()
+                except StockTransferItem.DoesNotExist:
+                    raise serializers.ValidationError(f"Item with id {item_id} does not exist in the stock transfer.")
+                except Stock.DoesNotExist:
+                    raise serializers.ValidationError(f"Stock entry not found for item id {item_id}.")
+
+        return Response({"message": "Stock receiving updated successfully."}, status=status.HTTP_200_OK)
+    

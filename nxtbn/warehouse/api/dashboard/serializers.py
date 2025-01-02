@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from nxtbn.warehouse.models import StockReservation, Warehouse, Stock
+from nxtbn.warehouse.models import StockReservation, StockTransfer, StockTransferItem, Warehouse, Stock
 from nxtbn.product.models import ProductVariant
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
 
@@ -146,3 +146,74 @@ class MergeStockReservationSerializer(serializers.ModelSerializer):
         data['destination_reservation'] = destination_reservation
 
         return data
+    
+
+
+
+class StockTransferItemSerializer(serializers.ModelSerializer):
+    """Serializer for StockTransferItem"""
+    class Meta:
+        model = StockTransferItem
+        fields = ['variant', 'quantity']
+
+class StockTransferSerializer(serializers.ModelSerializer):
+    """Serializer for StockTransfer"""
+    items = StockTransferItemSerializer(many=True, write_only=True)
+
+    class Meta:
+        model = StockTransfer
+        fields = ['id', 'from_warehouse', 'to_warehouse', 'status', 'created_by', 'items']
+        read_only_fields = ['id', 'status', 'created_by']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        stock_transfer = StockTransfer.objects.create(**validated_data, **{'created_by': self.context['request'].user})
+        
+        # Create StockTransferItem instances
+        for item_data in items_data:
+            StockTransferItem.objects.create(stock_transfer=stock_transfer, **item_data)
+        
+        return stock_transfer
+    
+    def update(self, instance, validated_data):
+        # Extract the new items data
+        items_data = validated_data.pop('items', [])
+
+        # Update the StockTransfer fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+
+        # Get existing items to compare
+        existing_items = {item.variant.id: item for item in instance.items.all()}
+
+        # Add or update the StockTransferItems
+        for item_data in items_data:
+            variant_id = item_data['variant']
+            quantity = item_data['quantity']
+            if variant_id in existing_items:
+                # Update existing item
+                item = existing_items.pop(variant_id)
+                item.quantity = quantity
+                item.save()
+            else:
+                # Create new item
+                StockTransferItem.objects.create(stock_transfer=instance, **item_data)
+
+        # Delete removed items
+        for item in existing_items.values():
+            item.delete()
+
+        return instance
+
+
+
+class StockTransferItemUpdateSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    received_quantity = serializers.IntegerField()
+    rejected_quantity = serializers.IntegerField()
+
+
+class StockTransferReceivingSerializer(serializers.Serializer):
+     items = StockTransferItemUpdateSerializer(many=True)

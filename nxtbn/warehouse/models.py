@@ -97,8 +97,11 @@ class StockTransferItem(models.Model):
     """Line items for a stock transfer"""
     stock_transfer = models.ForeignKey(StockTransfer, related_name='items', on_delete=models.CASCADE)
     variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT)
-    
-    quantity = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField() # quantity that is being transferred
+
+    # fill only when the transfer started receiving
+    received_quantity = models.PositiveIntegerField(default=0)
+    rejected_quantity = models.PositiveIntegerField(default=0)
     
     def __str__(self):
-        return f"{self.product.name} - {self.quantity}"
+        return f"{self.variant.name} - {self.quantity}"

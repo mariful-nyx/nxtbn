@@ -1,9 +1,11 @@
 
+from gettext import translation
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import generics, status
 from nxtbn.order.models import Order
 from nxtbn.product.models import ProductVariant
+from nxtbn.warehouse import StockMovementStatus
 from nxtbn.warehouse.models import StockReservation, StockTransfer, Warehouse, Stock
 from nxtbn.warehouse.api.dashboard.serializers import StockReservationSerializer, StockTransferSerializer, StockUpdateSerializer, MergeStockReservationSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
 from nxtbn.core.paginator import NxtbnPagination
@@ -229,7 +231,33 @@ class RetryReservationAPIView(APIView):
 
 
 class StockTransferListCreateAPIView(generics.ListCreateAPIView):
-    """List and create stock transfers"""
     queryset = StockTransfer.objects.prefetch_related('items').all()
     serializer_class = StockTransferSerializer
-        
+
+
+class StockTransferRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
+    queryset = StockTransfer.objects.all()
+    serializer_class = StockTransferSerializer
+    lookup_field = 'id'
+
+class StockTransferMarkAsInTransitAPIView(APIView):
+    def put(self, request, pk):
+        with translation.atomic():
+            transfer = get_object_or_404(StockTransfer, id=pk)
+            transfer.status = StockMovementStatus.IN_TRANSIT
+            transfer.save()
+
+            # increase incomming stock for destination warehouse
+            for item in transfer.items.all():
+                stock = Stock.objects.get(warehouse=transfer.to_warehouse, product_variant=item.variant)
+                stock.incoming += item.quantity
+                stock.save()
+
+            # decrease outgoing stock for source warehouse
+            for item in transfer.items.all():
+                stock = Stock.objects.get(warehouse=transfer.from_warehouse, product_variant=item.variant)
+                stock.quantity -= item.quantity
+                stock.save()
+
+
+        return Response({"detail": "Stock transfer marked as in-transit."}, status=status.HTTP_200_OK)

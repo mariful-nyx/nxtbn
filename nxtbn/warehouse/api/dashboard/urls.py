@@ -15,4 +15,6 @@ urlpatterns += [
     path('stock-reservation-transfer/<int:pk>/', warehouse_views.MergeStockReservationAPIView.as_view(), name='stock-reservation-detail'),
     path('retry-stock-reservation/<uuid:alias>/', warehouse_views.RetryReservationAPIView.as_view(), name='retry-stock-reservation'),
     path('stock-transfer-list/', warehouse_views.StockTransferListCreateAPIView.as_view(), name='stock-transfer-list'),
+    path('stock-transfer-detail/<int:pk>/', warehouse_views.StockTransferRetrieveUpdateAPIView.as_view(), name='stock-transfer-detail'),
+    path('stock-transfer-mark-as-in-transit/<int:pk>/', warehouse_views.StockTransferMarkAsInTransitAPIView.as_view(), name='stock-transfer-mark-as-in-transit'),
 ]

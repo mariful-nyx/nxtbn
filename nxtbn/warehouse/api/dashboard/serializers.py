@@ -174,3 +174,36 @@ class StockTransferSerializer(serializers.ModelSerializer):
             StockTransferItem.objects.create(stock_transfer=stock_transfer, **item_data)
         
         return stock_transfer
+    
+    def update(self, instance, validated_data):
+        # Extract the new items data
+        items_data = validated_data.pop('items', [])
+
+        # Update the StockTransfer fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+
+        # Get existing items to compare
+        existing_items = {item.variant.id: item for item in instance.items.all()}
+
+        # Add or update the StockTransferItems
+        for item_data in items_data:
+            variant_id = item_data['variant']
+            quantity = item_data['quantity']
+            if variant_id in existing_items:
+                # Update existing item
+                item = existing_items.pop(variant_id)
+                item.quantity = quantity
+                item.save()
+            else:
+                # Create new item
+                StockTransferItem.objects.create(stock_transfer=instance, **item_data)
+
+        # Delete removed items
+        for item in existing_items.values():
+            item.delete()
+
+        return instance
+    

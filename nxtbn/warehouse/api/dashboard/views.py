@@ -4,8 +4,8 @@ from rest_framework import viewsets
 from rest_framework import generics, status
 from nxtbn.order.models import Order
 from nxtbn.product.models import ProductVariant
-from nxtbn.warehouse.models import StockReservation, Warehouse, Stock
-from nxtbn.warehouse.api.dashboard.serializers import StockReservationSerializer, StockUpdateSerializer, MergeStockReservationSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
+from nxtbn.warehouse.models import StockReservation, StockTransfer, Warehouse, Stock
+from nxtbn.warehouse.api.dashboard.serializers import StockReservationSerializer, StockTransferSerializer, StockUpdateSerializer, MergeStockReservationSerializer, WarehouseSerializer, StockSerializer, StockDetailViewSerializer
 from nxtbn.core.paginator import NxtbnPagination
 
 
@@ -225,4 +225,11 @@ class RetryReservationAPIView(APIView):
         order = get_object_or_404(Order, alias=alias)
         reserve_stock(order)
         return Response({"detail": "Stock reservation retried successfully."}, status=status.HTTP_200_OK)
+    
+
+
+class StockTransferListCreateAPIView(generics.ListCreateAPIView):
+    """List and create stock transfers"""
+    queryset = StockTransfer.objects.prefetch_related('items').all()
+    serializer_class = StockTransferSerializer
         

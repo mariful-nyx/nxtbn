@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from nxtbn.warehouse.models import StockReservation, Warehouse, Stock
+from nxtbn.warehouse.models import StockReservation, StockTransfer, StockTransferItem, Warehouse, Stock
 from nxtbn.product.models import ProductVariant
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
 
@@ -146,3 +146,31 @@ class MergeStockReservationSerializer(serializers.ModelSerializer):
         data['destination_reservation'] = destination_reservation
 
         return data
+    
+
+
+
+class StockTransferItemSerializer(serializers.ModelSerializer):
+    """Serializer for StockTransferItem"""
+    class Meta:
+        model = StockTransferItem
+        fields = ['variant', 'quantity']
+
+class StockTransferSerializer(serializers.ModelSerializer):
+    """Serializer for StockTransfer"""
+    items = StockTransferItemSerializer(many=True, write_only=True)
+
+    class Meta:
+        model = StockTransfer
+        fields = ['id', 'from_warehouse', 'to_warehouse', 'status', 'created_by', 'items']
+        read_only_fields = ['id', 'status', 'created_by']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        stock_transfer = StockTransfer.objects.create(**validated_data, **{'created_by': self.context['request'].user})
+        
+        # Create StockTransferItem instances
+        for item_data in items_data:
+            StockTransferItem.objects.create(stock_transfer=stock_transfer, **item_data)
+        
+        return stock_transfer

@@ -216,4 +216,4 @@ class StockTransferItemUpdateSerializer(serializers.Serializer):
 
 
 class StockTransferReceivingSerializer(serializers.Serializer):
-     items = StockTransferItemUpdateSerializer(many=True)
+    items = StockTransferItemUpdateSerializer(many=True)

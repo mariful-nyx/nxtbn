@@ -241,9 +241,9 @@ class StockTransferRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     lookup_field = 'id'
 
 class StockTransferMarkAsInTransitAPIView(APIView):
-    def put(self, request, pk):
+    def put(self, request, id):
         with translation.atomic():
-            transfer = get_object_or_404(StockTransfer, id=pk)
+            transfer = get_object_or_404(StockTransfer, id=id)
             transfer.status = StockMovementStatus.IN_TRANSIT
             transfer.save()
 

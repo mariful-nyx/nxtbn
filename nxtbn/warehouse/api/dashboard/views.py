@@ -241,9 +241,9 @@ class StockTransferRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     lookup_field = 'id'
 
 class StockTransferMarkAsInTransitAPIView(APIView):
-    def put(self, request, pk):
+    def put(self, request, id):
         with translation.atomic():
-            transfer = get_object_or_404(StockTransfer, id=pk)
+            transfer = get_object_or_404(StockTransfer, id=id)
             transfer.status = StockMovementStatus.IN_TRANSIT
             transfer.save()
 
@@ -301,3 +301,23 @@ class StockTransferReceivingAPI(generics.UpdateAPIView):
 
         return Response({"message": "Stock receiving updated successfully."}, status=status.HTTP_200_OK)
     
+
+class StockTransferMarkedAsCompletedAPIView(APIView):
+    def put(self, request, pk):
+        transfer = get_object_or_404(StockTransfer, id=pk)
+
+        if transfer.status != StockMovementStatus.IN_TRANSIT:
+            raise ValidationError("Only stock transfer with status 'IN_TRANSIT' can be marked as completed.")
+        
+        with translation.atomic():
+            transfer.status = StockMovementStatus.COMPLETED
+            transfer.save()
+
+            # Update the stock quantities
+            for item in transfer.items.all():
+                destination_stock = Stock.objects.get(warehouse=transfer.to_warehouse, product_variant=item.variant)
+                destination_stock.quantity += item.received_quantity
+                destination_stock.incoming -= item.quantity
+                destination_stock.save()
+
+        return Response({"detail": "Stock transfer marked as completed."}, status=status.HTTP_200_OK)

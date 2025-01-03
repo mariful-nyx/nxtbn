@@ -146,7 +146,7 @@ class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
         UserRole.CUSTOMER_SUPPORT_AGENT: {"list",},
         UserRole.MARKETING_MANAGER: {"list",},
     }
-    action = 'list'
+    role_action = 'list'
         
     def get_queryset(self):
         return Product.objects.filter(status=PublishableStatus.PUBLISHED)

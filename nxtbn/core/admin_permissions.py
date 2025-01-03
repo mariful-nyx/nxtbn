@@ -29,8 +29,8 @@ class RoleBasedPermission(BasePermission):
         if user.role == UserRole.ADMIN:
             return True
 
-        # Get the action from URL
-        action = view.kwargs.get('action') or view.action
+
+        action = getattr(view, 'role_action', None) or getattr(view, 'action', None)
 
 
 

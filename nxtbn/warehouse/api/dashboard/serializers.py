@@ -158,7 +158,7 @@ class StockTransferItemSerializer(serializers.ModelSerializer):
 
 class StockTransferSerializer(serializers.ModelSerializer):
     """Serializer for StockTransfer"""
-    items = StockTransferItemSerializer(many=True, write_only=True)
+    items = StockTransferItemSerializer(many=True)
 
     class Meta:
         model = StockTransfer
@@ -167,6 +167,10 @@ class StockTransferSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
+
+        if not items_data:
+            raise serializers.ValidationError({"items": "This field is required."})
+
         stock_transfer = StockTransfer.objects.create(**validated_data, **{'created_by': self.context['request'].user})
         
         # Create StockTransferItem instances
@@ -178,6 +182,9 @@ class StockTransferSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         # Extract the new items data
         items_data = validated_data.pop('items', [])
+
+        if items_data is None:
+            raise serializers.ValidationError({"items": "This field is required."})
 
         # Update the StockTransfer fields
         for attr, value in validated_data.items():
@@ -216,4 +223,4 @@ class StockTransferItemUpdateSerializer(serializers.Serializer):
 
 
 class StockTransferReceivingSerializer(serializers.Serializer):
-     items = StockTransferItemUpdateSerializer(many=True)
+    items = StockTransferItemUpdateSerializer(many=True)

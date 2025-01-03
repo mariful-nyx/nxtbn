@@ -103,12 +103,15 @@ class OrderListView(generics.ListAPIView):
     filterset_class = OrderFilter
     search_fields = ['alias', 'id', 'user__username', 'supplier__name']
     ordering_fields = ['created_at']
+
     ROLE_PERMISSIONS = {
         UserRole.STORE_MANAGER: {"list",},
         UserRole.ORDER_PROCESSOR: {"list",},
         UserRole.CUSTOMER_SUPPORT_AGENT: {"list",},
         UserRole.MARKETING_MANAGER: {"list",},
     }
+
+    role_action = 'list'
 
 
 class OrderDetailView(generics.RetrieveAPIView):
@@ -141,7 +144,7 @@ class BasicStatsView(APIView):
         UserRole.STORE_MANAGER: {"basic_stats",},
         UserRole.MARKETING_MANAGER: {"basic_stats",},
     }
-    action = 'basic_stats'
+    role_action = 'basic_stats'
 
     def get(self, request):
         # Get start and end dates from query parameters
@@ -245,7 +248,7 @@ class OrderOverviewStatsView(APIView):
         UserRole.STORE_MANAGER: {"analytics",},
         UserRole.MARKETING_MANAGER: {"analytics",},
     }
-    action = 'analytics'
+    role_action = 'analytics'
       
 
     def get(self, request):
@@ -332,7 +335,7 @@ class OrderSummaryAPIView(APIView):
         UserRole.STORE_MANAGER: {"analytics",},
         UserRole.MARKETING_MANAGER: {"analytics",},
     }
-    action = 'analytics'
+    role_action = 'analytics'
 
     def get(self, request, *args, **kwargs):
         time_period = request.query_params.get('time_period')  # 'year', 'month', 'week', 'day'
@@ -422,7 +425,7 @@ class OrderEastimateView(OrderProccessorAPIView):
         UserRole.CUSTOMER_SUPPORT_AGENT: {"order_estimate",},
         UserRole.MARKETING_MANAGER: {"order_estimate",},
     }
-    action = 'order_estimate'
+    role_action = 'order_estimate'
 
     create_order = False # Eastimate order
 
@@ -434,7 +437,7 @@ class OrderCreateView(OrderProccessorAPIView):
         UserRole.CUSTOMER_SUPPORT_AGENT: {"order_create",},
         UserRole.MARKETING_MANAGER: {"order_create",},
     }
-    action = 'order_create'
+    role_action = 'order_create'
 
 
     create_order = True # Eastimate and create order

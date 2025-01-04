@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from nxtbn.warehouse import StockMovementStatus
 from nxtbn.warehouse.models import StockReservation, StockTransfer, StockTransferItem, Warehouse, Stock
 from nxtbn.product.models import ProductVariant
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
@@ -165,6 +166,31 @@ class StockTransferSerializer(serializers.ModelSerializer):
         fields = ['id', 'from_warehouse', 'to_warehouse', 'status', 'created_by', 'items']
         read_only_fields = ['id', 'status', 'created_by']
 
+    
+    def validate(self, attrs):
+
+        # It cant be edited if it is not in pending state
+        if self.instance and self.instance.status != StockMovementStatus.PENDING:
+            raise serializers.ValidationError({"details": "Only pending stock transfers can be edited."})
+
+        # check if available stock in the source warehouse
+        from_warehouse = attrs.get('from_warehouse')
+        items = attrs.get('items')
+
+        for item in items:
+            variant = item.get('variant')
+            quantity = item.get('quantity')
+
+            try:
+                stock = Stock.objects.get(warehouse=from_warehouse, product_variant=variant)
+            except Stock.DoesNotExist:
+                raise serializers.ValidationError({"items": f"Stock for variant {variant.id} does not exist in the source warehouse."})
+
+            if stock.quantity < quantity:
+                raise serializers.ValidationError({"items": f"Insufficient stock for variant {variant.id} in the source warehouse."})
+
+        return super().validate(attrs)
+
     def create(self, validated_data):
         items_data = validated_data.pop('items')
 
@@ -224,3 +250,18 @@ class StockTransferItemUpdateSerializer(serializers.Serializer):
 
 class StockTransferReceivingSerializer(serializers.Serializer):
     items = StockTransferItemUpdateSerializer(many=True)
+
+    def validate_items(self, items):
+        if not items:
+            raise serializers.ValidationError({"items": "This field is required."})
+
+        for item in items:
+            transfer_item = StockTransferItem.objects.get(id=item.get('id'))
+            received_quantity = item.get('received_quantity', 0)
+            rejected_quantity = item.get('rejected_quantity', 0)
+            if received_quantity + rejected_quantity > transfer_item.quantity:
+                raise serializers.ValidationError({
+                    "items": "The sum of received and rejected quantities cannot exceed the original quantity."
+                })
+
+        return items

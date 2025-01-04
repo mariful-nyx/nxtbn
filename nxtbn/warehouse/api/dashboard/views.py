@@ -1,5 +1,4 @@
 
-from gettext import translation
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import generics, status
@@ -18,9 +17,11 @@ from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from django.db.models.functions import Coalesce
 from django.db.models import F, Sum, Q
+from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
 from nxtbn.warehouse.utils import reserve_stock
+from rest_framework.exceptions import APIException
 
 
 
@@ -241,18 +242,26 @@ class StockTransferRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     lookup_field = 'id'
 
 class StockTransferMarkAsInTransitAPIView(APIView):
-    def put(self, request, id):
-        with translation.atomic():
-            transfer = get_object_or_404(StockTransfer, id=id)
+    def put(self, request, pk):
+        with transaction.atomic():
+            transfer = get_object_or_404(StockTransfer, id=pk)
             transfer.status = StockMovementStatus.IN_TRANSIT
             transfer.save()
 
             # increase incomming stock for destination warehouse
             for item in transfer.items.all():
-                stock = Stock.objects.get(warehouse=transfer.to_warehouse, product_variant=item.variant)
-                stock.incoming += item.quantity
+                try:
+                    stock = Stock.objects.get(warehouse=transfer.to_warehouse, product_variant=item.variant)
+                    stock.incoming += item.quantity
+                except Stock.DoesNotExist:
+                    stock = Stock.objects.create(
+                        warehouse=transfer.to_warehouse,
+                        product_variant=item.variant,
+                        incoming=item.quantity
+                    )
                 stock.save()
 
+           
             # decrease outgoing stock for source warehouse
             for item in transfer.items.all():
                 stock = Stock.objects.get(warehouse=transfer.from_warehouse, product_variant=item.variant)
@@ -272,9 +281,9 @@ class StockTransferReceivingAPI(generics.UpdateAPIView):
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
 
-        if instance.status != StockMovementStatus.PENDING:
+        if instance.status != StockMovementStatus.IN_TRANSIT:
             return Response(
-                {"error": "Only stock transfer with status 'PENDING' can be received."},
+                {"error": "Only stock transfer with status 'IN_TRANSIT' can be received."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -282,6 +291,7 @@ class StockTransferReceivingAPI(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
 
         items_data = serializer.validated_data['items']
+
 
         with transaction.atomic():
             for item_data in items_data:
@@ -295,9 +305,9 @@ class StockTransferReceivingAPI(generics.UpdateAPIView):
                     order_item.rejected_quantity = rejected_quantity
                     order_item.save()
                 except StockTransferItem.DoesNotExist:
-                    raise serializers.ValidationError(f"Item with id {item_id} does not exist in the stock transfer.")
+                    raise ValidationError(f"Item with id {item_id} does not exist in the stock transfer.")
                 except Stock.DoesNotExist:
-                    raise serializers.ValidationError(f"Stock entry not found for item id {item_id}.")
+                    raise ValidationError(f"Stock entry not found for item id {item_id}.")
 
         return Response({"message": "Stock receiving updated successfully."}, status=status.HTTP_200_OK)
     
@@ -309,7 +319,13 @@ class StockTransferMarkedAsCompletedAPIView(APIView):
         if transfer.status != StockMovementStatus.IN_TRANSIT:
             raise ValidationError("Only stock transfer with status 'IN_TRANSIT' can be marked as completed.")
         
-        with translation.atomic():
+        # validate if all item received and rejected sum is equal to quantity
+        for item in transfer.items.all():
+            if item.quantity != item.received_quantity + item.rejected_quantity:
+                raise ValidationError(f"Received quantity + Rejected quantity should be equal to {item.quantity} for item {item.variant.name}")
+        
+        
+        with transaction.atomic():
             transfer.status = StockMovementStatus.COMPLETED
             transfer.save()
 

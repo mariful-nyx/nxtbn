@@ -20,6 +20,7 @@ from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
 from babel.numbers import get_currency_precision, format_currency
 import datetime
 from django.test.utils import override_settings
+from nxtbn.warehouse import StockMovementStatus
 from nxtbn.warehouse.models import Stock, StockTransfer, StockTransferItem
 from nxtbn.warehouse.tests import StockFactory, WarehouseFactory
 from datetime import date
@@ -85,7 +86,8 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
         self.stock_to_warehouse_varinat_four = StockFactory(
             warehouse=self.from_warehouse,
             product_variant=self.product_variant_four,
-            quantity=10
+            quantity=10,
+            incoming=50
         )
 
        
@@ -295,7 +297,42 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
         self.assertEqual(response_stock_transfer_mark_completed.status_code, status.HTTP_400_BAD_REQUEST)
 
 
+        # now receive all the items
 
+        receivable_payload = {
+            "items": [
+                {
+                    "id": transfer.items.get(variant__id=self.product_variant_one.id).id,
+                    "received_quantity": 0,
+                    'rejected_quantity': 3,
+                },
+                {
+                    "id": transfer.items.get(variant__id=self.product_variant_two.id).id,
+                    "received_quantity": 2,
+                    'rejected_quantity': 1,
+                },
+                {
+                    "id": transfer.items.get(variant__id=self.product_variant_four.id).id,
+                    "received_quantity": 3,
+                    'rejected_quantity': 0,
+                },
+            ]
+        }
+
+        response_stock_transfer_receive = self.auth_client.put(stock_transfer_receive_url, receivable_payload, format='json')
+        self.assertEqual(response_stock_transfer_receive.status_code, status.HTTP_200_OK)
+
+        # now mark it as completed
+        response_stock_transfer_mark_completed = self.auth_client.put(stock_transfer_mark_completed_url, format='json')
+        self.assertEqual(response_stock_transfer_mark_completed.status_code, status.HTTP_200_OK)
+
+        transfer = StockTransfer.objects.get(id=stock_transfer_id)
+        self.assertEqual(transfer.status, StockMovementStatus.COMPLETED)
+
+        # now check incoming stock in destination warehouse and quantity should be updated
+        stock_to_warehouse_varinat_four = Stock.objects.get(warehouse=self.to_warehouse, product_variant=self.product_variant_four)
+        self.assertEqual(stock_to_warehouse_varinat_four.quantity, 13)
+        # self.assertEqual(stock_to_warehouse_varinat_four.incoming, 50)
 
 
     def test_puchase_create_with_blank_items(self):

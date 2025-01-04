@@ -244,3 +244,18 @@ class StockTransferItemUpdateSerializer(serializers.Serializer):
 
 class StockTransferReceivingSerializer(serializers.Serializer):
     items = StockTransferItemUpdateSerializer(many=True)
+
+    def validate_items(self, items):
+        if not items:
+            raise serializers.ValidationError({"items": "This field is required."})
+
+        for item in items:
+            transfer_item = StockTransferItem.objects.get(id=item.get('id'))
+            received_quantity = item.get('received_quantity', 0)
+            rejected_quantity = item.get('rejected_quantity', 0)
+            if received_quantity + rejected_quantity > transfer_item.quantity:
+                raise serializers.ValidationError({
+                    "items": "The sum of received and rejected quantities cannot exceed the original quantity."
+                })
+
+        return items

@@ -20,7 +20,7 @@ from nxtbn.tax.tests import TaxClassFactory, TaxRateFactory
 from babel.numbers import get_currency_precision, format_currency
 import datetime
 from django.test.utils import override_settings
-from nxtbn.warehouse.models import Stock, StockTransferItem
+from nxtbn.warehouse.models import Stock, StockTransfer, StockTransferItem
 from nxtbn.warehouse.tests import StockFactory, WarehouseFactory
 from datetime import date
 
@@ -201,6 +201,18 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
             StockTransferItem.objects.get(stock_transfer_id=stock_transfer_id, variant=self.product_variant_three.id)
 
 
+        # make sure all the variant exist in transfer list
+        transfer = StockTransfer.objects.get(id=stock_transfer_id)
+        self.assertEqual(transfer.items.count(), 3)
+
+        self.assertEqual(transfer.items.filter(variant__id=self.product_variant_one.id).exists(), True)
+        self.assertEqual(transfer.items.filter(variant__id=self.product_variant_two.id).exists(), True)
+        self.assertEqual(transfer.items.filter(variant__id=self.product_variant_four.id).exists(), True)
+
+        self.assertEqual(transfer.items.filter(variant__id=self.product_variant_five.id).exists(), False)
+
+
+
 
         # ==================================
         # Test for stock transfer receive
@@ -212,7 +224,78 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
         response_stock_transfer_mark_as_transit = self.auth_client.put(stock_transfer_mark_as_transit_url, format='json')
         self.assertEqual(response_stock_transfer_mark_as_transit.status_code, status.HTTP_200_OK)
         
-        
+       
+
+        # now start receiving stock transfer
+        stock_transfer_receive_url = reverse('stock-transfer-receive', kwargs={'pk': stock_transfer_id})
+        receivable_payload = {
+            "items": [
+                { # received quantity and rejected quantity both sum should be equal to quantity in stock transfer item and it should raise error
+                    "id": transfer.items.get(variant__id=self.product_variant_one.id).id,
+                    "received_quantity": 3, 
+                    'rejected_quantity': 5,
+                },
+            ]
+        }
+    
+
+        response_stock_transfer_receive = self.auth_client.put(stock_transfer_receive_url, receivable_payload, format='json')
+        self.assertEqual(response_stock_transfer_receive.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+        receivable_payload_exceds = {
+            "items": [
+                {
+                    "id": transfer.items.get(variant__id=self.product_variant_one.id).id,
+                    "received_quantity": 3,
+                    'rejected_quantity': 100,
+                },
+                {
+                    "id": transfer.items.get(variant__id=self.product_variant_two.id).id,
+                    "received_quantity": 5,
+                    'rejected_quantity': 0,
+                },
+                {
+                    "id": transfer.items.get(variant__id=self.product_variant_four.id).id,
+                    "received_quantity": 3,
+                    'rejected_quantity': 0,
+                },
+            ]
+        }
+
+        response_stock_transfer_receive_exceeds = self.auth_client.put(stock_transfer_receive_url, receivable_payload_exceds, format='json')
+        self.assertEqual(response_stock_transfer_receive_exceeds.status_code, status.HTTP_400_BAD_REQUEST)
+
+        receivable_payload = {
+            "items": [
+                {
+                    "id": transfer.items.get(variant__id=self.product_variant_one.id).id,
+                    "received_quantity": 3,
+                    'rejected_quantity': 0,
+                },
+                {
+                    "id": transfer.items.get(variant__id=self.product_variant_two.id).id,
+                    "received_quantity": 3,
+                    'rejected_quantity': 0,
+                },
+                {
+                    "id": transfer.items.get(variant__id=self.product_variant_four.id).id,
+                    "received_quantity": 2,
+                    'rejected_quantity': 0,
+                },
+            ]
+        }
+
+        response_stock_transfer_receive = self.auth_client.put(stock_transfer_receive_url, receivable_payload, format='json')
+        self.assertEqual(response_stock_transfer_receive.status_code, status.HTTP_200_OK)
+
+        # try to complete stock transfer and it should raise error as not all items received or rejected
+        stock_transfer_mark_completed_url = reverse('stock-transfer-mark-completed', kwargs={'pk': stock_transfer_id})
+        response_stock_transfer_mark_completed = self.auth_client.put(stock_transfer_mark_completed_url, format='json')
+        self.assertEqual(response_stock_transfer_mark_completed.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
     def test_puchase_create_with_blank_items(self):

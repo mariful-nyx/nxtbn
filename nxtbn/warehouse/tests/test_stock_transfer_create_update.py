@@ -58,14 +58,32 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
             cost_per_unit=Decimal('100.00')
         )
 
+        self.product_variant_five = ProductVariantFactory(
+            product=self.product,
+            price=Decimal('100.00'),
+            cost_per_unit=Decimal('100.00')
+        )
+
         self.stock_from_warehouse_varinat_one = StockFactory(
             warehouse=self.from_warehouse,
             product_variant=self.product_variant_one,
             quantity=10
         )
 
+        self.stock_from_warehouse_varinat_two = StockFactory(
+            warehouse=self.from_warehouse,
+            product_variant=self.product_variant_two,
+            quantity=100
+        )
+
+        self.stock_from_warehouse_varinat_three = StockFactory(
+            warehouse=self.from_warehouse,
+            product_variant=self.product_variant_three,
+            quantity=5
+        )
+
         self.stock_to_warehouse_varinat_four = StockFactory(
-            warehouse=self.to_warehouse,
+            warehouse=self.from_warehouse,
             product_variant=self.product_variant_four,
             quantity=10
         )
@@ -88,12 +106,48 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
                     "variant": self.product_variant_two.id
                 },
                 {
-                    "quantity": 15,
+                    "quantity": 15, # more quantity than available in stock
                     "variant": self.product_variant_three.id
                 },
             ]
         }
         response_stock_transfer_create = self.auth_client.post(stock_transfer_create_url, payload, format='json')
+        self.assertEqual(response_stock_transfer_create.status_code, status.HTTP_400_BAD_REQUEST) # raise error as insufficient stock
+
+        payload_stock_missing = {
+            "from_warehouse": self.from_warehouse.id,
+            "to_warehouse": self.to_warehouse.id,
+            "items": [
+                {
+                    "quantity": 3,
+                    "variant": self.product_variant_five.id # stock is missing in source warehouse
+                },
+            ]
+        }
+
+        response_stock_transfer_create_stock_missing = self.auth_client.post(stock_transfer_create_url, payload_stock_missing, format='json')
+        self.assertEqual(response_stock_transfer_create_stock_missing.status_code, status.HTTP_400_BAD_REQUEST)
+
+        payload_success = {
+            "from_warehouse": self.from_warehouse.id,
+            "to_warehouse": self.to_warehouse.id,
+            "items": [
+                {
+                    "quantity": 3,
+                    "variant": self.product_variant_one.id
+                },
+                {
+                    "quantity": 3,
+                    "variant": self.product_variant_two.id
+                },
+                {
+                    "quantity": 3,
+                    "variant": self.product_variant_three.id
+                },
+            ]
+        }
+
+        response_stock_transfer_create = self.auth_client.post(stock_transfer_create_url, payload_success, format='json')
         self.assertEqual(response_stock_transfer_create.status_code, status.HTTP_201_CREATED)
 
 
@@ -105,11 +159,11 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
             "to_warehouse": self.to_warehouse.id,
             "items": [
                 {
-                    "quantity": 15,
+                    "quantity": 3,
                     "variant": self.product_variant_one.id
                 },
                 {
-                    "quantity": 5,
+                    "quantity": 3,
                     "variant": self.product_variant_two.id
                 },
                 {
@@ -124,8 +178,8 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
         stock_transfer_detail_response = self.auth_client.get(stock_transfer_detail_url, format='json')
         self.assertEqual(len(stock_transfer_detail_response.json()["items"]), 3)
 
-        self.assertEqual(stock_transfer_detail_response.json()["items"][0]["quantity"], 15)
-        self.assertEqual(stock_transfer_detail_response.json()["items"][1]["quantity"], 5)
+        self.assertEqual(stock_transfer_detail_response.json()["items"][0]["quantity"], 3)
+        self.assertEqual(stock_transfer_detail_response.json()["items"][1]["quantity"], 3)
         self.assertEqual(stock_transfer_detail_response.json()["items"][2]["quantity"], 3)
 
        

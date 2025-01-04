@@ -165,6 +165,26 @@ class StockTransferSerializer(serializers.ModelSerializer):
         fields = ['id', 'from_warehouse', 'to_warehouse', 'status', 'created_by', 'items']
         read_only_fields = ['id', 'status', 'created_by']
 
+    
+    def validate(self, attrs):
+        # check if available stock in the source warehouse
+        from_warehouse = attrs.get('from_warehouse')
+        items = attrs.get('items')
+
+        for item in items:
+            variant = item.get('variant')
+            quantity = item.get('quantity')
+
+            try:
+                stock = Stock.objects.get(warehouse=from_warehouse, product_variant=variant)
+            except Stock.DoesNotExist:
+                raise serializers.ValidationError({"items": f"Stock for variant {variant.id} does not exist in the source warehouse."})
+
+            if stock.quantity < quantity:
+                raise serializers.ValidationError({"items": f"Insufficient stock for variant {variant.id} in the source warehouse."})
+
+        return super().validate(attrs)
+
     def create(self, validated_data):
         items_data = validated_data.pop('items')
 

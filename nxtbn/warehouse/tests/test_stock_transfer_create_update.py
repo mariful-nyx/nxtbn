@@ -154,6 +154,20 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
         stock_transfer_id = response_stock_transfer_create.json()['id']
         stock_transfer_detail_url = reverse('stock-transfer-detail', kwargs={'id': stock_transfer_id})
 
+        updated_payload_insufficent = { # in edit adding new item and another item deleted and quantity updated
+            "from_warehouse": self.from_warehouse.id,
+            "to_warehouse": self.to_warehouse.id,
+            "items": [
+                {
+                    "quantity": 1000, # more quantity than available in stock
+                    "variant": self.product_variant_one.id
+                },
+            ]
+        }
+
+        response_stock_transfer_update_insufficent = self.auth_client.put(stock_transfer_detail_url, updated_payload_insufficent, format='json')
+        self.assertEqual(response_stock_transfer_update_insufficent.status_code, status.HTTP_400_BAD_REQUEST)
+
         updated_payload = { # in edit adding new item and another item deleted and quantity updated
             "from_warehouse": self.from_warehouse.id,
             "to_warehouse": self.to_warehouse.id,
@@ -193,11 +207,12 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
         # ==================================
 
         # at first stock transfer mark as in transit
-        # stock_transfer_mark_as_transit_url = reverse('stock-transfer-mark-as-in-transit', kwargs={'pk': stock_transfer_id})
+        stock_transfer_mark_as_transit_url = reverse('stock-transfer-mark-as-in-transit', kwargs={'pk': stock_transfer_id})
 
-        # response_stock_transfer_mark_as_transit = self.auth_client.put(stock_transfer_mark_as_transit_url, format='json')
-        # self.assertEqual(response_stock_transfer_mark_as_transit.status_code, status.HTTP_200_OK)
-        # print(response_stock_transfer_mark_as_transit.data)
+        response_stock_transfer_mark_as_transit = self.auth_client.put(stock_transfer_mark_as_transit_url, format='json')
+        self.assertEqual(response_stock_transfer_mark_as_transit.status_code, status.HTTP_200_OK)
+        
+        
 
 
     def test_puchase_create_with_blank_items(self):

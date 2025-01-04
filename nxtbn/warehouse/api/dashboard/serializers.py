@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from nxtbn.warehouse import StockMovementStatus
 from nxtbn.warehouse.models import StockReservation, StockTransfer, StockTransferItem, Warehouse, Stock
 from nxtbn.product.models import ProductVariant
 from nxtbn.product.api.dashboard.serializers import ProductVariantSerializer
@@ -167,6 +168,11 @@ class StockTransferSerializer(serializers.ModelSerializer):
 
     
     def validate(self, attrs):
+
+        # It cant be edited if it is not in pending state
+        if self.instance and self.instance.status != StockMovementStatus.PENDING:
+            raise serializers.ValidationError({"details": "Only pending stock transfers can be edited."})
+
         # check if available stock in the source warehouse
         from_warehouse = attrs.get('from_warehouse')
         items = attrs.get('items')

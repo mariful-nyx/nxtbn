@@ -83,8 +83,15 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
             quantity=5
         )
 
-        self.stock_to_warehouse_varinat_four = StockFactory(
+        self.stock_from_warehouse_varinat_four = StockFactory(
             warehouse=self.from_warehouse,
+            product_variant=self.product_variant_four,
+            quantity=10,
+            incoming=40
+        )
+
+        self.stock_to_warehouse_varinat_four = StockFactory(
+            warehouse=self.to_warehouse,
             product_variant=self.product_variant_four,
             quantity=10,
             incoming=50
@@ -225,6 +232,8 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
 
         response_stock_transfer_mark_as_transit = self.auth_client.put(stock_transfer_mark_as_transit_url, format='json')
         self.assertEqual(response_stock_transfer_mark_as_transit.status_code, status.HTTP_200_OK)
+
+        # check destionation quantity and incoming
         
        
 
@@ -332,8 +341,23 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
         # now check incoming stock in destination warehouse and quantity should be updated
         stock_to_warehouse_varinat_four = Stock.objects.get(warehouse=self.to_warehouse, product_variant=self.product_variant_four)
         self.assertEqual(stock_to_warehouse_varinat_four.quantity, 13)
-        # self.assertEqual(stock_to_warehouse_varinat_four.incoming, 50)
+        self.assertEqual(stock_to_warehouse_varinat_four.incoming, 50)
 
+        # now check incoming stock in source warehouse and quantity should be updated
+        stock_from_warehouse_varinat_four = Stock.objects.get(warehouse=self.from_warehouse, product_variant=self.product_variant_four)
+        self.assertEqual(stock_from_warehouse_varinat_four.quantity, 7)
+        self.assertEqual(stock_from_warehouse_varinat_four.incoming, 40)
+
+
+        # after complete stock transfer it should not be editable and it cant be re-completed and re-received
+        response_stock_transfer_update_after_completed = self.auth_client.put(stock_transfer_detail_url, updated_payload, format='json')
+        self.assertEqual(response_stock_transfer_update_after_completed.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response_stock_transfer_receive_after_completed = self.auth_client.put(stock_transfer_receive_url, receivable_payload, format='json')
+        self.assertEqual(response_stock_transfer_receive_after_completed.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response_stock_transfer_mark_completed_after_completed = self.auth_client.put(stock_transfer_mark_completed_url, format='json')
+        self.assertEqual(response_stock_transfer_mark_completed_after_completed.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_puchase_create_with_blank_items(self):
         purchase_create_url = reverse('stock-transfer-list')

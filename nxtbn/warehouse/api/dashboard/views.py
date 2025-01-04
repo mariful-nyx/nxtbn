@@ -1,5 +1,4 @@
 
-from gettext import translation
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import generics, status
@@ -18,6 +17,7 @@ from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from django.db.models.functions import Coalesce
 from django.db.models import F, Sum, Q
+from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
 from nxtbn.warehouse.utils import reserve_stock
@@ -241,18 +241,26 @@ class StockTransferRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     lookup_field = 'id'
 
 class StockTransferMarkAsInTransitAPIView(APIView):
-    def put(self, request, id):
-        with translation.atomic():
-            transfer = get_object_or_404(StockTransfer, id=id)
+    def put(self, request, pk):
+        with transaction.atomic():
+            transfer = get_object_or_404(StockTransfer, id=pk)
             transfer.status = StockMovementStatus.IN_TRANSIT
             transfer.save()
 
             # increase incomming stock for destination warehouse
             for item in transfer.items.all():
-                stock = Stock.objects.get(warehouse=transfer.to_warehouse, product_variant=item.variant)
-                stock.incoming += item.quantity
+                try:
+                    stock = Stock.objects.get(warehouse=transfer.to_warehouse, product_variant=item.variant)
+                    stock.incoming += item.quantity
+                except Stock.DoesNotExist:
+                    stock = Stock.objects.create(
+                        warehouse=transfer.to_warehouse,
+                        product_variant=item.variant,
+                        incoming=item.quantity
+                    )
                 stock.save()
 
+           
             # decrease outgoing stock for source warehouse
             for item in transfer.items.all():
                 stock = Stock.objects.get(warehouse=transfer.from_warehouse, product_variant=item.variant)
@@ -309,7 +317,7 @@ class StockTransferMarkedAsCompletedAPIView(APIView):
         if transfer.status != StockMovementStatus.IN_TRANSIT:
             raise ValidationError("Only stock transfer with status 'IN_TRANSIT' can be marked as completed.")
         
-        with translation.atomic():
+        with transaction.atomic():
             transfer.status = StockMovementStatus.COMPLETED
             transfer.save()
 

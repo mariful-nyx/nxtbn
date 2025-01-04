@@ -133,6 +133,19 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
             StockTransferItem.objects.get(stock_transfer_id=stock_transfer_id, variant=self.product_variant_three.id)
 
 
+
+        # ==================================
+        # Test for stock transfer receive
+        # ==================================
+
+        # at first stock transfer mark as in transit
+        # stock_transfer_mark_as_transit_url = reverse('stock-transfer-mark-as-in-transit', kwargs={'pk': stock_transfer_id})
+
+        # response_stock_transfer_mark_as_transit = self.auth_client.put(stock_transfer_mark_as_transit_url, format='json')
+        # self.assertEqual(response_stock_transfer_mark_as_transit.status_code, status.HTTP_200_OK)
+        # print(response_stock_transfer_mark_as_transit.data)
+
+
     def test_puchase_create_with_blank_items(self):
         purchase_create_url = reverse('stock-transfer-list')
 
@@ -143,3 +156,4 @@ class StockTransferCreateUpdateAPITest(BaseTestCase):
         }
         response_purchase_create = self.auth_client.post(purchase_create_url, payload, format='json')
         self.assertEqual(response_purchase_create.status_code, status.HTTP_400_BAD_REQUEST)
+

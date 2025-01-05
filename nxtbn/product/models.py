@@ -14,7 +14,7 @@ from django.utils.html import escape, format_html
 
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes
 from nxtbn.core.mixin import MonetaryMixin
-from nxtbn.core.models import AbstractMetadata, AbstractSEOModel, AbstractUUIDModel, PublishableModel, AbstractBaseUUIDModel, AbstractBaseModel, NameDescriptionAbstract, no_nested_values
+from nxtbn.core.models import AbstractMetadata, AbstractSEOModel, AbstractTranslationModel, AbstractUUIDModel, PublishableModel, AbstractBaseUUIDModel, AbstractBaseModel, NameDescriptionAbstract, no_nested_values
 from nxtbn.filemanager.models import Document, Image
 from nxtbn.product import DimensionUnits, StockStatus, WeightUnits
 from nxtbn.product.utils import json_to_html
@@ -405,8 +405,7 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
 # Translation Models
 # ==================================================================
 
-class CategoryTranslation(AbstractSEOModel):
-    language = models.CharField(max_length=10)
+class CategoryTranslation(AbstractTranslationModel):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
     description = models.TextField(max_length=5000)
@@ -418,8 +417,7 @@ class CategoryTranslation(AbstractSEOModel):
         return self.name
     
 
-class CollectionTranslation(AbstractSEOModel):
-    language = models.CharField(max_length=10)
+class CollectionTranslation(AbstractTranslationModel):
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
     description = models.TextField(max_length=5000)
@@ -431,8 +429,7 @@ class CollectionTranslation(AbstractSEOModel):
         return self.name
     
 
-class ProductTranslation(AbstractSEOModel):
-    language = models.CharField(max_length=10)
+class ProductTranslation(AbstractTranslationModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
     name_when_in_relation = models.CharField(max_length=255, blank=True, null=True)
@@ -446,8 +443,7 @@ class ProductTranslation(AbstractSEOModel):
         return self.name
     
 
-class ProductVariantTranslation(AbstractSEOModel):
-    language = models.CharField(max_length=10)
+class ProductVariantTranslation(AbstractTranslationModel):
     product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
 
@@ -458,8 +454,7 @@ class ProductVariantTranslation(AbstractSEOModel):
         return self.name
     
 
-class SupplierTranslation(AbstractSEOModel):
-    language = models.CharField(max_length=10)
+class SupplierTranslation(AbstractTranslationModel):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
     description = models.TextField(max_length=5000)
@@ -471,8 +466,7 @@ class SupplierTranslation(AbstractSEOModel):
         return self.name
     
 
-class ProductTagTranslation(AbstractSEOModel):
-    language = models.CharField(max_length=10)
+class ProductTagTranslation(AbstractTranslationModel):
     product_tag = models.ForeignKey(ProductTag, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
 
@@ -483,8 +477,7 @@ class ProductTagTranslation(AbstractSEOModel):
         return self.name
     
 
-class ProductTypeTranslation(AbstractSEOModel):
-    language = models.CharField(max_length=10)
+class ProductTypeTranslation(AbstractTranslationModel):
     product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
 

@@ -4,7 +4,7 @@ from nxtbn.users.models import User
 from django.forms import ValidationError
 from django.utils import timezone
 
-from nxtbn.core.models import AbstractBaseModel
+from nxtbn.core.models import AbstractBaseModel, AbstractTranslationModel
 from nxtbn.discount import PromoCodeType
 from nxtbn.order import OrderStatus
 from nxtbn.product.models import Product
@@ -209,8 +209,7 @@ class PromoCodeProduct(models.Model):
 # Translation Models
 # ==================================================================
 
-class PromoCodeTranslation(models.Model):
-    language = models.CharField(max_length=10)
+class PromoCodeTranslation(AbstractTranslationModel):
     promo_code = models.ForeignKey(PromoCode, on_delete=models.CASCADE, related_name='translations')
     description = models.TextField(blank=True, null=True)
     

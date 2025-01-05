@@ -1,6 +1,6 @@
 from django.db import models
 from django_countries.fields import CountryField
-from nxtbn.core.models import AbstractBaseModel
+from nxtbn.core.models import AbstractBaseModel, AbstractTranslationModel
 
 class TaxClass(models.Model):
     """
@@ -53,8 +53,7 @@ class TaxRate(AbstractBaseModel):
 # Translation Models
 # ==================================================================
 
-class TaxClassTranslation(models.Model):
-    language = models.CharField(max_length=10)
+class TaxClassTranslation(AbstractTranslationModel):
     tax_class = models.ForeignKey(TaxClass, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=50)
 

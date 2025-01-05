@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes
 from nxtbn.core.mixin import MonetaryMixin
-from nxtbn.core.models import AbstractBaseModel
+from nxtbn.core.models import AbstractBaseModel, AbstractTranslationModel
 from django_countries.fields import CountryField
 from decimal import Decimal
 
@@ -156,8 +156,7 @@ class ShippingRate(MonetaryMixin, AbstractBaseModel):
 # Translation Models
 # ==================================================================
 
-class ShippingMethodTranslation(models.Model):
-    language = models.CharField(max_length=10)
+class ShippingMethodTranslation(AbstractTranslationModel):
     shipping_method = models.ForeignKey(ShippingMethod, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)

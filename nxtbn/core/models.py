@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 from django_extensions.db.fields import AutoSlugField
-from nxtbn.core import CurrencyTypes, MoneyFieldTypes, PublishableStatus
+from nxtbn.core import CurrencyTypes, LanguageChoices, MoneyFieldTypes, PublishableStatus
 from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.users.admin import User
 from django.contrib.sites.models import Site
@@ -119,6 +119,11 @@ class AbstractMetadata(models.Model):
     class Meta:
         abstract = True
 
+
+class AbstractTranslationModel(models.Model):
+    language = models.CharField(max_length=10, choices=LanguageChoices.choices)
+    class Meta:
+        abstract = True
 
 #============================
 # Abstract Base Model end

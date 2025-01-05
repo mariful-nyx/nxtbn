@@ -4,12 +4,16 @@ from rest_framework.routers import DefaultRouter
 from nxtbn.core.url_converters import IdOrNoneConverter
 
 from nxtbn.product.api.dashboard.views import (
+    CategoryTranslationViewSet,
+    CollectionTranslationViewSet,
     ProductListView,
     ProductDetailView,
     CategoryListView,
     CategoryByParentView,
     CategoryDetailView,
     CollectionViewSet,
+    ProductTagTranslationViewSet,
+    ProductTranslationViewSet,
     RecursiveCategoryListView,
     ColorViewSet,
     ProductTypeViewSet,
@@ -18,6 +22,7 @@ from nxtbn.product.api.dashboard.views import (
     ProductWithVariantView,
     ProductMinimalListView,
     ProductListDetailVariantView,
+    SupplierTranslationViewSet,
     TaxClassView,
     BulkProductStatusUpdateAPIView,
     BulkProductDeleteAPIView,
@@ -35,6 +40,13 @@ router.register(r'product-types', ProductTypeViewSet)
 router.register(r'product-tags', ProductTagViewSet)
 router.register(r'collections', CollectionViewSet)
 router.register(r'suppliers', SupplierModelViewSet)
+
+# Translation views
+router.register(r'supplier-translations', SupplierTranslationViewSet, basename='supplier-translation')
+router.register(r'category-translations', CategoryTranslationViewSet, basename='category-translation')
+router.register(r'collection-translations', CollectionTranslationViewSet, basename='collection-translation')
+router.register(r'product-translations', ProductTranslationViewSet, basename='product-translation')
+router.register(r'product-tag-translations', ProductTagTranslationViewSet, basename='product-tag-translation')
 
 urlpatterns = [
     path('', include(router.urls)),

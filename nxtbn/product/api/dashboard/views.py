@@ -14,9 +14,11 @@ from django_filters import rest_framework as filters
 
 from nxtbn.core import PublishableStatus
 from nxtbn.core.paginator import NxtbnPagination
-from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant, Supplier
+from nxtbn.product.models import CategoryTranslation, CollectionTranslation, Color, Product, Category, Collection, ProductTag, ProductTagTranslation, ProductTranslation, ProductType, ProductVariant, Supplier, SupplierTranslation
 from nxtbn.product.api.dashboard.serializers import (
     BasicCategorySerializer,
+    CategoryTranslationSerializer,
+    CollectionTranslationSerializer,
     ColorSerializer,
     InventorySerializer,
     ProductCreateSerializer,
@@ -27,10 +29,13 @@ from nxtbn.product.api.dashboard.serializers import (
     CollectionSerializer,
     ProductStatusUpdateBulkSerializer,
     ProductTagSerializer,
+    ProductTagTranslationSerializer,
+    ProductTranslationSerializer,
     ProductTypeSerializer,
     ProductVariantShortSerializer,
     ProductWithVariantSerializer,
     RecursiveCategorySerializer,
+    SupplierTranslationSerializer,
     TaxClassSerializer,
     SupplierSerializer
 )
@@ -338,3 +343,50 @@ class SupplierModelViewSet(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer
     queryset = Supplier.objects.all()
     pagination_class = NxtbnPagination
+
+
+
+
+# ==========================
+# Translation Views
+# ==========================
+
+
+class SupplierTranslationViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for managing supplier translations.
+    """
+    queryset = SupplierTranslation.objects.all()
+    serializer_class = SupplierTranslationSerializer
+
+
+class CategoryTranslationViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for managing category translations.
+    """
+    queryset = CategoryTranslation.objects.all()
+    serializer_class = CategoryTranslationSerializer
+
+
+class CollectionTranslationViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for managing collection translations.
+    """
+    queryset = CollectionTranslation.objects.all()
+    serializer_class = CollectionTranslationSerializer
+
+
+class ProductTranslationViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for managing product translations.
+    """
+    queryset = ProductTranslation.objects.all()
+    serializer_class = ProductTranslationSerializer
+
+
+class ProductTagTranslationViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for managing product tag translations.
+    """
+    queryset = ProductTagTranslation.objects.all()
+    serializer_class = ProductTagTranslationSerializer

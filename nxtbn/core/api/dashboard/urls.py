@@ -7,4 +7,5 @@ urlpatterns = [
     path('invoice-settings/', core_views.InvoiceSettingsView.as_view(), name='invoice-settings'),
     path('system-status/', status_views.SystemStatusAPIView.as_view(), name='system-status'),
     path('db-tables-details/', status_views.DatabaseTableInfoAPIView.as_view(), name='db-details'),
+    path('language-list/', core_views.LanguageChoicesAPIView.as_view(), name='language-list'),
 ]

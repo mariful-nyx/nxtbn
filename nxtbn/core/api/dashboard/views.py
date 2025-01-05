@@ -25,6 +25,7 @@ from rest_framework.parsers import JSONParser
 
 from rest_framework import serializers
 
+from nxtbn.core import LanguageChoices
 from nxtbn.core.api.dashboard.serializers import InvoiceSettingsSerializer, SiteSettingsSerializer
 from nxtbn.core.models import InvoiceSettings, SiteSettings
 
@@ -55,3 +56,14 @@ class InvoiceSettingsView(generics.RetrieveUpdateAPIView):
             return InvoiceSettings.objects.get(site=current_site)
         except InvoiceSettings.DoesNotExist:
             raise NotFound("Site settings for the current site do not exist.")
+        
+
+
+class LanguageChoicesAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        # Generate a list of language labels and their corresponding values
+        languages = [
+            {"value": lang_value, "label": lang_label}
+            for lang_value, lang_label in LanguageChoices.choices
+        ]
+        return Response(languages, status=status.HTTP_200_OK)

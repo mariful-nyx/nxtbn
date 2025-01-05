@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from babel.numbers import get_currency_precision, format_currency
+from django_extensions.db.fields import AutoSlugField
 
 
 from django.utils.html import escape, format_html
@@ -22,6 +23,7 @@ from nxtbn.tax.models import TaxClass
 from nxtbn.users.admin import User
 
 class Supplier(NameDescriptionAbstract, AbstractSEOModel):
+    slug = AutoSlugField(populate_from='name', unique=True)
     pass
 
 class Color(AbstractBaseModel): # TO DO: Remove this model, unnecessary, Decided with critically analyze. Can handle with product.related_to field
@@ -36,6 +38,7 @@ class Color(AbstractBaseModel): # TO DO: Remove this model, unnecessary, Decided
         verbose_name_plural = _("Colors")
 
 class Category(NameDescriptionAbstract, AbstractSEOModel):
+    slug = AutoSlugField(populate_from='name', unique=True)
     parent = models.ForeignKey(
         'self',
         null=True,
@@ -83,6 +86,7 @@ class Category(NameDescriptionAbstract, AbstractSEOModel):
         super().save(*args, **kwargs)
 
 class Collection(NameDescriptionAbstract, AbstractSEOModel):
+    slug = AutoSlugField(populate_from='name', unique=True)
     created_by = models.ForeignKey(
         User, 
         on_delete=models.SET_NULL,
@@ -131,6 +135,7 @@ class ProductType(models.Model):
     # TO DO: class Meta: # Handle unique together with each field except name
 
 class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
+    slug = AutoSlugField(populate_from='name', unique=True)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_created')
     last_modified_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_modified', null=True, blank=True)
     name = models.CharField(max_length=255, help_text="The name of the product.")
@@ -405,7 +410,7 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
 # Translation Models
 # ==================================================================
 
-class CategoryTranslation(AbstractTranslationModel):
+class CategoryTranslation(AbstractTranslationModel, AbstractSEOModel):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
     description = models.TextField(max_length=5000)
@@ -417,7 +422,7 @@ class CategoryTranslation(AbstractTranslationModel):
         return self.name
     
 
-class CollectionTranslation(AbstractTranslationModel):
+class CollectionTranslation(AbstractTranslationModel, AbstractSEOModel):
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
     description = models.TextField(max_length=5000)
@@ -429,7 +434,7 @@ class CollectionTranslation(AbstractTranslationModel):
         return self.name
     
 
-class ProductTranslation(AbstractTranslationModel):
+class ProductTranslation(AbstractTranslationModel, AbstractSEOModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
     name_when_in_relation = models.CharField(max_length=255, blank=True, null=True)
@@ -454,7 +459,7 @@ class ProductVariantTranslation(AbstractTranslationModel):
         return self.name
     
 
-class SupplierTranslation(AbstractTranslationModel):
+class SupplierTranslation(AbstractTranslationModel, AbstractSEOModel):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
     description = models.TextField(max_length=5000)
@@ -466,23 +471,12 @@ class SupplierTranslation(AbstractTranslationModel):
         return self.name
     
 
-class ProductTagTranslation(AbstractTranslationModel):
+class ProductTagTranslation(AbstractTranslationModel, AbstractSEOModel):
     product_tag = models.ForeignKey(ProductTag, on_delete=models.CASCADE, related_name='translations')
     name = models.CharField(max_length=255)
 
     class Meta:
         unique_together = ('language_code', 'product_tag')
-
-    def __str__(self):
-        return self.name
-    
-
-class ProductTypeTranslation(AbstractTranslationModel):
-    product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE, related_name='translations')
-    name = models.CharField(max_length=255)
-
-    class Meta:
-        unique_together = ('language_code', 'product_type')
 
     def __str__(self):
         return self.name

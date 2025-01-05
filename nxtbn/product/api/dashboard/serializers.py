@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError
 from nxtbn.core import PublishableStatus
 from nxtbn.core.utils import normalize_amount_currencywise
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
-from nxtbn.product.models import Color, Product, Category, Collection, ProductTag, ProductType, ProductVariant, Supplier
+from nxtbn.product.models import CategoryTranslation, CollectionTranslation, Color, Product, Category, Collection, ProductTag, ProductTagTranslation, ProductTranslation, ProductType, ProductVariant, Supplier, SupplierTranslation
 from nxtbn.tax.models import TaxClass
 from nxtbn.filemanager.models import Image
 
@@ -521,3 +521,69 @@ class SupplierSerializer(serializers.ModelSerializer):
             'meta_description',
             'slug'
         )
+
+
+# =================================================
+# Translation Serializers
+# =================================================
+
+class SupplierTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupplierTranslation
+        fields = (
+            'id',
+            'supplier',
+            'name',
+            'description',
+            'language_code',
+        )
+class CategoryTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CategoryTranslation
+        fields = (
+            'id',
+            'category',
+            'name',
+            'description',
+            'language_code',
+        )
+
+
+class CollectionTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CollectionTranslation 
+        fields = (
+            'id',
+            'collection',
+            'name',
+            'description',
+            'language_code',
+        )
+
+
+
+class ProductTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductTranslation
+        fields = (
+            'id',
+            'product',
+            'name',
+            'summary',
+            'description',
+            'language_code',
+        )
+
+class ProductTagTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductTagTranslation
+        fields = (
+            'id',
+            'product_tag',
+            'name',
+            'language_code',
+        )
+
+
+
+

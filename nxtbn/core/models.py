@@ -91,7 +91,6 @@ class AbstractSEOModel(models.Model):
     meta_description = models.CharField(
         max_length=350, blank=True, null=True, help_text="Description for search engines."
     )
-    slug = AutoSlugField(populate_from='name', unique=True)
 
     class Meta:
         abstract = True

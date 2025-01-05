@@ -397,3 +397,100 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
                     raise ValidationError("Dimension type is required if dimensions are provided.")
                 if self.attributes['dimension_type'] not in DimensionUnits.choices.keys():
                     raise ValidationError("Invalid dimension type, must be one of: {}".format(DimensionUnits.choices.keys()))
+                
+
+
+
+# ==================================================================
+# Translation Models
+# ==================================================================
+
+class CategoryTranslation(AbstractSEOModel):
+    language = models.CharField(max_length=10)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+    description = models.TextField(max_length=5000)
+
+    class Meta:
+        unique_together = ('language_code', 'category')
+
+    def __str__(self):
+        return self.name
+    
+
+class CollectionTranslation(AbstractSEOModel):
+    language = models.CharField(max_length=10)
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+    description = models.TextField(max_length=5000)
+
+    class Meta:
+        unique_together = ('language_code', 'collection')
+
+    def __str__(self):
+        return self.name
+    
+
+class ProductTranslation(AbstractSEOModel):
+    language = models.CharField(max_length=10)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+    name_when_in_relation = models.CharField(max_length=255, blank=True, null=True)
+    summary = models.TextField(max_length=500)
+    description = models.TextField(max_length=5000)
+
+    class Meta:
+        unique_together = ('language_code', 'product')
+
+    def __str__(self):
+        return self.name
+    
+
+class ProductVariantTranslation(AbstractSEOModel):
+    language = models.CharField(max_length=10)
+    product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        unique_together = ('language_code', 'product_variant')
+
+    def __str__(self):
+        return self.name
+    
+
+class SupplierTranslation(AbstractSEOModel):
+    language = models.CharField(max_length=10)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+    description = models.TextField(max_length=5000)
+
+    class Meta:
+        unique_together = ('language_code', 'supplier')
+
+    def __str__(self):
+        return self.name
+    
+
+class ProductTagTranslation(AbstractSEOModel):
+    language = models.CharField(max_length=10)
+    product_tag = models.ForeignKey(ProductTag, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        unique_together = ('language_code', 'product_tag')
+
+    def __str__(self):
+        return self.name
+    
+
+class ProductTypeTranslation(AbstractSEOModel):
+    language = models.CharField(max_length=10)
+    product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        unique_together = ('language_code', 'product_type')
+
+    def __str__(self):
+        return self.name
+    

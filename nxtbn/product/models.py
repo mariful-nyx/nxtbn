@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from babel.numbers import get_currency_precision, format_currency
+from django_extensions.db.fields import AutoSlugField
 
 
 from django.utils.html import escape, format_html
@@ -14,7 +15,7 @@ from django.utils.html import escape, format_html
 
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes
 from nxtbn.core.mixin import MonetaryMixin
-from nxtbn.core.models import AbstractMetadata, AbstractSEOModel, AbstractUUIDModel, PublishableModel, AbstractBaseUUIDModel, AbstractBaseModel, NameDescriptionAbstract, no_nested_values
+from nxtbn.core.models import AbstractMetadata, AbstractSEOModel, AbstractTranslationModel, AbstractUUIDModel, PublishableModel, AbstractBaseUUIDModel, AbstractBaseModel, NameDescriptionAbstract, no_nested_values
 from nxtbn.filemanager.models import Document, Image
 from nxtbn.product import DimensionUnits, StockStatus, WeightUnits
 from nxtbn.product.utils import json_to_html
@@ -22,6 +23,7 @@ from nxtbn.tax.models import TaxClass
 from nxtbn.users.admin import User
 
 class Supplier(NameDescriptionAbstract, AbstractSEOModel):
+    slug = AutoSlugField(populate_from='name', unique=True)
     pass
 
 class Color(AbstractBaseModel): # TO DO: Remove this model, unnecessary, Decided with critically analyze. Can handle with product.related_to field
@@ -36,6 +38,7 @@ class Color(AbstractBaseModel): # TO DO: Remove this model, unnecessary, Decided
         verbose_name_plural = _("Colors")
 
 class Category(NameDescriptionAbstract, AbstractSEOModel):
+    slug = AutoSlugField(populate_from='name', unique=True)
     parent = models.ForeignKey(
         'self',
         null=True,
@@ -83,6 +86,7 @@ class Category(NameDescriptionAbstract, AbstractSEOModel):
         super().save(*args, **kwargs)
 
 class Collection(NameDescriptionAbstract, AbstractSEOModel):
+    slug = AutoSlugField(populate_from='name', unique=True)
     created_by = models.ForeignKey(
         User, 
         on_delete=models.SET_NULL,
@@ -131,6 +135,7 @@ class ProductType(models.Model):
     # TO DO: class Meta: # Handle unique together with each field except name
 
 class Product(PublishableModel, AbstractMetadata, AbstractSEOModel):
+    slug = AutoSlugField(populate_from='name', unique=True)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_created')
     last_modified_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products_modified', null=True, blank=True)
     name = models.CharField(max_length=255, help_text="The name of the product.")
@@ -397,3 +402,82 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
                     raise ValidationError("Dimension type is required if dimensions are provided.")
                 if self.attributes['dimension_type'] not in DimensionUnits.choices.keys():
                     raise ValidationError("Invalid dimension type, must be one of: {}".format(DimensionUnits.choices.keys()))
+                
+
+
+
+# ==================================================================
+# Translation Models
+# ==================================================================
+
+class CategoryTranslation(AbstractTranslationModel, AbstractSEOModel):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+    description = models.TextField(max_length=5000)
+
+    class Meta:
+        unique_together = ('language_code', 'category')
+
+    def __str__(self):
+        return self.name
+    
+
+class CollectionTranslation(AbstractTranslationModel, AbstractSEOModel):
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+    description = models.TextField(max_length=5000)
+
+    class Meta:
+        unique_together = ('language_code', 'collection')
+
+    def __str__(self):
+        return self.name
+    
+
+class ProductTranslation(AbstractTranslationModel, AbstractSEOModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+    name_when_in_relation = models.CharField(max_length=255, blank=True, null=True)
+    summary = models.TextField(max_length=500)
+    description = models.TextField(max_length=5000)
+
+    class Meta:
+        unique_together = ('language_code', 'product')
+
+    def __str__(self):
+        return self.name
+    
+
+class ProductVariantTranslation(AbstractTranslationModel):
+    product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        unique_together = ('language_code', 'product_variant')
+
+    def __str__(self):
+        return self.name
+    
+
+class SupplierTranslation(AbstractTranslationModel, AbstractSEOModel):
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+    description = models.TextField(max_length=5000)
+
+    class Meta:
+        unique_together = ('language_code', 'supplier')
+
+    def __str__(self):
+        return self.name
+    
+
+class ProductTagTranslation(AbstractTranslationModel, AbstractSEOModel):
+    product_tag = models.ForeignKey(ProductTag, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        unique_together = ('language_code', 'product_tag')
+
+    def __str__(self):
+        return self.name
+    

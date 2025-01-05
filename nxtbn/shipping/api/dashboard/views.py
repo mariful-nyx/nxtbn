@@ -2,13 +2,15 @@
 from django.db.models import Q
 from nxtbn.order import AddressType
 from nxtbn.shipping.api.dashboard.serializers import (
-    ShippingMethodSerializer, 
+    ShippingMethodSerializer,
+    ShippingMethodTranslationSerializer, 
     ShppingMethodDetailSeralizer,
     ShippingRateSerializer
 )
-from nxtbn.shipping.models import ShippingMethod, ShippingRate
+from nxtbn.shipping.models import ShippingMethod, ShippingMethodTranslation, ShippingRate
 from rest_framework import generics
 from rest_framework.response import Response
+from rest_framework import viewsets
 
 from nxtbn.users.models import User
 
@@ -55,3 +57,15 @@ class ShippingRateDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ShippingRateSerializer
     queryset = ShippingRate.objects.all()
     lookup_field = 'id'
+
+# ==================================================================
+# Translation Views
+# ==================================================================
+
+class ShippingMethodTranslationViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing ShippingMethod translations.
+    """
+    serializer_class = ShippingMethodTranslationSerializer
+    queryset = ShippingMethodTranslation.objects.all()
+    

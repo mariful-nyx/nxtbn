@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes
 from nxtbn.core.mixin import MonetaryMixin
-from nxtbn.core.models import AbstractBaseModel
+from nxtbn.core.models import AbstractBaseModel, AbstractTranslationModel
 from django_countries.fields import CountryField
 from decimal import Decimal
 
@@ -150,3 +150,22 @@ class ShippingRate(MonetaryMixin, AbstractBaseModel):
             location_parts.append(self.country.name)
         location = ", ".join(filter(None, location_parts)) or "Global"
         return f"{self.shipping_method} - {location} ({self.weight_min}kg to {self.weight_max}kg)"
+
+
+# ==================================================================
+# Translation Models
+# ==================================================================
+
+class ShippingMethodTranslation(AbstractTranslationModel):
+    shipping_method = models.ForeignKey(ShippingMethod, on_delete=models.CASCADE, related_name='translations')
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    carrier = models.CharField(max_length=200)
+
+    class Meta:
+        unique_together = ('language_code', 'shipping_method')
+        verbose_name = "Shipping Method Translation"
+        verbose_name_plural = "Shipping Method Translations"
+
+    def __str__(self):
+        return f"{self.shipping_method} ({self.language_code})"

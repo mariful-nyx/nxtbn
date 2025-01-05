@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from nxtbn.shipping.models import ShippingMethod, ShippingRate
+from nxtbn.shipping.models import ShippingMethod, ShippingMethodTranslation, ShippingRate
 
 class ShippingRateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -42,3 +42,13 @@ class ShppingMethodDetailSeralizer(serializers.ModelSerializer):
     class Meta:
         model = ShippingMethod
         fields = ['id', 'name', 'description', 'carrier', 'rates']
+
+
+# ==================================================================
+# Translation Serializers
+# ==================================================================
+
+class ShippingMethodTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShippingMethodTranslation
+        fields = '__all__'

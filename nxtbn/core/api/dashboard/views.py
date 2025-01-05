@@ -61,7 +61,6 @@ class InvoiceSettingsView(generics.RetrieveUpdateAPIView):
 
 class LanguageChoicesAPIView(APIView):
     def get(self, request, *args, **kwargs):
-        # Generate a list of language labels and their corresponding values
         languages = [
             {"value": lang_value, "label": lang_label}
             for lang_value, lang_label in LanguageChoices.choices

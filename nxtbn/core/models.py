@@ -121,7 +121,7 @@ class AbstractMetadata(models.Model):
 
 
 class AbstractTranslationModel(models.Model):
-    language = models.CharField(max_length=10, choices=LanguageChoices.choices)
+    language_code = models.CharField(max_length=10, choices=LanguageChoices.choices)
     class Meta:
         abstract = True
 

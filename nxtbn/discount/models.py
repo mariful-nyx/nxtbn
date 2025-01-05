@@ -214,9 +214,9 @@ class PromoCodeTranslation(AbstractTranslationModel):
     description = models.TextField(blank=True, null=True)
     
     class Meta:
-        unique_together = ('language', 'promo_code')
+        unique_together = ('language_code', 'promo_code')
         verbose_name = "Promo Code Translation"
         verbose_name_plural = "Promo Code Translations"
     
     def __str__(self):
-        return f"{self.promo_code.code} ({self.language})"
+        return f"{self.promo_code.code} ({self.language_code})"

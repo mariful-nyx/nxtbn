@@ -58,9 +58,9 @@ class TaxClassTranslation(AbstractTranslationModel):
     name = models.CharField(max_length=50)
 
     def __str__(self):
-        return f"{self.tax_class.name} ({self.language})"
+        return f"{self.tax_class.name} ({self.language_code})"
     
     class Meta:
-        unique_together = ('language', 'tax_class')
+        unique_together = ('language_code', 'tax_class')
         verbose_name = "Tax Class Translation"
         verbose_name_plural = "Tax Class Translations"

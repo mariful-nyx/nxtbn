@@ -163,9 +163,9 @@ class ShippingMethodTranslation(AbstractTranslationModel):
     carrier = models.CharField(max_length=200)
 
     class Meta:
-        unique_together = ('language', 'shipping_method')
+        unique_together = ('language_code', 'shipping_method')
         verbose_name = "Shipping Method Translation"
         verbose_name_plural = "Shipping Method Translations"
 
     def __str__(self):
-        return f"{self.shipping_method} ({self.language})"
+        return f"{self.shipping_method} ({self.language_code})"

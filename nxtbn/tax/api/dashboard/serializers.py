@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from django.db import transaction
-from nxtbn.tax.models import TaxClass, TaxRate
+from nxtbn.tax.models import TaxClass, TaxClassTranslation, TaxRate
 
 
 class TaxRateSerializer(serializers.ModelSerializer):
@@ -34,3 +34,12 @@ class TaxClassDetailSerializer(serializers.ModelSerializer):
         ref_name = 'tax_class_detail_get'
         fields = ('id', 'name', 'tax_rates',)
 
+
+# ==================================================================
+# Translation Serializers
+# ==================================================================
+
+class TaxClassTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaxClassTranslation
+        fields = '__all__'

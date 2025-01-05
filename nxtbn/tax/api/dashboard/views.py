@@ -1,4 +1,4 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from rest_framework.permissions  import AllowAny
@@ -7,10 +7,11 @@ from rest_framework.exceptions import APIException
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.core.admin_permissions import NxtbnAdminPermission
 
-from nxtbn.tax.models import TaxClass, TaxRate
+from nxtbn.tax.models import TaxClass, TaxClassTranslation, TaxRate
 from nxtbn.tax.api.dashboard.serializers import (
     TaxClassSerializer, 
-    TaxClassDetailSerializer, 
+    TaxClassDetailSerializer,
+    TaxClassTranslationSerializer, 
     TaxRateSerializer
 )
 
@@ -52,4 +53,13 @@ class TaxRateRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
 
 
 
-        
+# ==================================================================
+# Translation Views
+# ==================================================================
+
+class TaxClassTranslationViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for managing tax class translations.
+    """
+    queryset = TaxClassTranslation.objects.all()
+    serializer_class = TaxClassTranslationSerializer

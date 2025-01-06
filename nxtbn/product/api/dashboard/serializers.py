@@ -146,15 +146,7 @@ class ProductSerializer(serializers.ModelSerializer):
         return obj.variants.count()
     
 
-class ProductMinimalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product 
-        ref_name = 'product_dashboard_minimal_get'
-        fields =  (
-            'id',
-            'name',
-        )
-    
+
 
 class VariantCreatePayloadSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
@@ -522,9 +514,62 @@ class SupplierSerializer(serializers.ModelSerializer):
             'slug'
         )
 
+# =================================================
+# Name id serializer start
+# =================================================
+
+class ProductMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product 
+        ref_name = 'product_dashboard_minimal_get'
+        fields =  (
+            'id',
+            'name',
+        )
+    
+
+class CategoryNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = (
+            'id',
+            'name',
+        )
+
+class CollectionNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Collection
+        fields = (
+            'id',
+            'name',
+        )
+
+class ProductTagNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductTag
+        fields = (
+            'id',
+            'name',
+        )
+
+
+class SupplierNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Supplier
+        fields = (
+            'id',
+            'name',
+        )
+
+
+
 
 # =================================================
-# Translation Serializers
+#  Name id serializer ended
+# =================================================
+
+# =================================================
+# Translation Serializers start
 # =================================================
 
 class SupplierTranslationSerializer(serializers.ModelSerializer):

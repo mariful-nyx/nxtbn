@@ -73,10 +73,10 @@ urlpatterns = [
     path('inventory/', InventoryListView.as_view(), name='product-inventory'),
 
     # Name and id views
-    path('products-name/', ProductNameView.as_view(), name='product-list'),
-    path('categories-name/', CategoryNameView.as_view(), name='category-list'),
-    path('suppliers-name/', SupplierNameView.as_view(), name='supplier-list'),
-    path('product-tags-name/', ProductTagNameView.as_view(), name='product-tag-list'),
-    path('collections-name/', CollectionNameView.as_view(), name='collection-list'),
+    path('products-name/', ProductNameView.as_view(), name='product-list-name'),
+    path('categories-name/', CategoryNameView.as_view(), name='category-list-name'),
+    path('suppliers-name/', SupplierNameView.as_view(), name='supplier-list-name'),
+    path('product-tags-name/', ProductTagNameView.as_view(), name='product-tag-list-name'),
+    path('collections-name/', CollectionNameView.as_view(), name='collection-list-name'),
 ]
 

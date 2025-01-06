@@ -17,7 +17,9 @@ from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.product.models import CategoryTranslation, CollectionTranslation, Color, Product, Category, Collection, ProductTag, ProductTagTranslation, ProductTranslation, ProductType, ProductVariant, Supplier, SupplierTranslation
 from nxtbn.product.api.dashboard.serializers import (
     BasicCategorySerializer,
+    CategoryNameSerializer,
     CategoryTranslationSerializer,
+    CollectionNameSerializer,
     CollectionTranslationSerializer,
     ColorSerializer,
     InventorySerializer,
@@ -28,6 +30,7 @@ from nxtbn.product.api.dashboard.serializers import (
     CategorySerializer,
     CollectionSerializer,
     ProductStatusUpdateBulkSerializer,
+    ProductTagNameSerializer,
     ProductTagSerializer,
     ProductTagTranslationSerializer,
     ProductTranslationSerializer,
@@ -35,6 +38,7 @@ from nxtbn.product.api.dashboard.serializers import (
     ProductVariantShortSerializer,
     ProductWithVariantSerializer,
     RecursiveCategorySerializer,
+    SupplierNameSerializer,
     SupplierTranslationSerializer,
     TaxClassSerializer,
     SupplierSerializer
@@ -345,6 +349,51 @@ class SupplierModelViewSet(viewsets.ModelViewSet):
     pagination_class = NxtbnPagination
 
 
+
+# ============================================
+# Id and Name Responsive realted views start 
+# ===========================================
+
+class ProductNameView(generics.ListAPIView):
+    serializer_class = ProductMinimalSerializer
+    queryset = Product.objects.all()
+
+    def get_queryset(self):
+        return Product.objects.all()
+    
+
+class CategoryNameView(generics.ListAPIView):
+    serializer_class = CategoryNameSerializer
+    queryset = Category.objects.all()
+
+    def get_queryset(self):
+        return Category.objects.all()
+
+class SupplierNameView(generics.ListAPIView):
+    serializer_class = SupplierNameSerializer
+    queryset = Supplier.objects.all()
+
+    def get_queryset(self):
+        return Supplier.objects.all()
+    
+class ProductTagNameView(generics.ListAPIView):
+    serializer_class = ProductTagNameSerializer
+    queryset = ProductTag.objects.all()
+
+    def get_queryset(self):
+        return ProductTag.objects.all()
+    
+class CollectionNameView(generics.ListAPIView):
+    pagination_class = None
+    serializer_class = CollectionNameSerializer
+    queryset = Collection.objects.all()
+
+    def get_queryset(self):
+        return Collection.objects.all()
+
+# ============================================
+# Id and Name Responsive realted views end 
+# ===========================================
 
 
 # ==========================

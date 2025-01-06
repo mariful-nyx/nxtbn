@@ -4,7 +4,9 @@ from rest_framework.routers import DefaultRouter
 from nxtbn.core.url_converters import IdOrNoneConverter
 
 from nxtbn.product.api.dashboard.views import (
+    CategoryNameView,
     CategoryTranslationViewSet,
+    CollectionNameView,
     CollectionTranslationViewSet,
     ProductListView,
     ProductDetailView,
@@ -12,6 +14,8 @@ from nxtbn.product.api.dashboard.views import (
     CategoryByParentView,
     CategoryDetailView,
     CollectionViewSet,
+    ProductNameView,
+    ProductTagNameView,
     ProductTagTranslationViewSet,
     ProductTranslationViewSet,
     RecursiveCategoryListView,
@@ -22,6 +26,7 @@ from nxtbn.product.api.dashboard.views import (
     ProductWithVariantView,
     ProductMinimalListView,
     ProductListDetailVariantView,
+    SupplierNameView,
     SupplierTranslationViewSet,
     TaxClassView,
     BulkProductStatusUpdateAPIView,
@@ -66,5 +71,12 @@ urlpatterns = [
     path('products/delete/bulk/', BulkProductDeleteAPIView.as_view(), name='bulk-product-status-delete'),
     path('products-variants/', ProductVariants.as_view(), name='products-variants'),
     path('inventory/', InventoryListView.as_view(), name='product-inventory'),
+
+    # Name and id views
+    path('products-name/', ProductNameView.as_view(), name='product-list'),
+    path('categories-name/', CategoryNameView.as_view(), name='category-list'),
+    path('suppliers-name/', SupplierNameView.as_view(), name='supplier-list'),
+    path('product-tags-name/', ProductTagNameView.as_view(), name='product-tag-list'),
+    path('collections-name/', CollectionNameView.as_view(), name='collection-list'),
 ]
 

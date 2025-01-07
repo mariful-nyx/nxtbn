@@ -47,6 +47,7 @@ urlpatterns = [
     path('django-admin/', admin.site.urls),
     path('', include('nxtbn.home.urls')),
     path('', include('nxtbn.seo.urls')),
+    path('', include('nxtbn.graph_api.urls')),
 
     path('product/', include('nxtbn.product.urls')),
 

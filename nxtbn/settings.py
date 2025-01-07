@@ -120,6 +120,7 @@ HELPING_HAND_APPS = [
     'rest_framework',
     'allauth',
     'allauth.account',
+    'graphene_django',
     'drf_yasg',
     'django_extensions',
     "corsheaders",

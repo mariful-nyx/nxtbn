@@ -113,6 +113,7 @@ LOCAL_APPS = [
     'nxtbn.post',
     'nxtbn.warehouse',
     'nxtbn.purchase',
+    'nxtbn.graph_api',
 ]
 
 HELPING_HAND_APPS = [

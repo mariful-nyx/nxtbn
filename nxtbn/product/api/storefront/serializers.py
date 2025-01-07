@@ -8,6 +8,7 @@ from nxtbn.core.utils import apply_exchange_rate, get_in_user_currency
 from nxtbn.product.api.dashboard.serializers import RecursiveCategorySerializer
 from nxtbn.filemanager.api.dashboard.serializers import ImageSerializer
 from nxtbn.product.models import Product, Collection, Category, ProductVariant
+from django.utils.translation import get_language
 
 from nxtbn.core.currency.backend import currency_Backend
 
@@ -60,13 +61,13 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
 class ProductWithDefaultVariantSerializer(serializers.ModelSerializer):
     product_thumbnail = serializers.SerializerMethodField()
     default_variant = ProductVariantSerializer(read_only=True)
+    texts = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = (
             'id',
-            'name',
-            'summary',
+            'texts',
             'slug',
             'default_variant',
             'product_thumbnail'
@@ -75,75 +76,195 @@ class ProductWithDefaultVariantSerializer(serializers.ModelSerializer):
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
     
+    def get_texts(self, obj):
+        request = self.context.get('request')
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                # Try fetching translation for the requested language
+                translation_obj = obj.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return {
+                        'name': translation_obj.name,
+                        'summary': translation_obj.summary,
+                    }
+                # If no translation exists, fallback to default # TODO (could be logged for debugging)
+                return {
+                    'name': obj.name,
+                    'summary': obj.summary,
+                }
+
+        # If internationalization is not enabled, return default texts
+        return {
+            'name': obj.name,
+            'summary': obj.summary,
+        }
+    
 class ProductWithDefaultVariantImageListSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)
+    texts = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = (
             'id',
-            'name',
-            'summary',
+            'texts',
             'slug',
             'default_variant',
             'images',
         )
+
+    def get_texts(self, obj):
+        request = self.context.get('request')
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                # Try fetching translation for the requested language
+                translation_obj = obj.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return {
+                        'name': translation_obj.name,
+                        'summary': translation_obj.summary,
+                    }
+                # If no translation exists, fallback to default # TODO (could be logged for debugging)
+                return {
+                    'name': obj.name,
+                    'summary': obj.summary,
+                }
+
+        # If internationalization is not enabled, return default texts
+        return {
+            'name': obj.name,
+            'summary': obj.summary,
+        }
     
 class ProductSlugSerializer(serializers.ModelSerializer):
+    texts = serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields = ('id', 'slug', 'name', 'product_thumbnail',)
+        fields = ('id', 'slug', 'texts', 'product_thumbnail',)
+
+    def get_texts(self, obj):
+        request = self.context.get('request')
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                # Try fetching translation for the requested language
+                translation_obj = obj.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return {
+                        'name': translation_obj.name,
+                    }
+                # If no translation exists, fallback to default # TODO (could be logged for debugging)
+                return {
+                    'name': obj.name,
+                }
+
+        # If internationalization is not enabled, return default texts
+        return {
+            'name': obj.name,
+        }
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True)
-    description_html = serializers.CharField(read_only=True)
     product_thumbnail = serializers.SerializerMethodField()
+    texts = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = (
             'id',
-            'name',
-            'summary',
-            'description_html',
             'brand',
             'category',
             'collections',
-            'created_by',
             'variants',
-            'meta_title',
-            'meta_description',
             'slug',
             'product_thumbnail',
+            'texts',
         )
 
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
     
+    def get_texts(self, obj):
+        request = self.context.get('request')
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                # Try fetching translation for the requested language
+                translation_obj = obj.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return {
+                        'name': translation_obj.name,
+                        'summary': translation_obj.summary,
+                        'description_html': translation_obj.description_html(),
+                        'meta_title': translation_obj.meta_title,
+                        'meta_description': translation_obj.meta_description,
+                    }
+                # If no translation exists, fallback to default # TODO (could be logged for debugging)
+                return {
+                    'name': obj.name,
+                    'summary': obj.summary,
+                    'description_html': obj.description_html(),
+                    'meta_title': obj.meta_title,
+                    'meta_description': obj.meta_description
+                }
+
+        # If internationalization is not enabled, return default texts
+        return {
+            'name': obj.name,
+            'summary': obj.summary,
+            'description_html': obj.description_html(),
+            'meta_title': obj.meta_title,
+            'meta_description': obj.meta_description
+        }
+    
 
 class ProductDetailImageListSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True)
-    description_html = serializers.CharField(read_only=True)
     images = ImageSerializer(many=True)
+    texts = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = (
             'id',
-            'name',
-            'summary',
-            'description_html',
+            'texts',
             'brand',
             'category',
             'collections',
-            'created_by',
             'variants',
-            'meta_title',
-            'meta_description',
             'slug',
             'images',
         )
+
+    def get_texts(self, obj):
+        request = self.context.get('request')
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                # Try fetching translation for the requested language
+                translation_obj = obj.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return {
+                        'name': translation_obj.name,
+                        'summary': translation_obj.summary,
+                        'description_html': translation_obj.description_html(),
+                        'meta_title': translation_obj.meta_title,
+                        'meta_description': translation_obj.meta_description,
+                    }
+                # If no translation exists, fallback to default # TODO (could be logged for debugging)
+                return {
+                    'name': obj.name,
+                    'summary': obj.summary,
+                    'description_html': obj.description_html(),
+                    'meta_title': obj.meta_title,
+                    'meta_description': obj.meta_description
+                }
+
+        # If internationalization is not enabled, return default texts
+        return {
+            'name': obj.name,
+            'summary': obj.summary,
+            'description_html': obj.description_html(),
+            'meta_title': obj.meta_title,
+        }
 
 
 class ProductSlugRelatedNameSerializer(serializers.ModelSerializer):
@@ -155,14 +276,11 @@ class ProductDetailWithRelatedLinkMinimalSerializer(serializers.ModelSerializer)
     variants = ProductVariantSerializer(many=True)
     related_links = ProductSlugRelatedNameSerializer(many=True, source='related_to')
     product_thumbnail = serializers.SerializerMethodField()
-    description_html = serializers.CharField(read_only=True)
+    texts = serializers.SerializerMethodField()
     class Meta:
         model = Product
         fields = (
             'id',
-            'name',
-            'summary',
-            'description',
             'brand',
             'category',
             'collections',
@@ -170,39 +288,97 @@ class ProductDetailWithRelatedLinkMinimalSerializer(serializers.ModelSerializer)
             'variants',
             'related_links',
             'meta_title',
-            'meta_description',
             'slug',
             'product_thumbnail',
-            'description_html',
+            'texts',
         )
 
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
+    
+    def get_texts(self, obj):
+        request = self.context.get('request')
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                # Try fetching translation for the requested language
+                translation_obj = obj.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return {
+                        'name': translation_obj.name,
+                        'summary': translation_obj.summary,
+                        'description_html': translation_obj.description_html(),
+                        'meta_title': translation_obj.meta_title,
+                        'meta_description': translation_obj.meta_description,
+                    }
+                # If no translation exists, fallback to default # TODO (could be logged for debugging)
+                return {
+                    'name': obj.name,
+                    'summary': obj.summary,
+                    'description_html': obj.description_html(),
+                    'meta_title': obj.meta_title,
+                    'meta_description': obj.meta_description
+                }
+
+        # If internationalization is not enabled, return default texts
+        return {
+            'name': obj.name,
+            'summary': obj.summary,
+            'description_html': obj.description_html(),
+            'meta_title': obj.meta_title,
+            'meta_description': obj.meta_description
+        }
 
 
 class ProductDetailWithRelatedLinkImageListMinimalSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True)
     related_links = ProductSlugRelatedNameSerializer(many=True, source='related_to')
     images = ImageSerializer(many=True)
+    texts = serializers.SerializerMethodField()
     class Meta:
         model = Product
         fields = (
             'id',
-            'name',
-            'summary',
-            'description',
+            'texts',
             'brand',
             'category',
             'collections',
             'images',
-            'created_by',
             'variants',
             'related_links',
-            'meta_title',
-            'meta_description',
             'slug',
-            'description_html',
         )
 
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
+    
+    def get_texts(self, obj):
+        request = self.context.get('request')
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                # Try fetching translation for the requested language
+                translation_obj = obj.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return {
+                        'name': translation_obj.name,
+                        'summary': translation_obj.summary,
+                        'description_html': translation_obj.description_html(),
+                        'meta_title': translation_obj.meta_title,
+                        'meta_description': translation_obj.meta_description,
+                    }
+                # If no translation exists, fallback to default # TODO (could be logged for debugging)
+                return {
+                    'name': obj.name,
+                    'summary': obj.summary,
+                    'description_html': obj.description_html(),
+                    'meta_title': obj.meta_title,
+                    'meta_description': obj.meta_description
+                }
+
+        # If internationalization is not enabled, return default texts
+        return {
+            'name': obj.name,
+            'summary': obj.summary,
+            'description_html': obj.description_html(),
+            'meta_title': obj.meta_title,
+            'meta_description': obj.meta_description
+        }

@@ -70,8 +70,8 @@ class ProductDetailAPITest(BaseTestCase):
         response = self.auth_client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.product.id)
-        self.assertEqual(response.data['name'], self.product.name)
-        self.assertEqual(response.data['summary'], self.product.summary)
+        self.assertEqual(response.data['texts']['name'], self.product.name)
+        self.assertEqual(response.data['texts']['summary'], self.product.summary)
         self.assertEqual(response.data['category'], self.product.category.id)
         self.assertIn('variants', response.data)
 
@@ -106,8 +106,8 @@ class ProductDetailAPITest(BaseTestCase):
 
 
         self.assertEqual(response.data['id'], black_shirt.id)
-        self.assertEqual(response.data['name'], black_shirt.name)
-        self.assertEqual(response.data['summary'], black_shirt.summary)
+        self.assertEqual(response.data['texts']['name'], black_shirt.name)
+        self.assertEqual(response.data['texts']['summary'], black_shirt.summary)
         self.assertIn('variants', response.data)
         self.assertIn('related_links', response.data)
         self.assertEqual(len(response.data['related_links']), 1)

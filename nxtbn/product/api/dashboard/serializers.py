@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from rest_framework.exceptions import ValidationError
 
 
@@ -569,6 +569,31 @@ class SupplierNameSerializer(serializers.ModelSerializer):
 # =================================================
 
 # =================================================
+#  Translation Equal Response Serializer start
+# =================================================
+
+class ProductTranslationEqualResponseSerializer(serializers.ModelSerializer):
+    description = serializers.SerializerMethodField()
+    class Meta:
+        model = Product
+        fields = (
+            'name',
+            'summary',
+            'description',
+            'meta_title',
+            'meta_description',
+        )
+
+    def get_description(self, obj):
+        return obj.description_html()
+
+
+
+# =================================================
+#  Translation Equal Response Serializer ended
+# =================================================
+
+# =================================================
 # Translation Serializers start
 # =================================================
 
@@ -608,16 +633,36 @@ class CollectionTranslationSerializer(serializers.ModelSerializer):
 
 
 class ProductTranslationSerializer(serializers.ModelSerializer):
+    language_code = serializers.CharField(max_length=10, read_only=True)
     class Meta:
         model = ProductTranslation
         fields = (
-            'id',
-            'product',
             'name',
             'summary',
             'description',
             'language_code',
+            'meta_title',
+            'meta_description',
         )
+
+    def create(self, validated_data):
+        lanague_code = self.context['view'].kwargs.get('lang_code')
+        base_product_id = self.context['view'].kwargs.get('base_product_id')
+        try:
+            data = {
+                'product_id': base_product_id,
+                'language_code': lanague_code
+            }
+            data.update(validated_data)
+            instance = ProductTranslation.objects.create(**data)
+        except IntegrityError:
+            instance = ProductTranslation.objects.get(product_id=base_product_id, language_code=lanague_code)
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+            instance.save()
+        
+        return instance
+
 
 class ProductTagTranslationSerializer(serializers.ModelSerializer):
     class Meta:

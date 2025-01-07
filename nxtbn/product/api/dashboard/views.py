@@ -1,6 +1,7 @@
 from django.forms import ValidationError
 from django.db.models import Sum, F, Count
 
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
@@ -33,6 +34,7 @@ from nxtbn.product.api.dashboard.serializers import (
     ProductTagNameSerializer,
     ProductTagSerializer,
     ProductTagTranslationSerializer,
+    ProductTranslationEqualResponseSerializer,
     ProductTranslationSerializer,
     ProductTypeSerializer,
     ProductVariantShortSerializer,
@@ -359,7 +361,7 @@ class ProductNameView(generics.ListAPIView):
     queryset = Product.objects.all()
 
     def get_queryset(self):
-        return Product.objects.all()
+        return Product.objects.all().order_by('-created_at')
     
 
 class CategoryNameView(generics.ListAPIView):
@@ -425,12 +427,31 @@ class CollectionTranslationViewSet(viewsets.ModelViewSet):
     serializer_class = CollectionTranslationSerializer
 
 
-class ProductTranslationViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for managing product translations.
-    """
-    queryset = ProductTranslation.objects.all()
+class ProductTranslationDetails(generics.GenericAPIView):
     serializer_class = ProductTranslationSerializer
+
+    def get(self, request, *args, **kwargs):
+        base_product_id = kwargs.get('base_product_id')
+        lang_code = kwargs.get('lang_code')
+        try:
+            instance = ProductTranslation.objects.get(product_id=base_product_id, language_code=lang_code)
+            serializer = self.get_serializer(instance)
+            translated_strings = serializer.data
+        except ProductTranslation.DoesNotExist:
+            translated_strings = {}
+
+        data = {
+            'original_strings': ProductTranslationEqualResponseSerializer(Product.objects.get(id=base_product_id)).data,
+            'translated_strings': translated_strings
+        }
+        return Response(data)
+    
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 
 class ProductTagTranslationViewSet(viewsets.ModelViewSet):

@@ -17,7 +17,7 @@ from nxtbn.product.api.dashboard.views import (
     ProductNameView,
     ProductTagNameView,
     ProductTagTranslationViewSet,
-    ProductTranslationViewSet,
+    ProductTranslationDetails,
     RecursiveCategoryListView,
     ColorViewSet,
     ProductTypeViewSet,
@@ -50,7 +50,6 @@ router.register(r'suppliers', SupplierModelViewSet)
 router.register(r'supplier-translations', SupplierTranslationViewSet, basename='supplier-translation')
 router.register(r'category-translations', CategoryTranslationViewSet, basename='category-translation')
 router.register(r'collection-translations', CollectionTranslationViewSet, basename='collection-translation')
-router.register(r'product-translations', ProductTranslationViewSet, basename='product-translation')
 router.register(r'product-tag-translations', ProductTagTranslationViewSet, basename='product-tag-translation')
 
 urlpatterns = [
@@ -71,6 +70,9 @@ urlpatterns = [
     path('products/delete/bulk/', BulkProductDeleteAPIView.as_view(), name='bulk-product-status-delete'),
     path('products-variants/', ProductVariants.as_view(), name='products-variants'),
     path('inventory/', InventoryListView.as_view(), name='product-inventory'),
+
+    # Translation
+    path('product-translations/<int:base_product_id>/<str:lang_code>/', ProductTranslationDetails.as_view(), name='product-translation'),
 
     # Name and id views
     path('products-name/', ProductNameView.as_view(), name='product-list-name'),

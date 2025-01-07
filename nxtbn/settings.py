@@ -329,6 +329,14 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
+GRAPHENE = {
+    'SCHEMA': 'nxtbn.graph_api.schema.schema',
+    'MIDDLEWARE': [
+        'graphene_django.debug.DjangoDebugMiddleware',
+    ],
+}
+
+
 
 AUTH_USER_MODEL = "users.User" 
   

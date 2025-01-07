@@ -60,13 +60,13 @@ class ProductWithVariantSerializer(serializers.ModelSerializer):
 class ProductWithDefaultVariantSerializer(serializers.ModelSerializer):
     product_thumbnail = serializers.SerializerMethodField()
     default_variant = ProductVariantSerializer(read_only=True)
+    texts = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = (
             'id',
-            'name',
-            'summary',
+            'texts',
             'slug',
             'default_variant',
             'product_thumbnail'
@@ -74,6 +74,39 @@ class ProductWithDefaultVariantSerializer(serializers.ModelSerializer):
 
     def get_product_thumbnail(self, obj):
         return obj.product_thumbnail(self.context['request'])
+    
+    def get_texts(self, obj):
+        request = self.context.get('request')
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != request.LANGUAGE_CODE:
+                # Try fetching translation for the requested language
+                translation_obj = obj.translations.filter(language_code=request.LANGUAGE_CODE).first()
+                if translation_obj:
+                    return {
+                        'name': translation_obj.name,
+                        'summary': translation_obj.summary,
+                    }
+                # If no translation exists, fallback to default # TODO (could be logged for debugging)
+                return {
+                    'name': obj.name,
+                    'summary': obj.summary,
+                }
+
+            # If the language code matches, return translated texts
+            try:
+                return obj.translated_texts()
+            except AttributeError:
+                # Fallback in case translated_texts method is missing or not implemented
+                return {
+                    'name': obj.name,
+                    'summary': obj.summary,
+                }
+
+        # If internationalization is not enabled, return default texts
+        return {
+            'name': obj.name,
+            'summary': obj.summary,
+        }
     
 class ProductWithDefaultVariantImageListSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True)

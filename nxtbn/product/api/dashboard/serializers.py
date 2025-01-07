@@ -641,19 +641,20 @@ class ProductTranslationSerializer(serializers.ModelSerializer):
             'summary',
             'description',
             'language_code',
+            'meta_title',
+            'meta_description',
         )
 
     def create(self, validated_data):
-        lanague_code = self.context['request'].kwargs.get('lang_code')
-        base_product_id = self.context['request'].kwargs.get('base_product_id')
+        lanague_code = self.context['view'].kwargs.get('lang_code')
+        base_product_id = self.context['view'].kwargs.get('base_product_id')
         try:
-            instance = ProductTranslation.objects.create(
-                **{
-                    'product_id': base_product_id,
-                    'language_code': lanague_code
-                }
-                **validated_data
-            )
+            data = {
+                'product_id': base_product_id,
+                'language_code': lanague_code
+            }
+            data.update(validated_data)
+            instance = ProductTranslation.objects.create(**data)
         except IntegrityError:
             instance = ProductTranslation.objects.get(product_id=base_product_id, language_code=lanague_code)
             for attr, value in validated_data.items():

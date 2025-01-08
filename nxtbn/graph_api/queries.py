@@ -52,7 +52,12 @@ class CartQuery(graphene.ObjectType):
     def resolve_cart(self, info):
         # Get the cart (for guest or authenticated user)
         cart, is_guest = get_or_create_cart(info.context)
-        exchange_rate = currency_Backend().get_exchange_rate(info.context.currency)
+
+        exchange_rate = 1.0
+        if settings.IS_MULTI_CURRENCY:
+            exchange_rate = currency_Backend().get_exchange_rate(info.context.currency)
+        
+        info.context.exchange_rate = exchange_rate
 
         items = []
         total = 0

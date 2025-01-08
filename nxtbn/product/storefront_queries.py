@@ -3,7 +3,7 @@ import graphene
 from nxtbn.cart.utils import get_or_create_cart
 from nxtbn.core import PublishableStatus
 from nxtbn.core.utils import apply_exchange_rate
-from nxtbn.product.types import (
+from nxtbn.product.storefront_types import (
     ProductGraphType,
     ImageType,
     CategoryType,

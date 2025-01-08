@@ -2,7 +2,7 @@
 
 import graphene
 
-from nxtbn.order.proccesor.mutation import OrderProcessMutation
+from nxtbn.order.proccesor.storefront_mutation import OrderProcessMutation
 
 
 class OrderMutation(graphene.ObjectType):

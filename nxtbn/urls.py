@@ -23,7 +23,8 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from graphene_django.views import GraphQLView
 
-from nxtbn.schema import schema
+from nxtbn.admin_schema import admin_schema
+from nxtbn.storefront_schema import storefront_schema
 from nxtbn.swagger_views import DASHBOARD_API_DOCS_SCHEMA_VIEWS, STOREFRONT_API_DOCS_SCHEMA_VIEWS, api_docs
 
 
@@ -49,7 +50,8 @@ urlpatterns = [
     path('django-admin/', admin.site.urls),
     path('', include('nxtbn.home.urls')),
     path('', include('nxtbn.seo.urls')),
-    path("graphql/", GraphQLView.as_view(graphiql=True, schema=schema)),
+    path("graphql/", GraphQLView.as_view(graphiql=True, schema=storefront_schema)),
+    path('admin-graphql/', GraphQLView.as_view(schema=admin_schema)),
 
     path('product/', include('nxtbn.product.urls')),
 

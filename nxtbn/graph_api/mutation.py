@@ -98,8 +98,53 @@ class UpdateCartItemMutation(graphene.Mutation):
                 return UpdateCartItemMutation(message="Cart item updated successfully.")
             else:
                 raise Exception("Item not found in cart.")
+            
+
+
+
+class RemoveFromCartMutation(graphene.Mutation):
+    class Arguments:
+        product_variant_id = graphene.ID(required=True)
+
+    success = graphene.Boolean()
+    message = graphene.String()
+    cart = graphene.Field(CartType)  # Assuming you have CartType for the cart object
+
+    def mutate(self, info, product_variant_id):
+        # Retrieve the product variant by ID
+        product_variant = ProductVariant.objects.get(id=product_variant_id)
+        
+        cart, is_guest = get_or_create_cart(info.context)
+
+        if not is_guest:
+            # Authenticated user
+            try:
+                cart_item = CartItem.objects.get(cart=cart, variant=product_variant)
+                cart_item.delete()
+                return RemoveFromCartMutation(
+                    success=True,
+                    message="Item removed from cart successfully.",
+                    cart=cart  # Returning updated cart object
+                )
+            except CartItem.DoesNotExist:
+                raise GraphQLError("Item not found in cart.")
+        else:
+            # Guest user
+            cart = info.context.session.get('cart', {})
+            if str(product_variant_id) in cart:
+                del cart[str(product_variant_id)]
+                save_guest_cart(info.context, cart)
+                return RemoveFromCartMutation(
+                    success=True,
+                    message="Item removed from cart successfully.",
+                    cart=cart  # Returning updated cart
+                )
+            else:
+                raise GraphQLError("Item not found in cart.")
+
 
 class CartMutation(graphene.ObjectType):
     add_to_cart = AddToCartMutation.Field()
     update_cart_item = UpdateCartItemMutation.Field()
+    remove_from_cart = RemoveFromCartMutation.Field()
 

@@ -79,7 +79,6 @@ urlpatterns = [
     path('product/storefront/api/', include('nxtbn.product.api.storefront.urls')),
     path('product/dashboard/api/', include('nxtbn.product.api.dashboard.urls')),
 
-    path('cart/storefront/api/', include('nxtbn.cart.api.storefront.urls')),
     path('cart/dashboard/api/', include('nxtbn.cart.api.dashboard.urls')),
 
     path('payment/storefront/api/', include('nxtbn.payment.api.storefront.urls')),

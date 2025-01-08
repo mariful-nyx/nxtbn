@@ -38,7 +38,6 @@ STOREFRONT_PATTERNS = [
     path('product/storefront/api/', include('nxtbn.product.api.storefront.urls')),
     path('payment/storefront/api/', include('nxtbn.payment.api.storefront.urls')),
     path('seo/storefront/api/', include('nxtbn.seo.api.storefront.urls')),
-    path('cart/storefront/api/', include('nxtbn.cart.api.storefront.urls')),
 ]
 
 

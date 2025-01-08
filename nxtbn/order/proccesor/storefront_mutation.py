@@ -1,8 +1,5 @@
-
-
-
 import graphene
-from nxtbn.order.proccesor.types import OrderEstimateInput
+from nxtbn.order.proccesor.storefront_type import OrderEstimateInput
 import graphene
 from graphene.types.generic import GenericScalar
 from graphql import GraphQLError

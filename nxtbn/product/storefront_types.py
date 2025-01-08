@@ -3,7 +3,7 @@ import graphene
 from graphene_django import DjangoObjectType
 from graphene import relay
 from nxtbn.core.utils import apply_exchange_rate
-from nxtbn.product.filters import ProductFilter, CategoryFilter, CollectionFilter, ProductTagsFilter
+from nxtbn.product.storefront_filters import ProductFilter, CategoryFilter, CollectionFilter, ProductTagsFilter
 from nxtbn.product.models import Product, Image, Category, ProductVariant, Supplier, ProductType, Collection, ProductTag, TaxClass
 from django.utils.translation import get_language
 
@@ -177,7 +177,7 @@ class ProductGraphType(DjangoObjectType):
             "collections",
             "tags",
             "variants",
-            "images",
+            # "images",
             "default_variant",
         )
         interfaces = (relay.Node,)

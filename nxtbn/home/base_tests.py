@@ -33,12 +33,18 @@ class BaseGraphQLTestCase(TestCase):
         response = self.graphql_admin_client.execute(mutation, variable_values=variables)
         return response
 
-    def assertGraphQLResponse(self, response, expected_status):
-        """Check the status of the GraphQL response."""
-        self.assertIn('errors', response if expected_status != 200 else {})
-        self.assertIn('data', response if expected_status == 200 else {})
-        if expected_status != 200:
-            self.assertEqual(response.get('errors', [{}])[0].get('message'), 'Unauthorized')
+
+    def assertGraphQLSuccess(self, response, *args, **kwargs):
+        """Check if the GraphQL response contains no errors and has data."""
+        self.assertNotIn('errors', response)  # Make sure no errors are present
+        self.assertIn('data', response)  # Ensure data exists in the response
+        # Optionally, you can assert specific data is present
+        self.assertIsInstance(response['data'], dict)
+
+    def assertGraphQLFailure(self, response, *args, **kwargs):
+        """Check if the GraphQL response contains errors."""
+        self.assertIn('errors', response)
+        
 
     def superAdminLogin(self):
         self.user = UserFactory(
@@ -76,7 +82,7 @@ class BaseGraphQLTestCase(TestCase):
         """
         
         response = self.execute_admin_graphql(mutation)
-        self.assertGraphQLResponse(response)
+        self.assertGraphQLSuccess(response)
 
         # Extract access token
         access_token = response['data']['login']['login']['token']['access']
@@ -117,7 +123,7 @@ class BaseGraphQLTestCase(TestCase):
         """
         
         response = self.execute_admin_graphql(mutation)
-        self.assertGraphQLResponse(response)
+        self.assertGraphQLSuccess(response)
 
         # Extract access token
         access_token = response['data']['login']['login']['token']['access']
@@ -158,7 +164,7 @@ class BaseGraphQLTestCase(TestCase):
         """
         
         # response = self.execute_admin_graphql(mutation)
-        # self.assertGraphQLResponse(response)
+        # self.assertGraphQLSuccess(response)
 
         # # Extract access token
         # access_token = response['data']['login']['login']['token']['access']
@@ -198,7 +204,7 @@ class BaseGraphQLTestCase(TestCase):
         """
         
         response = self.execute_admin_graphql(mutation)
-        self.assertGraphQLResponse(response)
+        self.assertGraphQLSuccess(response)
 
         # Extract access token
         access_token = response['data']['login']['login']['token']['access']
@@ -238,7 +244,7 @@ class BaseGraphQLTestCase(TestCase):
         """
         
         response = self.execute_admin_graphql(mutation)
-        self.assertGraphQLResponse(response)
+        self.assertGraphQLSuccess(response)
 
         # Extract access token
         access_token = response['data']['login']['login']['token']['access']

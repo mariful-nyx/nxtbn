@@ -60,7 +60,7 @@ class CollectionFactory(DjangoModelFactory):
     is_active = True
     created_by = factory.SubFactory(UserFactory)
     last_modified_by = factory.SubFactory(UserFactory)
-    image = factory.SubFactory(ImageFactory, nullable=True)
+    # image = factory.SubFactory(ImageFactory, nullable=True)
 
 
 # Product Tag Factory

@@ -1,16 +1,14 @@
 import graphene
 
-from nxtbn.cart.storefront_mutation import CartMutation
-from nxtbn.order.storefront_mutation import OrderMutation
 from nxtbn.product.storefront_queries import ProductQuery
-from nxtbn.cart.storefront_queries import CartQuery
+from nxtbn.users.admin_mutation import UserMutation
 
 
 
-class Query(ProductQuery, CartQuery):
+class Query(ProductQuery):
     pass
 
-class Mutation(CartMutation, OrderMutation):
+class Mutation(UserMutation):
     pass
 
 admin_schema = graphene.Schema(query=Query, mutation=Mutation)

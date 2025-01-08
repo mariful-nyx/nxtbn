@@ -51,7 +51,7 @@ urlpatterns = [
     path('', include('nxtbn.home.urls')),
     path('', include('nxtbn.seo.urls')),
     path("graphql/", GraphQLView.as_view(graphiql=True, schema=storefront_schema)),
-    path('admin-graphql/', GraphQLView.as_view(schema=admin_schema)),
+    path('admin-graphql/', GraphQLView.as_view(graphiql=True, schema=admin_schema)),
 
     path('product/', include('nxtbn.product.urls')),
 

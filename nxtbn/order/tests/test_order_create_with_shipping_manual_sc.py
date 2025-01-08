@@ -246,7 +246,7 @@ class OrderCreateShippingRateManual(BaseTestCase): # as admin
         self.assertEqual(order_estimate_response.data['shipping_fee'], expected_shipping_cost_fr)
 
         # Order Create Test
-        order_response = self.client.post(self.order_api_url, order_payload, format='json')
+        order_response = self.auth_client.post(self.order_api_url, order_payload, format='json')
         self.assertEqual(order_response.status_code, status.HTTP_200_OK)
         self.assertEqual(order_response.data['subtotal'], expected_subtotal_fr)
         self.assertEqual(order_response.data['total'], expected_total_fr)
@@ -430,5 +430,5 @@ class OrderCreateShippingRateManualAsCustomer(BaseTestCase): # as customer, to t
 
        
         # Order Create Test
-        order_response = self.client.post(self.order_api_url, order_payload, format='json')
+        order_response = self.auth_client.post(self.order_api_url, order_payload, format='json')
         self.permissionDenied(order_response)

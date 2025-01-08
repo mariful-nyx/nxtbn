@@ -217,7 +217,7 @@ class TestProductCreateAPITest(BaseTestCase):
             
         }
 
-        response = self.client.post(self.product_create_url, payload, format='json')
+        response = self.auth_client.post(self.product_create_url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_product_with_duplicate_variant(self):
@@ -253,5 +253,5 @@ class TestProductCreateAPITest(BaseTestCase):
             ]
         }
 
-        response = self.client.post(self.product_create_url, payload, format='json')
+        response = self.auth_client.post(self.product_create_url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

@@ -350,6 +350,10 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         currency = settings.BASE_CURRENCY
         tax_class = validated_data.pop('tax_class', None)
 
+        if not variants_payload:
+            raise ValidationError("At least one variant must be provided.")
+
+
         with transaction.atomic():
             instance = Product.objects.create(
                 **validated_data,

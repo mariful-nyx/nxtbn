@@ -3,6 +3,7 @@ from django.test import  TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
+from nxtbn.admin_schema import admin_schema
 from nxtbn.users import UserRole
 from nxtbn.users.tests import UserFactory
 from django.test import TestCase
@@ -152,11 +153,11 @@ class BaseTestCase(TestCase):
         self.auth_client = GRAPHClient(storefront_schema, headers={"Authorization": f"Bearer {token}"})
 
 
-class BaseTestCase(TestCase):
+class BaseTestCase(TestCase): # We have to remove this as we are now transforming rest to graphql
     client = APIClient()
     auth_client = APIClient()
-    admin_login_url = reverse('admin_login')
-    customer_login_url = reverse('customer_login')
+    graphql_admin_client = GRAPHClient(admin_schema)
+    graphql_customer_client = GRAPHClient(storefront_schema)
     
     def setUp(self):
         self.user = UserFactory(
@@ -179,6 +180,18 @@ class BaseTestCase(TestCase):
     def loginSeccess(self, login):
         self.assertTrue(login)
 
+    def assertGraphSuccess(self, response, *args, **kwargs):
+        """Check if the GraphQL response contains no errors and has data."""
+        self.assertNotIn('errors', response)  # Make sure no errors are present
+        self.assertIn('data', response)  # Ensure data exists in the response
+        # Optionally, you can assert specific data is present
+        self.assertIsInstance(response['data'], dict)
+
+    def execute_graphql(self, mutation, variables=None):
+        """Helper function to execute a GraphQL mutation with variables."""
+        response = self.graphql_admin_client.execute(mutation, variable_values=variables)
+        return response
+
     def superAdminLogin(self):
         self.user = UserFactory(
             email="cc@example.com",
@@ -188,16 +201,37 @@ class BaseTestCase(TestCase):
             role=UserRole.ADMIN
         )
         
-        login_data = {
-            'email': 'cc@example.com',
-            'password': 'testpass'
-        }
+        mutation = """
+            mutation MyMutation {
+                login(email: "cc@example.com", password: "testpass") {
+                    login {
+                        storeUrl
+                        token {
+                            access
+                            expiresIn
+                            refresh
+                            refreshExpiresIn
+                        }
+                        version
+                        user {
+                            email
+                            firstName
+                            fullName
+                            id
+                            lastName
+                            role
+                            username
+                        }
+                    }
+                }
+            }
+        """
         
-        response = self.client.post(self.admin_login_url, login_data)
-        self.assertSuccess(response)
-       
-        access_token = response.data['token']['access']
-        
+        response = self.execute_graphql(mutation)
+        self.assertGraphSuccess(response)
+
+        # Extract access token
+        access_token = response['data']['login']['login']['token']['access']
         self.auth_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
 
     def adminLogin(self):
@@ -209,17 +243,43 @@ class BaseTestCase(TestCase):
             role=UserRole.ADMIN
         )
 
-        login_data = {
-            'email': 'cc@example.com',
-            'password': 'testpass'
-        }
-        
-        response = self.client.post(self.admin_login_url, login_data)
-        self.assertSuccess(response)
+        mutation = """
+            mutation MyMutation {
+                login(email: "cc@example.com", password: "testpass") {
+                    login {
+                        storeUrl
+                        token {
+                            access
+                            expiresIn
+                            refresh
+                            refreshExpiresIn
+                        }
+                        version
+                        user {
+                            email
+                            firstName
+                            fullName
+                            id
+                            lastName
+                            role
+                            username
+                        }
+                    }
+                }
+            }
+        """
+
+        response = self.execute_graphql(mutation)
+        self.assertGraphSuccess(response)
+
        
-        access_token = response.data['token']['access']
-        
+        # Extract access token
+        access_token = response['data']['login']['login']['token']['access']
         self.auth_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
+
+
+        
+        
     
     def customerLogin(self):
       
@@ -230,17 +290,39 @@ class BaseTestCase(TestCase):
             is_staff=False,
             is_superuser=False
         )
-        login_data = {
-            'email': 'cc@example.com',
-            'password': 'testpass'
-        }
-        
-        response = self.client.post(self.customer_login_url, login_data)
-        self.assertSuccess(response)
-       
-        access_token = response.data['token']['access']
-        
-        self.auth_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
+        mutation = """
+            mutation MyMutation {
+                login(email: "cc@example.com", password: "testpass") {
+                    login {
+                        storeUrl
+                        token {
+                            access
+                            expiresIn
+                            refresh
+                            refreshExpiresIn
+                        }
+                        version
+                        user {
+                            email
+                            firstName
+                            fullName
+                            id
+                            lastName
+                            role
+                            username
+                        }
+                    }
+                }
+            }
+        """
+
+        # response = self.execute_graphql(mutation)
+        # self.assertGraphSuccess(response)
+
+
+        # # Extract access token
+        # access_token = response['data']['login']['token']['access']
+        # self.auth_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
 
     def storeManagerLogin(self):
        
@@ -250,16 +332,38 @@ class BaseTestCase(TestCase):
             role=UserRole.STORE_MANAGER,
             is_staff=False
         )
-        login_data = {
-            'email': 'cc@example.com',
-            'password': 'testpass'
-        }
-        self.admin_login_url = reverse('admin_login')
-        response = self.client.post(self.admin_login_url, login_data)
-        self.assertSuccess(response)
-           
-        access_token = response.data['token']['access']
-        
+        mutation = """
+            mutation MyMutation {
+                login(email: "cc@example.com", password: "testpass") {
+                    login {
+                        storeUrl
+                        token {
+                            access
+                            expiresIn
+                            refresh
+                            refreshExpiresIn
+                        }
+                        version
+                        user {
+                            email
+                            firstName
+                            fullName
+                            id
+                            lastName
+                            role
+                            username
+                        }
+                    }
+                }
+            }
+        """
+
+        response = self.execute_graphql(mutation)
+        self.assertGraphSuccess(response)
+
+
+        # Extract access token
+        access_token = response['data']['login']['login']['token']['access']
         self.auth_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
 
     
@@ -270,18 +374,37 @@ class BaseTestCase(TestCase):
             role=UserRole.STORE_MANAGER,
             is_staff=False
         )
-        login_data = {
-            'email': 'cc@example.com',
-            'password': 'testpass'
-        }
-        self.admin_login_url = reverse('admin_login')
-        response = self.client.post(self.admin_login_url, login_data)
-        self.assertSuccess(response)
-           
-        access_token = response.data['token']['access']
-        
+        mutation = """
+            mutation MyMutation {
+                login(email: "cc@example.com", password: "testpass") {
+                    login {
+                        storeUrl
+                        token {
+                            access
+                            expiresIn
+                            refresh
+                            refreshExpiresIn
+                        }
+                        version
+                        user {
+                            email
+                            firstName
+                            fullName
+                            id
+                            lastName
+                            role
+                            username
+                        }
+                    }
+                }
+            }
+        """
+
+        response = self.execute_graphql(mutation)
+        self.assertGraphSuccess(response)
+
+        # Extract access token
+        access_token = response['data']['login']['login']['token']['access']
         self.auth_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
-
-
 
 

@@ -182,16 +182,3 @@ class ProductGraphType(DjangoObjectType):
         )
         interfaces = (relay.Node,)
         filterset_class = ProductFilter
-
-
-
-
-class CartItemType(graphene.ObjectType):
-    product_variant = graphene.Field(ProductVariantType)
-    quantity = graphene.Int()
-    subtotal = graphene.String()
-
-
-class CartType(graphene.ObjectType):
-    items = graphene.List(CartItemType)
-    total = graphene.String()

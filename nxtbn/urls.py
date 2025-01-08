@@ -21,6 +21,7 @@ from django.conf import settings
 from django.urls import re_path, path, include
 from django.contrib import admin
 from django.views.generic import TemplateView
+from django.views.decorators.csrf import csrf_exempt
 from graphene_django.views import GraphQLView
 
 from nxtbn.admin_schema import admin_schema
@@ -50,8 +51,8 @@ urlpatterns = [
     path('django-admin/', admin.site.urls),
     path('', include('nxtbn.home.urls')),
     path('', include('nxtbn.seo.urls')),
-    path("graphql/", GraphQLView.as_view(graphiql=True, schema=storefront_schema)),
-    path('admin-graphql/', GraphQLView.as_view(schema=admin_schema)),
+    path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True, schema=storefront_schema))),
+    path('admin-graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True, schema=admin_schema))),
 
     path('product/', include('nxtbn.product.urls')),
 

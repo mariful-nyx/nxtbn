@@ -12,7 +12,7 @@ from nxtbn.users.models import User
 from nxtbn.users.api.dashboard.serializers import CustomerSerializer, DashboardLoginSerializer, MeSerializer, UserMututionalSerializer, UserSerializer, CustomerWithAddressSerializer, CustomerUpdateSerializer
 from nxtbn.users.api.dashboard.serializers import DashboardLoginSerializer, PasswordChangeSerializer
 from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
-from nxtbn.users.api.storefront.views import LogoutView, TokenRefreshView
+from nxtbn.users.api.storefront.views import LogoutView
 from nxtbn.users.utils.jwt_utils import JWTManager
 from nxtbn.users.models import User
 from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
@@ -87,8 +87,6 @@ class LoginView(generics.GenericAPIView):
         return Response({"detail": _("Invalid credentials")}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class DashboardTokenRefreshView(TokenRefreshView):
-    pass
 
 class DashboardLogoutView(LogoutView):
     pass

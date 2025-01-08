@@ -23,7 +23,7 @@ class Query(graphene.ObjectType):
         except Product.DoesNotExist:
             return None
 
-    def resolve_all_products(root, info):
+    def resolve_all_products(root, info, **kwargs):
         return Product.objects.all()
 
 schema = graphene.Schema(query=Query)

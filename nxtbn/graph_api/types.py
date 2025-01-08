@@ -2,7 +2,7 @@ import graphene
 from graphene_django import DjangoObjectType
 from graphene import relay
 from nxtbn.graph_api.filters import ProductFilter
-from nxtbn.product.models import Product, Image, Category, Supplier, ProductType, Collection, ProductTag, TaxClass
+from nxtbn.product.models import Product, Image, Category, ProductVariant, Supplier, ProductType, Collection, ProductTag, TaxClass
 
 class ImageType(DjangoObjectType):
     class Meta:
@@ -39,14 +39,18 @@ class TaxClassType(DjangoObjectType):
         model = TaxClass
         fields = "__all__"
 
+class ProductVariantType(DjangoObjectType):
+    class Meta:
+        model = ProductVariant
+        fields = '__all__'
+        interfaces = (relay.Node,)
+
 class ProductGraphType(DjangoObjectType):
     class Meta:
         model = Product
         fields = "__all__"
         interfaces = (relay.Node,)
         filterset_class = ProductFilter
-
-    category = graphene.Field(CategoryType)
 
     def resolve_category(self, info):
         return self.category

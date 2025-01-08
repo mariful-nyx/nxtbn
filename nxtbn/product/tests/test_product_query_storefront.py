@@ -7,9 +7,12 @@ from nxtbn.product.tests import (
     CategoryFactory,
     CollectionFactory,
     ProductTagFactory,
+    ProductVariantFactory,
 )
 from nxtbn.admin_schema import admin_schema
 from graphene.test import Client as GRAPHClient
+from unittest.mock import Mock
+
 
 class ProductQueryTestCase(BaseGraphQLTestCase):
     def setUp(self):
@@ -26,6 +29,10 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
             # tags=[self.tag],
             status=PublishableStatus.PUBLISHED,
         )
+
+        self.variant = ProductVariantFactory(product=self.product, price=10.0)
+        self.product.default_variant = self.variant
+        self.product.save()
 
     def test_resolve_product_valid_id(self):
         query = """
@@ -81,8 +88,10 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
             }
         }
         """
+        mocked_context = Mock()
+        mocked_context.exchange_rate = None
 
-        response = self.graphql_customer_client.execute(query)
+        response = self.graphql_customer_client.execute(query, context_value=mocked_context)
 
         self.assertGraphQLSuccess(response)
         products = response["data"]["allProducts"]["edges"]
@@ -105,13 +114,14 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
         }
         """
 
+
         response = self.graphql_customer_client.execute(query)
 
-        # self.assertGraphQLSuccess(response, expected_status=200)
-        # categories = response["data"]["allCategories"]["edges"]
+        self.assertGraphQLSuccess(response, expected_status=200)
+        categories = response["data"]["allCategories"]["edges"]
 
-        # self.assertEqual(len(categories), 1)
-        # self.assertEqual(categories[0]["node"]["name"], "Test Category")
+        self.assertEqual(len(categories), 1)
+        self.assertEqual(categories[0]["node"]["name"], "Test Category")
 
     def test_resolve_all_collections(self):
         query = """
@@ -129,11 +139,11 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
 
         response = self.graphql_customer_client.execute(query)
 
-        # self.assertGraphQLSuccess(response, expected_status=200)
-        # collections = response["data"]["allCollections"]["edges"]
+        self.assertGraphQLSuccess(response, expected_status=200)
+        collections = response["data"]["allCollections"]["edges"]
 
-        # self.assertEqual(len(collections), 1)
-        # self.assertEqual(collections[0]["node"]["name"], "Test Collection")
+        self.assertEqual(len(collections), 1)
+        self.assertEqual(collections[0]["node"]["name"], "Test Collection")
 
     def test_resolve_all_tags(self):
         query = """
@@ -151,8 +161,8 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
 
         response = self.graphql_customer_client.execute(query)
 
-        # self.assertGraphQLSuccess(response, expected_status=200)
-        # tags = response["data"]["allTags"]["edges"]
+        self.assertGraphQLSuccess(response, expected_status=200)
+        tags = response["data"]["allTags"]["edges"]
 
-        # self.assertEqual(len(tags), 1)
-        # self.assertEqual(tags[0]["node"]["name"], "Test Tag")
+        self.assertEqual(len(tags), 1)
+        self.assertEqual(tags[0]["node"]["name"], "Test Tag")

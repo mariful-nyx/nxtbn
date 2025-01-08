@@ -65,6 +65,44 @@ class LoginMutation(graphene.Mutation):
             return LoginMutation(login=response)
         else:
             raise Exception("Invalid credentials")
+        
+
+
+
+class TokenRefreshMutation(graphene.Mutation):
+    class Arguments:
+        refresh_token = graphene.String(required=True)
+
+    refresh = graphene.Field(LoginResponse)
+
+    def mutate(self, info, refresh_token):
+        jwt_manager = JWTManager()
+
+        # Verify refresh token
+        user = jwt_manager.verify_jwt_token(refresh_token)
+
+        if user:
+            access_token = jwt_manager.generate_access_token(user)
+            new_refresh_token = jwt_manager.generate_refresh_token(user)
+
+            user_data = JwtBasicUserSerializer(user).data
+
+            response = LoginResponse(
+                user=UserType(**user_data),
+                storeUrl=settings.STORE_URL,
+                version=settings.VERSION,
+                token=TokenType(
+                    access=access_token,
+                    refresh=new_refresh_token,
+                    expiresIn=jwt_manager.access_token_expiration_seconds,
+                    refreshExpiresIn=jwt_manager.refresh_token_expiration_seconds
+                )
+            )
+
+            return TokenRefreshMutation(refresh=response)
+        else:
+            raise Exception("Invalid or expired refresh token")
 
 class UserMutation(graphene.ObjectType):
     login = LoginMutation.Field()
+    refresh_token = TokenRefreshMutation.Field()

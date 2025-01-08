@@ -31,10 +31,7 @@ class OrderEstimateInput(graphene.InputObjectType):
     billing_address_id = graphene.Int()
 
     shipping_method_id = graphene.Int()
-    custom_shipping_amount = PriceAndNameInput()
-    custom_discount_amount = PriceAndNameInput()
     promocode = graphene.String()
     variants = graphene.List(VariantQuantityInput, required=True)
-    customer_id = graphene.Int()
     note = graphene.String()
-    create_order = graphene.Boolean(default_value=False)
+    create_order = graphene.Boolean(default_value=False) # if false, it will eastimate the order only

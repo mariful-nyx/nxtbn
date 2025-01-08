@@ -35,6 +35,6 @@ class Query(graphene.ObjectType):
         
         info.context.exchange_rate = exchange_rate
 
-        return Product.objects.filter(status=PublishableStatus.PUBLISHED)
+        return Product.objects.filter(status=PublishableStatus.PUBLISHED).order_by('-created_at')
 
 schema = graphene.Schema(query=Query)

@@ -45,8 +45,7 @@ class ProductVariantType(DjangoObjectType):
     
     def resolve_price(self, info):
         target_currency = info.context.currency
-        # exchange_rate = self.context.exchange_rate
-        exchange_rate = 2.0
+        exchange_rate = info.context.exchange_rate
         converted_price = apply_exchange_rate(self.price, exchange_rate, target_currency, 'en_US')
         return converted_price
     class Meta:

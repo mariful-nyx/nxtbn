@@ -18,15 +18,20 @@ from django.contrib.auth.hashers import make_password
 
 
 
-class BaseTestCase(TestCase):
-    client = GRAPHClient(storefront_schema)
-    auth_client = None  # This will hold the authenticated client
+class BaseGraphQLTestCase(TestCase):
+    graphql_admin_client = GRAPHClient(admin_schema)
+    graphql_customer_client = GRAPHClient(storefront_schema)
 
     def setUp(self):
         self.user = UserFactory(
             email="test@example.com",
             password=make_password('testpass')
         )
+
+    def execute_admin_graphql(self, mutation, variables=None):
+        """Helper function to execute a GraphQL mutation with variables."""
+        response = self.graphql_admin_client.execute(mutation, variable_values=variables)
+        return response
 
     def assertGraphQLResponse(self, response, expected_status):
         """Check the status of the GraphQL response."""
@@ -44,20 +49,38 @@ class BaseTestCase(TestCase):
             role=UserRole.ADMIN
         )
         
-        login_mutation = """
-        mutation AdminLogin($email: String!, $password: String!) {
-            tokenAuth(email: $email, password: $password) {
-                token
+        mutation = """
+            mutation MyMutation {
+                login(email: "cc@example.com", password: "testpass") {
+                    login {
+                        storeUrl
+                        token {
+                            access
+                            expiresIn
+                            refresh
+                            refreshExpiresIn
+                        }
+                        version
+                        user {
+                            email
+                            firstName
+                            fullName
+                            id
+                            lastName
+                            role
+                            username
+                        }
+                    }
+                }
             }
-        }
         """
         
-        variables = {'email': 'cc@example.com', 'password': 'testpass'}
-        response = self.client.execute(login_mutation, variables=variables)
-        self.assertGraphQLResponse(response, 200)
+        response = self.execute_admin_graphql(mutation)
+        self.assertGraphQLResponse(response)
 
-        token = response['data']['tokenAuth']['token']
-        self.auth_client = GRAPHClient(storefront_schema, headers={"Authorization": f"Bearer {token}"})
+        # Extract access token
+        access_token = response['data']['login']['login']['token']['access']
+        
 
     def adminLogin(self):
         self.user = UserFactory(
@@ -67,20 +90,37 @@ class BaseTestCase(TestCase):
             role=UserRole.ADMIN
         )
         
-        login_mutation = """
-        mutation AdminLogin($email: String!, $password: String!) {
-            tokenAuth(email: $email, password: $password) {
-                token
+        mutation = """
+            mutation MyMutation {
+                login(email: "cc@example.com", password: "testpass") {
+                    login {
+                        storeUrl
+                        token {
+                            access
+                            expiresIn
+                            refresh
+                            refreshExpiresIn
+                        }
+                        version
+                        user {
+                            email
+                            firstName
+                            fullName
+                            id
+                            lastName
+                            role
+                            username
+                        }
+                    }
+                }
             }
-        }
         """
         
-        variables = {'email': 'cc@example.com', 'password': 'testpass'}
-        response = self.client.execute(login_mutation, variables=variables)
-        self.assertGraphQLResponse(response, 200)
+        response = self.execute_admin_graphql(mutation)
+        self.assertGraphQLResponse(response)
 
-        token = response['data']['tokenAuth']['token']
-        self.auth_client = GRAPHClient(storefront_schema, headers={"Authorization": f"Bearer {token}"})
+        # Extract access token
+        access_token = response['data']['login']['login']['token']['access']
 
     def customerLogin(self):
         self.user = UserFactory(
@@ -91,20 +131,37 @@ class BaseTestCase(TestCase):
             is_superuser=False
         )
         
-        login_mutation = """
-        mutation CustomerLogin($email: String!, $password: String!) {
-            tokenAuth(email: $email, password: $password) {
-                token
+        mutation = """
+            mutation MyMutation {
+                login(email: "cc@example.com", password: "testpass") {
+                    login {
+                        storeUrl
+                        token {
+                            access
+                            expiresIn
+                            refresh
+                            refreshExpiresIn
+                        }
+                        version
+                        user {
+                            email
+                            firstName
+                            fullName
+                            id
+                            lastName
+                            role
+                            username
+                        }
+                    }
+                }
             }
-        }
         """
         
-        variables = {'email': 'cc@example.com', 'password': 'testpass'}
-        response = self.client.execute(login_mutation, variables=variables)
-        self.assertGraphQLResponse(response, 200)
+        # response = self.execute_admin_graphql(mutation)
+        # self.assertGraphQLResponse(response)
 
-        token = response['data']['tokenAuth']['token']
-        self.auth_client = GRAPHClient(storefront_schema, headers={"Authorization": f"Bearer {token}"})
+        # # Extract access token
+        # access_token = response['data']['login']['login']['token']['access']
 
     def storeManagerLogin(self):
         self.user = UserFactory(
@@ -114,20 +171,37 @@ class BaseTestCase(TestCase):
             is_staff=False
         )
         
-        login_mutation = """
-        mutation StoreManagerLogin($email: String!, $password: String!) {
-            tokenAuth(email: $email, password: $password) {
-                token
+        mutation = """
+            mutation MyMutation {
+                login(email: "cc@example.com", password: "testpass") {
+                    login {
+                        storeUrl
+                        token {
+                            access
+                            expiresIn
+                            refresh
+                            refreshExpiresIn
+                        }
+                        version
+                        user {
+                            email
+                            firstName
+                            fullName
+                            id
+                            lastName
+                            role
+                            username
+                        }
+                    }
+                }
             }
-        }
         """
         
-        variables = {'email': 'cc@example.com', 'password': 'testpass'}
-        response = self.client.execute(login_mutation, variables=variables)
-        self.assertGraphQLResponse(response, 200)
+        response = self.execute_admin_graphql(mutation)
+        self.assertGraphQLResponse(response)
 
-        token = response['data']['tokenAuth']['token']
-        self.auth_client = GRAPHClient(storefront_schema, headers={"Authorization": f"Bearer {token}"})
+        # Extract access token
+        access_token = response['data']['login']['login']['token']['access']
 
     def marketingManagerLogin(self):
         self.user = UserFactory(
@@ -137,20 +211,37 @@ class BaseTestCase(TestCase):
             is_staff=False
         )
         
-        login_mutation = """
-        mutation MarketingManagerLogin($email: String!, $password: String!) {
-            tokenAuth(email: $email, password: $password) {
-                token
+        mutation = """
+            mutation MyMutation {
+                login(email: "cc@example.com", password: "testpass") {
+                    login {
+                        storeUrl
+                        token {
+                            access
+                            expiresIn
+                            refresh
+                            refreshExpiresIn
+                        }
+                        version
+                        user {
+                            email
+                            firstName
+                            fullName
+                            id
+                            lastName
+                            role
+                            username
+                        }
+                    }
+                }
             }
-        }
         """
         
-        variables = {'email': 'cc@example.com', 'password': 'testpass'}
-        response = self.client.execute(login_mutation, variables=variables)
-        self.assertGraphQLResponse(response, 200)
+        response = self.execute_admin_graphql(mutation)
+        self.assertGraphQLResponse(response)
 
-        token = response['data']['tokenAuth']['token']
-        self.auth_client = GRAPHClient(storefront_schema, headers={"Authorization": f"Bearer {token}"})
+        # Extract access token
+        access_token = response['data']['login']['login']['token']['access']
 
 
 class BaseTestCase(TestCase): # We have to remove this as we are now transforming rest to graphql

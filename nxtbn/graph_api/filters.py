@@ -1,5 +1,5 @@
 import django_filters as filters
-from nxtbn.product.models import Category, Collection, Product, Supplier
+from nxtbn.product.models import Category, Collection, Product, ProductTag, Supplier
 from django.db.models import Q
 
 
@@ -25,3 +25,28 @@ class ProductFilter(filters.FilterSet):
         """
         lookup = Q(name__icontains=value) | Q(description__icontains=value) | Q(alias__icontains=value)
         return queryset.filter(lookup)
+    
+
+
+class CategoryFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = Category
+        fields = ('name',)
+
+
+class CollectionFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = Collection
+        fields = ('name',)
+
+
+class ProductTagsFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = ProductTag
+        fields = ('name',)

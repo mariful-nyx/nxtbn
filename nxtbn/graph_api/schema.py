@@ -22,8 +22,9 @@ class Query(graphene.ObjectType):
     product = graphene.Field(ProductGraphType, id=graphene.ID(required=True))
     all_products = DjangoFilterConnectionField(ProductGraphType)
 
-    # all_categories = DjangoFilterConnectionField(CategoryType)
-    # all_collections = DjangoFilterConnectionField(CollectionType)
+    all_categories = DjangoFilterConnectionField(CategoryType)
+    all_collections = DjangoFilterConnectionField(CollectionType)
+    all_tags = DjangoFilterConnectionField(ProductTagType)
 
     def resolve_product(root, info, id):
         try:
@@ -39,5 +40,6 @@ class Query(graphene.ObjectType):
         info.context.exchange_rate = exchange_rate
 
         return Product.objects.filter(status=PublishableStatus.PUBLISHED).order_by('-created_at')
+    
 
 schema = graphene.Schema(query=Query)

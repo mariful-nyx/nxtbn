@@ -3,9 +3,10 @@ import graphene
 from graphene_django import DjangoObjectType
 from graphene import relay
 from nxtbn.core.utils import apply_exchange_rate
-from nxtbn.graph_api.filters import ProductFilter
+from nxtbn.graph_api.filters import ProductFilter, CategoryFilter, CollectionFilter, ProductTagsFilter
 from nxtbn.product.models import Product, Image, Category, ProductVariant, Supplier, ProductType, Collection, ProductTag, TaxClass
 from django.utils.translation import get_language
+
 
 class ImageType(DjangoObjectType):
     class Meta:
@@ -25,6 +26,8 @@ class CategoryType(DjangoObjectType):
     class Meta:
         model = Category
         fields = ("id",)
+        interfaces = (relay.Node,)
+        filterset_class = CategoryFilter
 
 class SupplierType(DjangoObjectType):
     name = graphene.String()
@@ -58,6 +61,8 @@ class CollectionType(DjangoObjectType):
     class Meta:
         model = Collection
         fields = ("id",)
+        interfaces = (relay.Node,)
+        filterset_class = CollectionFilter
 
 class ProductTagType(DjangoObjectType):
     name = graphene.String()
@@ -72,6 +77,8 @@ class ProductTagType(DjangoObjectType):
     class Meta:
         model = ProductTag
         fields = ("id",)
+        interfaces = (relay.Node,)
+        filterset_class = ProductTagsFilter
 
 class TaxClassType(DjangoObjectType):
     class Meta:

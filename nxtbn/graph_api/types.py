@@ -42,12 +42,23 @@ class TaxClassType(DjangoObjectType):
 
 class ProductVariantType(DjangoObjectType):
     price = graphene.String()
+    price_without_symbol = graphene.String()
+    price_raw = graphene.String()
     
-    def resolve_price(self, info):
+    def resolve_price(self, info): # with currency symbol
         target_currency = info.context.currency
         exchange_rate = info.context.exchange_rate
         converted_price = apply_exchange_rate(self.price, exchange_rate, target_currency, 'en_US')
         return converted_price
+    
+    def resolve_price_without_symbol(self, info): # without currency symbol
+        target_currency = info.context.currency
+        exchange_rate = info.context.exchange_rate
+        converted_price = apply_exchange_rate(self.price, exchange_rate, target_currency)
+        return converted_price
+    
+    def resolve_price_raw(self, info): # raw price
+        return self.price
     class Meta:
         model = ProductVariant
         fields = (

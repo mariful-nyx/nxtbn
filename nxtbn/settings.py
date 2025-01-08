@@ -113,12 +113,14 @@ LOCAL_APPS = [
     'nxtbn.post',
     'nxtbn.warehouse',
     'nxtbn.purchase',
+    'nxtbn.graph_api',
 ]
 
 HELPING_HAND_APPS = [
     'rest_framework',
     'allauth',
     'allauth.account',
+    'graphene_django',
     'drf_yasg',
     'django_extensions',
     "corsheaders",
@@ -139,6 +141,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Optional: For serving static files
     'nxtbn.core.currency_middleware.CurrencyMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -326,6 +329,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 20,
 }
+
+GRAPHENE = {
+    'SCHEMA': 'nxtbn.graph_api.schema.schema',
+    'MIDDLEWARE': [
+        'graphene_django.debug.DjangoDebugMiddleware',
+    ],
+}
+
 
 
 AUTH_USER_MODEL = "users.User" 

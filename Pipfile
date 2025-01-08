@@ -28,6 +28,7 @@ redis = "*"
 django-countries = "*"
 pymemcache = "4.0.0"
 psutil = "*"
+graphene-django = "*"
 
 [dev-packages]
 coverage = "*"

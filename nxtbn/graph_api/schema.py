@@ -1,4 +1,5 @@
 import graphene
+from nxtbn.core import PublishableStatus
 from nxtbn.graph_api.types import (
     ProductGraphType,
     ImageType,
@@ -13,6 +14,8 @@ from nxtbn.product.models import Product, Image, Category, Supplier, ProductType
 from graphene_django.filter import DjangoFilterConnectionField
 
 
+
+
 class Query(graphene.ObjectType):
     product = graphene.Field(ProductGraphType, id=graphene.ID(required=True))
     all_products = DjangoFilterConnectionField(ProductGraphType)
@@ -24,6 +27,8 @@ class Query(graphene.ObjectType):
             return None
 
     def resolve_all_products(root, info, **kwargs):
-        return Product.objects.all()
+        return Product.objects.filter(
+            status=PublishableStatus.PUBLISHED
+        )
 
 schema = graphene.Schema(query=Query)

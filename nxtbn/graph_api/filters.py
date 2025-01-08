@@ -2,10 +2,8 @@ import django_filters
 from nxtbn.product.models import Product
 
 class ProductFilter(django_filters.FilterSet):
+    status = django_filters.CharFilter(field_name="status", lookup_expr="exact")
+
     class Meta:
         model = Product
-        fields = {
-            'name': ['icontains'],  # Filter by name using case-insensitive containment
-            'brand': ['icontains'],  # Filter by brand
-            # 'category__name': ['exact'],  # Filter by exact category name
-        }
+        fields = ["status"]

@@ -13,14 +13,32 @@ class ImageType(DjangoObjectType):
         fields = "__all__"
 
 class CategoryType(DjangoObjectType):
+    name = graphene.String()
+
+    def resolve_name(self, info):
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                translation_obj = self.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return translation_obj.name
+        return self.name
     class Meta:
         model = Category
-        fields = "__all__"
+        fields = ("id",)
 
 class SupplierType(DjangoObjectType):
+    name = graphene.String()
+
+    def resolve_name(self, info):
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                translation_obj = self.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return translation_obj.name
+        return self.name
     class Meta:
         model = Supplier
-        fields = "__all__"
+        fields = ("id",)
 
 class ProductTypeType(DjangoObjectType):
     class Meta:
@@ -28,9 +46,18 @@ class ProductTypeType(DjangoObjectType):
         fields = "__all__"
 
 class CollectionType(DjangoObjectType):
+    name = graphene.String()
+
+    def resolve_name(self, info):
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                translation_obj = self.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return translation_obj.name
+        return self.name
     class Meta:
         model = Collection
-        fields = "__all__"
+        fields = ("id",)
 
 class ProductTagType(DjangoObjectType):
     name = graphene.String()

@@ -22,6 +22,9 @@ class Query(graphene.ObjectType):
     product = graphene.Field(ProductGraphType, id=graphene.ID(required=True))
     all_products = DjangoFilterConnectionField(ProductGraphType)
 
+    # all_categories = DjangoFilterConnectionField(CategoryType)
+    # all_collections = DjangoFilterConnectionField(CollectionType)
+
     def resolve_product(root, info, id):
         try:
             return Product.objects.get(pk=id)

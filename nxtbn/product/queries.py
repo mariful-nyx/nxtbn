@@ -1,7 +1,9 @@
 from django.conf import settings
 import graphene
+from nxtbn.cart.utils import get_or_create_cart
 from nxtbn.core import PublishableStatus
-from nxtbn.graph_api.types import (
+from nxtbn.core.utils import apply_exchange_rate
+from nxtbn.product.types import (
     ProductGraphType,
     ImageType,
     CategoryType,
@@ -11,14 +13,13 @@ from nxtbn.graph_api.types import (
     ProductTagType,
     TaxClassType,
 )
-from nxtbn.product.models import Product, Image, Category, Supplier, ProductType, Collection, ProductTag, TaxClass
+from nxtbn.product.models import Product, Image, Category, ProductVariant, Supplier, ProductType, Collection, ProductTag, TaxClass
 from graphene_django.filter import DjangoFilterConnectionField
 from nxtbn.core.currency.backend import currency_Backend
 
 
 
-
-class Query(graphene.ObjectType):
+class ProductQuery(graphene.ObjectType):
     product = graphene.Field(ProductGraphType, id=graphene.ID(required=True))
     all_products = DjangoFilterConnectionField(ProductGraphType)
 
@@ -42,4 +43,3 @@ class Query(graphene.ObjectType):
         return Product.objects.filter(status=PublishableStatus.PUBLISHED).order_by('-created_at')
     
 
-schema = graphene.Schema(query=Query)

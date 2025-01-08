@@ -5,7 +5,7 @@ from graphene_django.types import DjangoObjectType
 from nxtbn.product.models import ProductVariant
 from nxtbn.cart.models import Cart, CartItem 
 from nxtbn.core.currency.backend import currency_Backend
-from nxtbn.graph_api.types import CartType, ProductVariantType 
+from nxtbn.product.types import CartType, ProductVariantType 
 from nxtbn.cart.utils import get_or_create_cart, save_guest_cart  
 
 class CartItemUpdateInput(graphene.InputObjectType):

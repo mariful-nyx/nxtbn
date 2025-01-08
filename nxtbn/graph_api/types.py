@@ -189,7 +189,7 @@ class ProductGraphType(DjangoObjectType):
 class CartItemType(graphene.ObjectType):
     product_variant = graphene.Field(ProductVariantType)
     quantity = graphene.Int()
-    subtotal = graphene.Float()
+    subtotal = graphene.String()
 
 
 class CartType(graphene.ObjectType):

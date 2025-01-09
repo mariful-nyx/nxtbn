@@ -3,8 +3,9 @@
 import graphene
 
 from graphene_django.filter import DjangoFilterConnectionField
-from nxtbn.product.admin_types import ProductGraphType, ProductTranslationType
+from nxtbn.product.admin_types import CategoryType, CollectionType, ProductGraphType, ProductTagType, ProductTranslationType, ProductVariantType, SupplierType
 from nxtbn.product.models import Product, ProductTranslation
+from nxtbn.product.storefront_types import CategoryHierarchicalType
 
 
 class ProductTranslationQuery(graphene.ObjectType):
@@ -13,6 +14,14 @@ class ProductTranslationQuery(graphene.ObjectType):
 
     product_translation = graphene.Field(ProductTranslationType, base_product_id=graphene.ID(required=True), lang_code=graphene.String(required=True))
     all_product_translations = DjangoFilterConnectionField(ProductTranslationType)
+
+    all_collections = DjangoFilterConnectionField(CollectionType)
+    all_producttags = DjangoFilterConnectionField(ProductTagType)
+    all_suppliers = DjangoFilterConnectionField(SupplierType)
+    all_product_variants = DjangoFilterConnectionField(ProductVariantType)
+
+    all_categories = DjangoFilterConnectionField(CategoryType)
+    hierarchical_categories = DjangoFilterConnectionField(CategoryHierarchicalType)
 
     def resolve_product(root, info, id):
         try:

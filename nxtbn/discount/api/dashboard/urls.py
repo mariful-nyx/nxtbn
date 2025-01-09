@@ -3,7 +3,6 @@ from nxtbn.discount.api.dashboard import views as discount_views
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'promo-code-translations', discount_views.PromoCodeTranslationViewSet, basename='promo-code-translation')
 
 
 

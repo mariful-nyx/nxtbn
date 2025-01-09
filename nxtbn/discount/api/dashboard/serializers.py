@@ -120,12 +120,3 @@ class PromoCodeUsageSerializer(serializers.ModelSerializer):
     def get_promocode(self, obj):
         return obj.promo_code.code
 
-
-# =============================================================================
-# Translation serializer
-# =============================================================================
-
-class PromoCodeTranslationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PromoCodeTranslation
-        fields = '__all__'

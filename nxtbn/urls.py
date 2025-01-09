@@ -23,13 +23,15 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from django.views.decorators.csrf import csrf_exempt
 from graphene_django.views import GraphQLView
+from rest_framework.permissions import IsAdminUser
 
 from nxtbn.admin_schema import admin_schema
 from nxtbn.storefront_schema import storefront_schema
 from nxtbn.swagger_views import DASHBOARD_API_DOCS_SCHEMA_VIEWS, STOREFRONT_API_DOCS_SCHEMA_VIEWS, api_docs
 
 
-
+class ProtectedGraphQLView(GraphQLView):
+    permission_classes = (IsAdminUser,) 
 
 
 # showing exact error in remote development server
@@ -52,7 +54,7 @@ urlpatterns = [
     path('', include('nxtbn.home.urls')),
     path('', include('nxtbn.seo.urls')),
     path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True, schema=storefront_schema))),
-    path('admin-graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True, schema=admin_schema))),
+    path('admin-graphql/', csrf_exempt(ProtectedGraphQLView.as_view(graphiql=True, schema=admin_schema))),
 
     path('product/', include('nxtbn.product.urls')),
 

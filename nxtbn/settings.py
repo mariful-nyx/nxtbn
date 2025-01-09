@@ -330,6 +330,7 @@ REST_FRAMEWORK = {
 }
 
 GRAPHENE = {
+    'SCHEMA': 'nxtbn.admin_schema.admin_schema',
     'MIDDLEWARE': [
         'graphene_django.debug.DjangoDebugMiddleware',
     ],

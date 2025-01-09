@@ -47,8 +47,11 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
         }
         """
 
+        mocked_context = Mock()
+        mocked_context.exchange_rate = None
+
         variables = {"id": self.product.id}
-        response = self.graphql_customer_client.execute(query, variables=variables)
+        response = self.graphql_customer_client.execute(query, variables=variables, context_value=mocked_context)
 
 
         self.assertGraphQLSuccess(response)

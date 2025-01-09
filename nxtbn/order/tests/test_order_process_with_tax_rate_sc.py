@@ -90,10 +90,8 @@ class OrderProccessTaxableProductNoTrackingStockAPI(BaseGraphQLTestCase): # Sing
                     variants: [
                         { alias: "%s", quantity: %d }
                     ],
-                    billingAddressId: 10,
                     note: "",
                     promocode: "",
-                    shippingAddressId: 10,
                     shippingAddress: {
                         country: "%s",
                         email: "test@example.com",
@@ -105,7 +103,6 @@ class OrderProccessTaxableProductNoTrackingStockAPI(BaseGraphQLTestCase): # Sing
                         streetAddress: "123 Main St",
                         city: "New York"
                     },
-                    shippingMethodId: 10,
                     createOrder: false
                     }
                 ) {
@@ -132,19 +129,58 @@ class OrderProccessTaxableProductNoTrackingStockAPI(BaseGraphQLTestCase): # Sing
 
         order_estimate_response =  self.graphql_customer_client.execute(order_mutation, context_value=mock_user)
 
-        print(order_estimate_response)
+        order_estimate_response = order_estimate_response['data']['orderProcess']['response']
 
-        # self.assertEqual(order_estimate_response.status_code, status.HTTP_200_OK)
-        # self.assertEqual(order_estimate_response.data['subtotal'], params['subtotal'])
-        # self.assertEqual(order_estimate_response.data['total'], params['total'])
-        # self.assertEqual(order_estimate_response.data['estimated_tax'], params['tax'])
+        self.assertEqual(order_estimate_response['subtotal'], params['subtotal'])
+        self.assertEqual(order_estimate_response['total'], params['total'])
+        self.assertEqual(order_estimate_response['estimated_tax'], params['tax'])
 
         # Order Create Test
-        # order_response = self.auth_client.post(self.order_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY,})
-        # self.assertEqual(order_response.status_code, status.HTTP_200_OK)
-        # self.assertEqual(order_response.data['subtotal'], params['subtotal'])
-        # self.assertEqual(order_response.data['total'], params['total'])
-        # self.assertEqual(order_response.data['estimated_tax'], params['tax'])
+
+        order_mutation_create = """
+            mutation MyMutation {
+                orderProcess(
+                    input: {
+                    variants: [
+                        { alias: "%s", quantity: %d }
+                    ],
+                    note: "",
+                    promocode: "",
+                    shippingAddress: {
+                        country: "%s",
+                        email: "test@example.com",
+                        firstName: "John",
+                        phoneNumber: "1234567890",
+                        lastName: "Doe",
+                        postalCode: "10001",
+                        state: "%s",
+                        streetAddress: "123 Main St",
+                        city: "New York"
+                    },
+                    createOrder: true
+                    }
+                ) {
+                    message
+                    orderAlias
+                    orderId
+                    response
+                    success
+                }
+            }
+        """ % (
+            variant.alias, 
+            3, 
+            self.country,
+            self.state 
+        )
+
+        order_create_response =  self.graphql_customer_client.execute(order_mutation_create, context_value=mock_user)
+
+        order_create_response = order_create_response['data']['orderProcess']['response']
+
+        self.assertEqual(order_create_response['subtotal'], params['subtotal'])
+        self.assertEqual(order_create_response['total'], params['total'])
+        self.assertEqual(order_create_response['estimated_tax'], params['tax'])
 
     def test_order_for_all_currencies(self):
         """
@@ -211,10 +247,8 @@ class OrderProccessTaxableProductNoTrackingStockAPI(BaseGraphQLTestCase): # Sing
 # Ensures accuracy in calculations for mixed tax rates, non-taxable products, and non-trackable stock products.
 # ======================================================================================================================
 
-
-
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
-class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
+class OrderProccessTaxableMultiVariantNoTrackingStockAPI(BaseGraphQLTestCase):
     """
         Test Case for Order Create API with multiple products/variants in a single currency mode.
         Ensures accuracy in calculations for mixed tax rates, non-taxable products, and non-trackable stock products.
@@ -230,9 +264,6 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
         # Tax classes
         self.tax_class_15 = TaxClassFactory()
         self.tax_class_5 = TaxClassFactory()
-
-        self.order_api_url = reverse('admin_order_create')
-        self.order_estimate_api_url = reverse('admin_order_estimate')
 
     def _test_order_with_multi_variant(self, currency, params):
         """
@@ -292,7 +323,6 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
             track_inventory=False,
             currency=currency,
             price=normalize_amount_currencywise(params['variant_1']['price'], currency),
-            # stock=params['variant_1']['stock'],
             cost_per_unit=params['variant_1']['cost_per_unit'],
         )
 
@@ -301,7 +331,6 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
             track_inventory=False,
             currency=currency,
             price=normalize_amount_currencywise(params['variant_2']['price'], currency),
-            # stock=params['variant_2']['stock'],
             cost_per_unit=params['variant_2']['cost_per_unit'],
         )
 
@@ -310,56 +339,110 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
             track_inventory=False,
             currency=currency,
             price=normalize_amount_currencywise(params['variant_3']['price'], currency),
-            # stock=params['variant_3']['stock'],
             cost_per_unit=params['variant_3']['cost_per_unit'],
         )
 
-        # Payload for order
-        order_payload = {
-            "shipping_address": {
-                "country": self.country,
-                "state": self.state,
-                "street_address": "123 Main St",
-                "city": "New York",
-                "postal_code": "10001",
-                "email": "test@example.com",
-                "first_name": "John",
-                "last_name": "Doe",
-                "phone_number": "1234567890"
-            },
-            "billing_address": {
-                "country": self.country,
-                "state": self.state,
-                "street_address": "123 Main St",
-                "city": "New York",
-                "postal_code": "10001",
-                "email": "test@example.com",
-                "first_name": "John",
-                "last_name": "Doe",
-                "phone_number": "1234567890"
-            },
-            "variants": [
-                {"alias": variant_1.alias, "quantity": 2},
-                {"alias": variant_2.alias, "quantity": 3},
-                {"alias": variant_3.alias, "quantity": 1},
-            ]
-        }
+        order_mutation = """
+            mutation MyMutation {
+                orderProcess(
+                    input: {
+                    variants: [
+                        { alias: "%s", quantity: %d },
+                        { alias: "%s", quantity: %d },
+                        { alias: "%s", quantity: %d }
+                    ],
+                    note: "",
+                    promocode: "",
+                    shippingAddress: {
+                        country: "%s",
+                        email: "test@example.com",
+                        firstName: "John",
+                        phoneNumber: "1234567890",
+                        lastName: "Doe",
+                        postalCode: "10001",
+                        state: "%s",
+                        streetAddress: "123 Main St",
+                        city: "New York"
+                    },
+                    createOrder: false
+                    }
+                ) {
+                    message
+                    orderAlias
+                    orderId
+                    response
+                    success
+                }
+            }
+        """ % (
+            variant_1.alias, 2,
+            variant_2.alias, 3,
+            variant_3.alias, 1,
+            self.country,
+            self.state
+        )
 
-        
+        mock_user = MagicMock()
+        mock_user.id = self.user.id
+        mock_user.email = self.user.email
+        mock_user.exchange_rate = 1.0
+        mock_user.user = self.user
+        mock_user.currency = 'USD'
 
-        # Estimate Test
-        order_estimate_response = self.auth_client.post(self.order_estimate_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY})
-        self.assertEqual(order_estimate_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(order_estimate_response.data['subtotal'], params['subtotal'])
-        self.assertEqual(order_estimate_response.data['total'], params['total'])
-        self.assertEqual(order_estimate_response.data['estimated_tax'], params['tax'])
+        order_estimate_response = self.graphql_customer_client.execute(order_mutation, context_value=mock_user)
+        order_estimate_response = order_estimate_response['data']['orderProcess']['response']
+
+        self.assertEqual(order_estimate_response['subtotal'], params['subtotal'])
+        self.assertEqual(order_estimate_response['total'], params['total'])
+        self.assertEqual(order_estimate_response['estimated_tax'], params['tax'])
 
         # Order Create Test
-        order_response = self.auth_client.post(self.order_api_url, order_payload, format='json', headers={'Accept-Currency': settings.BASE_CURRENCY})
-        self.assertEqual(order_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(order_response.data['subtotal'], params['subtotal'])
-        self.assertEqual(order_response.data['total'], params['total'])
-        self.assertEqual(order_response.data['estimated_tax'], params['tax'])
+        order_mutation_create = """
+            mutation MyMutation {
+                orderProcess(
+                    input: {
+                    variants: [
+                        { alias: "%s", quantity: %d },
+                        { alias: "%s", quantity: %d },
+                        { alias: "%s", quantity: %d }
+                    ],
+                    note: "",
+                    promocode: "",
+                    shippingAddress: {
+                        country: "%s",
+                        email: "test@example.com",
+                        firstName: "John",
+                        phoneNumber: "1234567890",
+                        lastName: "Doe",
+                        postalCode: "10001",
+                        state: "%s",
+                        streetAddress: "123 Main St",
+                        city: "New York"
+                    },
+                    createOrder: true
+                    }
+                ) {
+                    message
+                    orderAlias
+                    orderId
+                    response
+                    success
+                }
+            }
+        """ % (
+            variant_1.alias, 2,
+            variant_2.alias, 3,
+            variant_3.alias, 1,
+            self.country,
+            self.state
+        )
+
+        order_create_response = self.graphql_customer_client.execute(order_mutation_create, context_value=mock_user)
+        order_create_response = order_create_response['data']['orderProcess']['response']
+
+        self.assertEqual(order_create_response['subtotal'], params['subtotal'])
+        self.assertEqual(order_create_response['total'], params['total'])
+        self.assertEqual(order_create_response['estimated_tax'], params['tax'])
 
     def test_order_with_multi_variant(self):
         """
@@ -373,9 +456,9 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
                     "subtotal": "$235.50",
                     "total": "$252.78", # rounded to 2 decimal places, that is why it is not 252.775
                     "tax": "$17.28", # rounded to 2 decimal places, that is why it is not 17.275
-                    "variant_1": {"price": 50.00, "cost_per_unit": 40.00, "stock": 10}, # will be ordered 2 times, Taxable 15%
-                    "variant_2": {"price": 30.00, "cost_per_unit": 25.00, "stock": 10}, # will be ordered 3 times, Non-taxable
-                    "variant_3": {"price": 45.50, "cost_per_unit": 35.00, "stock": 10}, # will be ordered 1 time, Taxable 5%
+                    "variant_1": {"price": 50.00, "cost_per_unit": 40.00}, # will be ordered 2 times, Taxable 15%
+                    "variant_2": {"price": 30.00, "cost_per_unit": 25.00}, # will be ordered 3 times, Non-taxable
+                    "variant_3": {"price": 45.50, "cost_per_unit": 35.00}, # will be ordered 1 time, Taxable 5%
                 },
             )
 
@@ -387,9 +470,9 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
                     "subtotal": "¥23,550", 
                     "total": "¥25,278", # rounded to 0 decimal places
                     "tax": "¥1,728", # rounded to 0 decimal places
-                    "variant_1": {"price": 5000, "cost_per_unit": 4000, "stock": 10}, # will be ordered 2 times, Taxable 15%
-                    "variant_2": {"price": 3000, "cost_per_unit": 2500, "stock": 10}, # will be ordered 3 times, Non-taxable
-                    "variant_3": {"price": 4550, "cost_per_unit": 3500, "stock": 10}, # will be ordered 1 time, Taxable 5%
+                    "variant_1": {"price": 5000, "cost_per_unit": 4000}, # will be ordered 2 times, Taxable 15%
+                    "variant_2": {"price": 3000, "cost_per_unit": 2500}, # will be ordered 3 times, Non-taxable
+                    "variant_3": {"price": 4550, "cost_per_unit": 3500}, # will be ordered 1 time, Taxable 5%
                 },
             )
 
@@ -401,9 +484,9 @@ class OrderCreateTaxableMultiVariantNoTrackingStockAPI(BaseTestCase):
                     "subtotal": "KWD235.500",
                     "total": "KWD252.775", # rounded to 3 decimal places, that is why it is not 252.78
                     "tax": "KWD17.275", # rounded to 3 decimal places, that is why it is not 17.28
-                    "variant_1": {"price": 50.000, "cost_per_unit": 40.000, "stock": 10}, # will be ordered 2 times, Taxable 15%
-                    "variant_2": {"price": 30.000, "cost_per_unit": 25.000, "stock": 10}, # will be ordered 3 times, Non-taxable
-                    "variant_3": {"price": 45.500, "cost_per_unit": 35.000, "stock": 10}, # will be ordered 1 time, Taxable 5%
+                    "variant_1": {"price": 50.000, "cost_per_unit": 40.000}, # will be ordered 2 times, Taxable 15%
+                    "variant_2": {"price": 30.000, "cost_per_unit": 25.000}, # will be ordered 3 times, Non-taxable
+                    "variant_3": {"price": 45.500, "cost_per_unit": 35.000}, # will be ordered 1 time, Taxable 5%
                 },
             )
 

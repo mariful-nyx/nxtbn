@@ -4,20 +4,12 @@ from rest_framework.routers import DefaultRouter
 from nxtbn.core.url_converters import IdOrNoneConverter
 
 from nxtbn.product.api.dashboard.views import (
-    CategoryNameView,
-    CategoryTranslationViewSet,
-    CollectionNameView,
-    CollectionTranslationViewSet,
     ProductListView,
     ProductDetailView,
     CategoryListView,
     CategoryByParentView,
     CategoryDetailView,
     CollectionViewSet,
-    ProductNameView,
-    ProductTagNameView,
-    ProductTagTranslationViewSet,
-    ProductTranslationDetails,
     RecursiveCategoryListView,
     ColorViewSet,
     ProductTypeViewSet,
@@ -26,8 +18,6 @@ from nxtbn.product.api.dashboard.views import (
     ProductWithVariantView,
     ProductMinimalListView,
     ProductListDetailVariantView,
-    SupplierNameView,
-    SupplierTranslationViewSet,
     TaxClassView,
     BulkProductStatusUpdateAPIView,
     BulkProductDeleteAPIView,
@@ -46,11 +36,6 @@ router.register(r'product-tags', ProductTagViewSet)
 router.register(r'collections', CollectionViewSet)
 router.register(r'suppliers', SupplierModelViewSet)
 
-# Translation views
-router.register(r'supplier-translations', SupplierTranslationViewSet, basename='supplier-translation')
-router.register(r'category-translations', CategoryTranslationViewSet, basename='category-translation')
-router.register(r'collection-translations', CollectionTranslationViewSet, basename='collection-translation')
-router.register(r'product-tag-translations', ProductTagTranslationViewSet, basename='product-tag-translation')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -71,14 +56,5 @@ urlpatterns = [
     path('products-variants/', ProductVariants.as_view(), name='products-variants'),
     path('inventory/', InventoryListView.as_view(), name='product-inventory'),
 
-    # Translation
-    path('product-translations/<int:base_product_id>/<str:lang_code>/', ProductTranslationDetails.as_view(), name='product-translation'),
-
-    # Name and id views
-    path('products-name/', ProductNameView.as_view(), name='product-list-name'),
-    path('categories-name/', CategoryNameView.as_view(), name='category-list-name'),
-    path('suppliers-name/', SupplierNameView.as_view(), name='supplier-list-name'),
-    path('product-tags-name/', ProductTagNameView.as_view(), name='product-tag-list-name'),
-    path('collections-name/', CollectionNameView.as_view(), name='collection-list-name'),
 ]
 

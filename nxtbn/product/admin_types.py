@@ -30,9 +30,11 @@ class ProductTranslationType(DjangoObjectType):
 
 class ProductGraphType(DjangoObjectType):
     description_html = graphene.String()
+    db_id = graphene.Int(source="id")
     class Meta:
         model = Product
         fields = (
+            'id',
             'slug',
             'name',
             'name_when_in_relation',

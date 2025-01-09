@@ -8,6 +8,7 @@ from nxtbn.product.admin_filters import ProductFilter, ProductTranslationFilter
 
 class ProductTranslationType(DjangoObjectType):
     description_html = graphene.String()
+    base_product_id = graphene.Int()
     class Meta:
         model = ProductTranslation
         fields = (
@@ -23,6 +24,9 @@ class ProductTranslationType(DjangoObjectType):
 
     def resolve_description_html(self, info):
         return self.description_html()
+    
+    def resolve_base_product_id(self, info):
+        return self.product_id
 
 class ProductGraphType(DjangoObjectType):
     description_html = graphene.String()

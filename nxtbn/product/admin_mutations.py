@@ -4,7 +4,7 @@ from nxtbn.product.models import ProductTranslation
 
 
 
-class ProductTranslatoinMutation(graphene.Mutation):
+class UpdateProductTranslatoinMutation(graphene.Mutation):
     class Arguments:
         base_product_id = graphene.Int(required=True)
         lang_code = graphene.String(required=True)
@@ -29,4 +29,9 @@ class ProductTranslatoinMutation(graphene.Mutation):
         product_translation.meta_description = meta_description
         product_translation.save()
 
-        return ProductTranslatoinMutation(product_translation=product_translation)
+        return UpdateProductTranslatoinMutation(product_translation=product_translation) 
+
+
+
+class ProductMutation(graphene.ObjectType):
+    update_product_translation = UpdateProductTranslatoinMutation.Field()

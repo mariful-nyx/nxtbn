@@ -15,6 +15,10 @@ class ImageType(DjangoObjectType):
 
 class CategoryType(DjangoObjectType):
     name = graphene.String()
+    description = graphene.String()
+    meta_title = graphene.String()
+    meta_description = graphene.String()
+
 
     def resolve_name(self, info):
         if settings.USE_I18N:
@@ -23,9 +27,87 @@ class CategoryType(DjangoObjectType):
                 if translation_obj:
                     return translation_obj.name
         return self.name
+    
+    def resolve_description(self, info):
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                translation_obj = self.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return translation_obj.description
+        return self.description
+    
+    def resolve_meta_title(self, info):
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                translation_obj = self.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return translation_obj.meta_title
+        return self.meta_title
+    
+    def resolve_meta_description(self, info):
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                translation_obj = self.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return translation_obj.meta_description
+        return self.meta_description
+    
     class Meta:
         model = Category
-        fields = ("id",)
+        fields = ("id", )
+        interfaces = (relay.Node,)
+        filterset_class = CategoryFilter
+
+
+
+class CategoryHierarchicalType(DjangoObjectType):
+    name = graphene.String()
+    description = graphene.String()
+    meta_title = graphene.String()
+    meta_description = graphene.String()
+
+    # Recursive field for subcategories
+    children = graphene.List(lambda: CategoryHierarchicalType)
+
+    def resolve_name(self, info):
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                translation_obj = self.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return translation_obj.name
+        return self.name
+    
+    def resolve_description(self, info):
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                translation_obj = self.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return translation_obj.description
+        return self.description
+    
+    def resolve_meta_title(self, info):
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                translation_obj = self.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return translation_obj.meta_title
+        return self.meta_title
+    
+    def resolve_meta_description(self, info):
+        if settings.USE_I18N:
+            if settings.LANGUAGE_CODE != get_language():
+                translation_obj = self.translations.filter(language_code=get_language()).first()
+                if translation_obj:
+                    return translation_obj.meta_description
+        return self.meta_description
+    
+    def resolve_children(self, info):
+        # Return all subcategories of the current category
+        return self.subcategories.all()
+    
+    class Meta:
+        model = Category
+        fields = ("id", "children",)
         interfaces = (relay.Node,)
         filterset_class = CategoryFilter
 

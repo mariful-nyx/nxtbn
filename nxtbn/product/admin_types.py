@@ -73,7 +73,6 @@ class CollectionType(DjangoObjectType):
             'meta_title',
             'meta_description',
             'image',
-            'products',
         )
         interfaces = (relay.Node,)
         filterset_class = CollectionFilter
@@ -111,12 +110,6 @@ class SupplierType(DjangoObjectType):
         model = Supplier
         fields = (
             'name',
-            'slug',
-            'description',
-            'meta_title',
-            'meta_description',
-            'image',
-            'products',
         )
         interfaces = (relay.Node,)
         filterset_class = SupplierFilter
@@ -129,13 +122,7 @@ class ProductVariantType(DjangoObjectType):
             'name',
             'sku',
             'track_inventory',
-            'quantity',
-            'cost_price',
-            'images',
-            'weight',
-            'weight_unit',
             'product',
-            'attributes',
             'price',
         )
         interfaces = (relay.Node,)
@@ -202,9 +189,6 @@ class ProductVariantTranslationType(DjangoObjectType):
         model = ProductVariantTranslation
         fields = (
             'name',
-            'description',
-            'meta_title',
-            'meta_description',
         )
 
 

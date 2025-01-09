@@ -18,10 +18,6 @@ from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.product.models import CategoryTranslation, CollectionTranslation, Color, Product, Category, Collection, ProductTag, ProductTagTranslation, ProductTranslation, ProductType, ProductVariant, Supplier, SupplierTranslation
 from nxtbn.product.api.dashboard.serializers import (
     BasicCategorySerializer,
-    CategoryNameSerializer,
-    CategoryTranslationSerializer,
-    CollectionNameSerializer,
-    CollectionTranslationSerializer,
     ColorSerializer,
     InventorySerializer,
     ProductCreateSerializer,
@@ -31,17 +27,11 @@ from nxtbn.product.api.dashboard.serializers import (
     CategorySerializer,
     CollectionSerializer,
     ProductStatusUpdateBulkSerializer,
-    ProductTagNameSerializer,
     ProductTagSerializer,
-    ProductTagTranslationSerializer,
-    ProductTranslationEqualResponseSerializer,
-    ProductTranslationSerializer,
     ProductTypeSerializer,
     ProductVariantShortSerializer,
     ProductWithVariantSerializer,
     RecursiveCategorySerializer,
-    SupplierNameSerializer,
-    SupplierTranslationSerializer,
     TaxClassSerializer,
     SupplierSerializer
 )
@@ -349,114 +339,3 @@ class SupplierModelViewSet(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer
     queryset = Supplier.objects.all()
     pagination_class = NxtbnPagination
-
-
-
-# ============================================
-# Id and Name Responsive realted views start 
-# ===========================================
-
-class ProductNameView(generics.ListAPIView):
-    serializer_class = ProductMinimalSerializer
-    queryset = Product.objects.all()
-
-    def get_queryset(self):
-        return Product.objects.all().order_by('-created_at')
-    
-
-class CategoryNameView(generics.ListAPIView):
-    serializer_class = CategoryNameSerializer
-    queryset = Category.objects.all()
-
-    def get_queryset(self):
-        return Category.objects.all()
-
-class SupplierNameView(generics.ListAPIView):
-    serializer_class = SupplierNameSerializer
-    queryset = Supplier.objects.all()
-
-    def get_queryset(self):
-        return Supplier.objects.all()
-    
-class ProductTagNameView(generics.ListAPIView):
-    serializer_class = ProductTagNameSerializer
-    queryset = ProductTag.objects.all()
-
-    def get_queryset(self):
-        return ProductTag.objects.all()
-    
-class CollectionNameView(generics.ListAPIView):
-    pagination_class = None
-    serializer_class = CollectionNameSerializer
-    queryset = Collection.objects.all()
-
-    def get_queryset(self):
-        return Collection.objects.all()
-
-# ============================================
-# Id and Name Responsive realted views end 
-# ===========================================
-
-
-# ==========================
-# Translation Views
-# ==========================
-
-
-class SupplierTranslationViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for managing supplier translations.
-    """
-    queryset = SupplierTranslation.objects.all()
-    serializer_class = SupplierTranslationSerializer
-
-
-class CategoryTranslationViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for managing category translations.
-    """
-    queryset = CategoryTranslation.objects.all()
-    serializer_class = CategoryTranslationSerializer
-
-
-class CollectionTranslationViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for managing collection translations.
-    """
-    queryset = CollectionTranslation.objects.all()
-    serializer_class = CollectionTranslationSerializer
-
-
-class ProductTranslationDetails(generics.GenericAPIView):
-    serializer_class = ProductTranslationSerializer
-
-    def get(self, request, *args, **kwargs):
-        base_product_id = kwargs.get('base_product_id')
-        lang_code = kwargs.get('lang_code')
-        try:
-            instance = ProductTranslation.objects.get(product_id=base_product_id, language_code=lang_code)
-            serializer = self.get_serializer(instance)
-            translated_strings = serializer.data
-        except ProductTranslation.DoesNotExist:
-            translated_strings = {}
-
-        data = {
-            'original_strings': ProductTranslationEqualResponseSerializer(Product.objects.get(id=base_product_id)).data,
-            'translated_strings': translated_strings
-        }
-        return Response(data)
-    
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-
-class ProductTagTranslationViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for managing product tag translations.
-    """
-    queryset = ProductTagTranslation.objects.all()
-    serializer_class = ProductTagTranslationSerializer

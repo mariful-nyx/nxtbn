@@ -1,6 +1,6 @@
 import graphene
 from graphene_django.types import DjangoObjectType
-from nxtbn.product.models import Category, Collection, ProductTag, ProductTranslation, Product, ProductVariant, Supplier
+from nxtbn.product.models import Category, CategoryTranslation, Collection, CollectionTranslation, ProductTag, ProductTagTranslation, ProductTranslation, Product, ProductVariant, ProductVariantTranslation, Supplier, SupplierTranslation
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene import relay
 
@@ -171,3 +171,59 @@ class CategoryHierarchicalType(DjangoObjectType):
         )
         interfaces = (relay.Node,)
         filterset_class = CategoryFilter
+
+
+class CategoryTranslationType(DjangoObjectType):
+    db_id = graphene.Int(source="id")
+    class Meta:
+        model = CategoryTranslation
+        fields = (
+            'name',
+            'description',
+            'meta_title',
+            'meta_description',
+        )
+
+class SupplierTranslationType(DjangoObjectType):
+    db_id = graphene.Int(source="id")
+    class Meta:
+        model = SupplierTranslation
+        fields = (
+            'name',
+            'description',
+            'meta_title',
+            'meta_description',
+        )
+
+
+class ProductVariantTranslationType(DjangoObjectType):
+    db_id = graphene.Int(source="id")
+    class Meta:
+        model = ProductVariantTranslation
+        fields = (
+            'name',
+            'description',
+            'meta_title',
+            'meta_description',
+        )
+
+
+class ProductTagTranslationType(DjangoObjectType):
+    db_id = graphene.Int(source="id")
+    class Meta:
+        model = ProductTagTranslation
+        fields = (
+            'name',
+        )
+
+
+class CollectionTranslationType(DjangoObjectType):
+    db_id = graphene.Int(source="id")
+    class Meta:
+        model = CollectionTranslation
+        fields = (
+            'name',
+            'description',
+            'meta_title',
+            'meta_description',
+        )

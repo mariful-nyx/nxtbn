@@ -173,6 +173,9 @@ class ProductVariantType(DjangoObjectType):
     price_raw = graphene.String()
     
     def resolve_price(self, info): # with currency symbol
+        if not settings.IS_MULTI_CURRENCY:
+            return self.humanize_total_price()
+        
         target_currency = info.context.currency
         exchange_rate = info.context.exchange_rate
         converted_price = apply_exchange_rate(self.price, exchange_rate, target_currency, 'en_US')
@@ -202,6 +205,7 @@ class ProductGraphType(DjangoObjectType):
     meta_title = graphene.String()
     meta_description = graphene.String()
     thumbnail = graphene.String()
+    price = graphene.String() # price of default variant
 
     def resolve_name(self, info):
         if settings.USE_I18N:
@@ -245,6 +249,18 @@ class ProductGraphType(DjangoObjectType):
     
     def resolve_thumbnail(self, info):
         return self.product_thumbnail(info.context)
+    
+    def resolve_price(self, info):
+        if self.default_variant:
+            if not settings.IS_MULTI_CURRENCY:
+                return self.default_variant.humanize_total_price()
+            else:
+                target_currency = info.context.currency
+                exchange_rate = info.context.exchange_rate
+                converted_price = apply_exchange_rate(self.default_variant.price, exchange_rate, target_currency, 'en_US')
+                return converted_price
+        return None
+    
 
 
     class Meta:

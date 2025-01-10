@@ -54,6 +54,9 @@ def check_user_permissions(info, any_staff=False, allowed_roles=[]):
     if not info.context.user.is_staff:
         raise Exception("You must be a staff to perform this action")
     
+    if info.context.user.is_superuser:
+        return True
+    
     if any_staff:
         return True
     

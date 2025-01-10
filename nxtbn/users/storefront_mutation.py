@@ -63,7 +63,7 @@ class CustomerSignupMutation(graphene.Mutation):
         )
 
         # Send the verification email
-        complete_signup(info.context._request, user, allauth_settings.EMAIL_VERIFICATION, None)
+        complete_signup(info.context, user, allauth_settings.EMAIL_VERIFICATION, None)
 
         response_data = {"detail": _("Verification e-mail sent. Please check your email.")}
 

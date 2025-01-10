@@ -26,7 +26,7 @@ class ProductTranslationQuery(graphene.ObjectType):
     hierarchical_categories = DjangoFilterConnectionField(CategoryHierarchicalType)
 
     def resolve_product(root, info, id):
-        check_user_permissions(info, [UserRole.ADMIN, UserRole.STORE_MANAGER, UserRole.PRODUCT_MANAGER, UserRole.MARKETING_MANAGER])
+        check_user_permissions(info, any_staff=True)
 
         try:
             return Product.objects.get(pk=id)
@@ -34,16 +34,16 @@ class ProductTranslationQuery(graphene.ObjectType):
             return None
         
     def resolve_all_products(root, info, **kwargs):
-        check_user_permissions(info, [UserRole.ADMIN, UserRole.STORE_MANAGER, UserRole.PRODUCT_MANAGER, UserRole.MARKETING_MANAGER])
+        check_user_permissions(info, any_staff=True)
         return Product.objects.all()
     
     def resolve_product_translation(root, info, base_product_id, lang_code):
-        check_user_permissions(info, [UserRole.ADMIN, UserRole.STORE_MANAGER, UserRole.PRODUCT_MANAGER, UserRole.MARKETING_MANAGER])
+        check_user_permissions(info, any_staff=True)
         try:
             return ProductTranslation.objects.get(product_id=base_product_id, language_code=lang_code)
         except ProductTranslation.DoesNotExist:
             return None
         
     def resolve_all_product_translations(root, info, **kwargs):
-        check_user_permissions(info, [UserRole.ADMIN, UserRole.STORE_MANAGER, UserRole.PRODUCT_MANAGER, UserRole.MARKETING_MANAGER])
+        check_user_permissions(info, any_staff=True)
         return ProductTranslation.objects.all()

@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 import graphene
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
@@ -51,16 +52,19 @@ class CustomerSignupMutation(graphene.Mutation):
         jwt_manager = JWTManager()
 
         # Create the user
-        user = get_user_model().objects.create_user(
-            email=email,
-            password=password,
-            username=username,
-            first_name=first_name,
-            last_name=last_name,
-            is_active=True,
-            is_staff=False,
-            is_superuser=False,
-        )
+        try:
+            user = get_user_model().objects.create_user(
+                email=email,
+                password=password,
+                username=username,
+                first_name=first_name,
+                last_name=last_name,
+                is_active=True,
+                is_staff=False,
+                is_superuser=False,
+            )
+        except IntegrityError:
+            raise Exception(_("User with this email already exists."))
 
         # Send the verification email
         complete_signup(info.context, user, allauth_settings.EMAIL_VERIFICATION, None)

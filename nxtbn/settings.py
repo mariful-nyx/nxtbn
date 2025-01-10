@@ -329,12 +329,14 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
+
 GRAPHENE = {
     'SCHEMA': 'nxtbn.admin_schema.admin_schema',
     'MIDDLEWARE': [
         'graphene_django.debug.DjangoDebugMiddleware',
         'nxtbn.users.auth_middleware.GraphQLJWTMiddleware',
     ],
+    'RELAY_CONNECTION_MAX_LIMIT': 100, # pagination limit
 }
 
 

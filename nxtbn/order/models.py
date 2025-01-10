@@ -25,7 +25,12 @@ from babel.numbers import get_currency_precision, format_currency
 
 
 
-class Address(AbstractAddressModels):
+class Address(models.Model):
+    street_address = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    postal_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=100)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="addresses")
     # Customizable Receiver Information / may redundent with user model. if no user/auth, fill first_name and last_name
     first_name = models.CharField(max_length=50)

@@ -48,7 +48,7 @@ class RoleBasedPermission(BasePermission):
     
 
 def check_user_permissions(info, any_staff=False, allowed_roles=[]):
-    if not info.context.user:
+    if not info.context.user.is_authenticated:
         raise Exception("You must be logged in to perform this action")
     
     if not info.context.user.is_staff:

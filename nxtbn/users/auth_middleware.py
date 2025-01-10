@@ -1,25 +1,23 @@
 from nxtbn.users.utils.jwt_utils import JWTManager
+from django.contrib.auth.models import AnonymousUser
 
 class GraphQLJWTMiddleware:
     def __init__(self):
         self.jwt_manager = JWTManager()
 
     def resolve(self, next, root, info, **args):
-        # Get the request object from info.context
         request = info.context
-        # Get token from headers or cookies
+
         token = self.get_token_from_request(request)
 
         if token:
-            # Verify token
             user = self.jwt_manager.verify_jwt_token(token)
             if user:
-                # Attach the user to the context for access within GraphQL resolvers
                 info.context.user = user
             else:
-                info.context.user = None
+                info.context.user = AnonymousUser()
         else:
-            info.context.user = None
+            info.context.user = AnonymousUser()
 
         # Continue processing the query
         return next(root, info, **args)

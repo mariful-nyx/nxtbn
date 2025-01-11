@@ -21,7 +21,7 @@ from nxtbn.core.currency.backend import currency_Backend
 
 
 class ProductQuery(graphene.ObjectType):
-    product = graphene.Field(ProductGraphType, id=graphene.ID(required=True))
+    product = graphene.Field(ProductGraphType, slug=graphene.String())
     all_products = DjangoFilterConnectionField(ProductGraphType)
 
     all_categories = DjangoFilterConnectionField(CategoryType)
@@ -30,7 +30,7 @@ class ProductQuery(graphene.ObjectType):
     all_collections = DjangoFilterConnectionField(CollectionType)
     all_tags = DjangoFilterConnectionField(ProductTagType)
 
-    def resolve_product(root, info, id):
+    def resolve_product(root, info, slug):
         exchange_rate = 1.0
         if settings.IS_MULTI_CURRENCY:
             exchange_rate = currency_Backend().get_exchange_rate(info.context.currency)
@@ -38,7 +38,7 @@ class ProductQuery(graphene.ObjectType):
         info.context.exchange_rate = exchange_rate
         
         try:
-            return Product.objects.get(pk=id)
+            return Product.objects.get(slug=slug)
         except Product.DoesNotExist:
             return None
 

@@ -25,9 +25,14 @@ class AddressGraphType(DjangoObjectType):
 
 class OrderType(DjangoObjectType):
     db_id = graphene.Int(source='id')
+    humanize_total_price = graphene.String()
+
+    def resolve_humanize_total_price(self, info):
+        return self.humanize_total_price()
     class Meta:
         model = Order
         fields = (
+            'alias',
             'id',
             'order_number',
             'status',

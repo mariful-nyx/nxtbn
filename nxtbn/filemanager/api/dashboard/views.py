@@ -23,7 +23,7 @@ class ImageFilter(django_filters.FilterSet):
 
 class ImageListView(generics.ListCreateAPIView):
     serializer_class = ImageSerializer
-    queryset = Image.objects.all()
+    queryset = Image.objects.all().order_by('-created_at')
     pagination_class = NxtbnPagination
     permission_classes = (NxtbnAdminPermission,)
     filter_backends = [ DjangoFilterBackend,]

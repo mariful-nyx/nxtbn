@@ -1,6 +1,9 @@
 import graphene
 from graphene_django import DjangoObjectType
+from graphene import relay
 from nxtbn.order.models import Address, Order
+
+from nxtbn.order.admin_filters import OrderFilter
 
 class AddressGraphType(DjangoObjectType):
     db_id = graphene.Int(source='id')
@@ -50,3 +53,5 @@ class OrderType(DjangoObjectType):
             'note',
             'comment',
         )
+        interfaces = (relay.Node,)
+        filterset_class = OrderFilter

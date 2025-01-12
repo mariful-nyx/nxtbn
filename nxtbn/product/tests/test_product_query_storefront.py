@@ -36,9 +36,10 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
 
     def test_resolve_product_valid_id(self):
         query = """
-        query getProduct($id: ID!) {
-            product(id: $id) {
+        query getProduct($slug: String!) {
+            product(slug: $slug) {
                 id
+                slug
                 name
                 category {
                     name
@@ -50,7 +51,7 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
         mocked_context = Mock()
         mocked_context.exchange_rate = None
 
-        variables = {"id": self.product.id}
+        variables = {"slug": self.product.slug}
         response = self.graphql_customer_client.execute(query, variables=variables, context_value=mocked_context)
 
 
@@ -73,7 +74,7 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
         response = self.graphql_customer_client.execute(query, variables=variables)
 
         self.assertGraphQLFailure(response)
-        self.assertIsNone(response["data"]["product"])  # Product should be None
+        self.assertIsNone(response["data"])  # Product should be None
 
     def test_resolve_all_products(self):
         query = """

@@ -34,7 +34,6 @@ class OrderType(DjangoObjectType):
         fields = (
             'alias',
             'id',
-            'order_number',
             'status',
             'shipping_address',
             'billing_address',

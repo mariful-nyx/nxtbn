@@ -11,7 +11,9 @@ class OrderFilter(filters.FilterSet):
     authorize_status = filters.ChoiceFilter(choices=OrderAuthorizationStatus.choices)
     currency = filters.CharFilter(field_name='currency', lookup_expr='iexact')
     payment_method = filters.ChoiceFilter(choices=PaymentMethod.choices, method='filter_by_payment_method')
-    created_at = filters.DateFromToRangeFilter(field_name='created_at') # eg. ?created_at_after=2023-09-01&created_at_before=2023-09-12
+    # created_at = filters.DateFromToRangeFilter(field_name='created_at') # eg. ?created_at_after=2023-09-01&created_at_before=2023-09-12
+    created_at_before = filters.DateFilter(field_name='created_at', lookup_expr='lte')
+    created_at_after = filters.DateFilter(field_name='created_at', lookup_expr='gte')
     min_order_value = filters.NumberFilter(field_name='total_price', lookup_expr='gte', method='filter_min_order_value')
     max_order_value = filters.NumberFilter(field_name='total_price', lookup_expr='lte', method='filter_max_order_value')
 
@@ -23,7 +25,8 @@ class OrderFilter(filters.FilterSet):
             'authorize_status',
             'currency',
             'payment_method',
-            'created_at',
+            'created_at_before',
+            'created_at_after',
             'min_order_value',
             'max_order_value',
         ]

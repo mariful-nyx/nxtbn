@@ -139,6 +139,7 @@ class UpdateStockWarehouseWise(generics.UpdateAPIView):
 
 class StockReservationFilter(filters.FilterSet):
     warehouse = filters.CharFilter(field_name='stock__warehouse', lookup_expr='iexact')
+    variant = filters.CharFilter(field_name='stock__product_variant', lookup_expr='exact')
     class Meta:
         model = StockReservation
         fields = [
@@ -146,6 +147,7 @@ class StockReservationFilter(filters.FilterSet):
             'stock',
             'purpose',
             'warehouse',
+            'variant',
         ]
 
 

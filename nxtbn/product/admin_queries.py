@@ -5,7 +5,7 @@ import graphene
 from graphene_django.filter import DjangoFilterConnectionField
 from nxtbn.core.admin_permissions import check_user_permissions
 from nxtbn.product.admin_types import CategoryTranslationType, CategoryType, CollectionTranslationType, CollectionType, ProductGraphType, ProductTagTranslationType, ProductTagType, ProductTranslationType, ProductVariantType, SupplierType
-from nxtbn.product.models import CategoryTranslation, CollectionTranslation, Product, ProductTagTranslation, ProductTranslation
+from nxtbn.product.models import Category, CategoryTranslation, Collection, CollectionTranslation, Product, ProductTag, ProductTagTranslation, ProductTranslation, Supplier
 from nxtbn.product.storefront_types import CategoryHierarchicalType
 from nxtbn.users import UserRole
 
@@ -16,13 +16,20 @@ class ProductQuery(graphene.ObjectType):
 
     
 
+    collection = graphene.Field(CollectionType, id=graphene.ID(required=True))
     all_collections = DjangoFilterConnectionField(CollectionType)
+
+    producttag = graphene.Field(ProductTagType, id=graphene.ID(required=True))
     all_producttags = DjangoFilterConnectionField(ProductTagType)
+
+    supplier = graphene.Field(SupplierType, id=graphene.ID(required=True))
     all_suppliers = DjangoFilterConnectionField(SupplierType)
     all_product_variants = DjangoFilterConnectionField(ProductVariantType)
 
+    category = graphene.Field(CategoryType, id=graphene.ID(required=True))
     all_categories = DjangoFilterConnectionField(CategoryType)
     hierarchical_categories = DjangoFilterConnectionField(CategoryHierarchicalType)
+    category = graphene.Field(CategoryType, id=graphene.ID(required=True))
 
     # All translations
 
@@ -35,10 +42,71 @@ class ProductQuery(graphene.ObjectType):
     collection_translation = graphene.Field(CollectionTranslationType, base_collection_id=graphene.ID(required=True), lang_code=graphene.String(required=True))
     all_collection_translations = DjangoFilterConnectionField(CollectionTranslationType)
 
-    tags_translation = graphene.Field(ProductTagTranslationType, base_tag_id=graphene.ID(required=True), lang_code=graphene.String(required=True))
+    producttags_translation = graphene.Field(ProductTagTranslationType, base_tag_id=graphene.ID(required=True), lang_code=graphene.String(required=True))
     all_tags_translations = DjangoFilterConnectionField(ProductTagTranslationType)
 
  
+    def resolve_product(root, info, id):
+        check_user_permissions(info, any_staff=True)
+
+        try:
+            return Product.objects.get(pk=id)
+        except Product.DoesNotExist:
+            return None
+        
+    def resolve_all_products(root, info, **kwargs):
+        check_user_permissions(info, any_staff=True)
+        return Product.objects.all()
+    
+    def resolve_collection(root, info, id):
+        check_user_permissions(info, any_staff=True)
+
+        try:
+            return Collection.objects.get(pk=id)
+        except Collection.DoesNotExist:
+            return None
+    
+    def resolve_all_collections(root, info, **kwargs):
+        check_user_permissions(info, any_staff=True)
+        return Collection.objects.all()
+    
+    def resolve_producttag(root, info, id):
+        check_user_permissions(info, any_staff=True)
+
+        try:
+            return ProductTag.objects.get(pk=id)
+        except ProductTag.DoesNotExist:
+            return None
+        
+    def resolve_all_producttags(root, info, **kwargs):
+        check_user_permissions(info, any_staff=True)
+        return ProductTag.objects.all()
+    
+    def resolve_supplier(root, info, id):
+        check_user_permissions(info, any_staff=True)
+
+        try:
+            return Supplier.objects.get(pk=id)
+        except Supplier.DoesNotExist:
+            return None
+    
+    def resolve_all_suppliers(root, info, **kwargs):
+        check_user_permissions(info, any_staff=True)
+        return Product.objects.all()
+    
+    def resolve_all_product_variants(root, info, **kwargs):
+        check_user_permissions(info, any_staff=True)
+        return Product.objects.all()
+    
+    def resolve_category(root, info, id):
+        check_user_permissions(info, any_staff=True)
+
+        try:
+            return Category.objects.get(pk=id)
+        except Category.DoesNotExist:
+            return None
+        
+    # All translations
 
     def resolve_category_translation(root, info, base_category_id, lang_code):
         check_user_permissions(info, any_staff=True)
@@ -73,18 +141,6 @@ class ProductQuery(graphene.ObjectType):
         check_user_permissions(info, any_staff=True)
         return ProductTagTranslation.objects.all()
 
-
-    def resolve_product(root, info, id):
-        check_user_permissions(info, any_staff=True)
-
-        try:
-            return Product.objects.get(pk=id)
-        except Product.DoesNotExist:
-            return None
-        
-    def resolve_all_products(root, info, **kwargs):
-        check_user_permissions(info, any_staff=True)
-        return Product.objects.all()
     
     def resolve_product_translation(root, info, base_product_id, lang_code):
         check_user_permissions(info, any_staff=True)
@@ -96,3 +152,4 @@ class ProductQuery(graphene.ObjectType):
     def resolve_all_product_translations(root, info, **kwargs):
         check_user_permissions(info, any_staff=True)
         return ProductTranslation.objects.all()
+    

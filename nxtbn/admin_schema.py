@@ -1,14 +1,14 @@
 import graphene
 
 from nxtbn.product.admin_mutations import ProductMutation
-from nxtbn.product.admin_queries import ProductTranslationQuery
+from nxtbn.product.admin_queries import ProductQuery
 from nxtbn.users.admin_mutation import UserMutation
 from nxtbn.order.admin_queries import AdminOrderQuery
 
 
 
 
-class Query(ProductTranslationQuery, AdminOrderQuery):
+class Query(ProductQuery, AdminOrderQuery):
     pass
 
 class Mutation(UserMutation, ProductMutation):

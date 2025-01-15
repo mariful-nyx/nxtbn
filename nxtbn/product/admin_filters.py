@@ -1,5 +1,5 @@
 import django_filters as filters
-from nxtbn.product.models import Category, Collection, Product, ProductTag, ProductTranslation, Supplier
+from nxtbn.product.models import Category, CategoryTranslation, Collection, CollectionTranslation, Product, ProductTag, ProductTagTranslation, ProductTranslation, Supplier
 from django.db.models import Q
 
 
@@ -35,6 +35,28 @@ class ProductTranslationFilter(filters.FilterSet):
         model = ProductTranslation
         fields = ('name', 'summary', 'description',)
 
+class CategoryTranslationFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = CategoryTranslation
+        fields = ('name',)
+
+
+class CollectionTranslationFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = CollectionTranslation
+        fields = ('name',)
+
+
+class TagsTranslationFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = ProductTagTranslation
+        fields = ('name',)
 
 class CategoryFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')

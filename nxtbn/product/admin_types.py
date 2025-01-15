@@ -4,30 +4,10 @@ from nxtbn.product.models import Category, CategoryTranslation, Collection, Coll
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene import relay
 
-from nxtbn.product.admin_filters import CategoryFilter, CollectionFilter, ProductFilter, ProductTagsFilter, ProductTranslationFilter
+from nxtbn.product.admin_filters import CategoryFilter, CategoryTranslationFilter, CollectionFilter, CollectionTranslationFilter, ProductFilter, ProductTagsFilter, ProductTranslationFilter, TagsTranslationFilter
 from nxtbn.product.storefront_filters import ProductVariantFilter, SupplierFilter
 
-class ProductTranslationType(DjangoObjectType):
-    description_html = graphene.String()
-    base_product_id = graphene.Int()
-    class Meta:
-        model = ProductTranslation
-        fields = (
-            'name',
-            'summary',
-            'description',
-            'language_code',
-            'meta_title',
-            'meta_description',
-        )
-        interfaces = (relay.Node,)
-        filterset_class = ProductTranslationFilter
 
-    def resolve_description_html(self, info):
-        return self.description_html()
-    
-    def resolve_base_product_id(self, info):
-        return self.product_id
 
 class ProductGraphType(DjangoObjectType):
     description_html = graphene.String()
@@ -160,6 +140,33 @@ class CategoryHierarchicalType(DjangoObjectType):
         filterset_class = CategoryFilter
 
 
+# =====================================
+# All translation types
+# =====================================
+
+class ProductTranslationType(DjangoObjectType):
+    description_html = graphene.String()
+    base_product_id = graphene.Int()
+    class Meta:
+        model = ProductTranslation
+        fields = (
+            'name',
+            'summary',
+            'description',
+            'language_code',
+            'meta_title',
+            'meta_description',
+        )
+        interfaces = (relay.Node,)
+        filterset_class = ProductTranslationFilter
+
+    def resolve_description_html(self, info):
+        return self.description_html()
+    
+    def resolve_base_product_id(self, info):
+        return self.product_id
+    
+
 class CategoryTranslationType(DjangoObjectType):
     db_id = graphene.Int(source="id")
     class Meta:
@@ -170,6 +177,8 @@ class CategoryTranslationType(DjangoObjectType):
             'meta_title',
             'meta_description',
         )
+        interfaces = (relay.Node,)
+        filterset_class = CategoryTranslationFilter
 
 class SupplierTranslationType(DjangoObjectType):
     db_id = graphene.Int(source="id")
@@ -200,6 +209,9 @@ class ProductTagTranslationType(DjangoObjectType):
             'name',
         )
 
+        interfaces = (relay.Node,)
+        filterset_class = TagsTranslationFilter
+
 
 class CollectionTranslationType(DjangoObjectType):
     db_id = graphene.Int(source="id")
@@ -211,3 +223,5 @@ class CollectionTranslationType(DjangoObjectType):
             'meta_title',
             'meta_description',
         )
+        interfaces = (relay.Node,)
+        filterset_class = CollectionTranslationFilter

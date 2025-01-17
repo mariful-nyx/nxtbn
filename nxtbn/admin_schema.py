@@ -6,12 +6,13 @@ from nxtbn.product.admin_mutations import ProductMutation
 from nxtbn.product.admin_queries import ProductQuery
 from nxtbn.users.admin_mutation import UserMutation
 from nxtbn.order.admin_queries import AdminOrderQuery
+from nxtbn.warehouse.admin_queries import WarehouseQuery
 
 
 
 
 
-class Query(ProductQuery, AdminOrderQuery, CoreQuery):
+class Query(ProductQuery, AdminOrderQuery, CoreQuery, WarehouseQuery):
     pass
 
 class Mutation(UserMutation, ProductMutation, CoreMutation):

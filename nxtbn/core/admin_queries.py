@@ -7,7 +7,7 @@ from graphene_django.filter import DjangoFilterConnectionField
 
 class CoreQuery(graphene.ObjectType):
     currency_exchanges = DjangoFilterConnectionField(CurrencyExchangeType)
-    currency_exchange = graphene.Field(CurrencyExchangeType, id=graphene.ID(required=True))
+    all_currency_exchange = graphene.Field(CurrencyExchangeType, id=graphene.ID(required=True))
 
     def resolve_currency_exchanges(self, info):
         return CurrencyExchange.objects.all()

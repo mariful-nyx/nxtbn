@@ -10,6 +10,7 @@ from nxtbn.warehouse.models import (
 )
 
 class WarehouseType(DjangoObjectType):
+    db_id = graphene.ID(source='id')
     class Meta:
         model = Warehouse
         fields = "__all__"  
@@ -29,6 +30,7 @@ class StockType(DjangoObjectType):
         }
 
 class StockReservationType(DjangoObjectType):
+    db_id = graphene.ID(source='id')
     class Meta:
         model = StockReservation
         fields = "__all__"
@@ -39,6 +41,7 @@ class StockReservationType(DjangoObjectType):
         }
 
 class StockTransferType(DjangoObjectType):
+    db_id = graphene.ID(source='id')
     class Meta:
         model = StockTransfer
         fields = "__all__"
@@ -50,6 +53,7 @@ class StockTransferType(DjangoObjectType):
         }
 
 class StockTransferItemType(DjangoObjectType):
+    db_id = graphene.ID(source='id')
     class Meta:
         model = StockTransferItem
         fields = "__all__"

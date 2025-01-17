@@ -34,7 +34,7 @@ class StockSerializer(serializers.ModelSerializer):
         return obj.warehouse.name
     
     def get_product_variant_name(self, obj):
-        return obj.product_variant.name
+        return obj.product_variant.get_descriptive_name_minimal()
 
 
 

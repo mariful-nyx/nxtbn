@@ -354,6 +354,14 @@ class ProductVariant(MonetaryMixin, AbstractUUIDModel, AbstractMetadata, models.
         
         return " - ".join(parts)
     
+    def get_descriptive_name_minimal(self):
+        parts = [self.product.name]
+        
+        if self.name:
+            parts.append(self.name)
+        
+        return " - ".join(parts)
+    
     def humanize_total_price(self, locale='en_US'):
         if locale:
             return format_currency(self.price, self.currency, locale=locale)

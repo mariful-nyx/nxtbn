@@ -82,7 +82,7 @@ class StockReservation(AbstractBaseModel):
             stock.save(update_fields=['reserved'])
 
 
-class StockTransfer(models.Model):
+class StockTransfer(AbstractBaseModel):
     """Tracks transfers of inventory between warehouses"""    
     from_warehouse = models.ForeignKey(Warehouse, related_name='transfers_out', on_delete=models.PROTECT)
     to_warehouse = models.ForeignKey(Warehouse, related_name='transfers_in', on_delete=models.PROTECT)
@@ -93,7 +93,7 @@ class StockTransfer(models.Model):
     def __str__(self):
         return f"Transfer {self.id} - {self.from_warehouse} to {self.to_warehouse}"
 
-class StockTransferItem(models.Model):
+class StockTransferItem(AbstractBaseModel):
     """Line items for a stock transfer"""
     stock_transfer = models.ForeignKey(StockTransfer, related_name='items', on_delete=models.CASCADE)
     variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT)

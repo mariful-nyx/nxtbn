@@ -54,6 +54,7 @@ class StockTransferType(DjangoObjectType):
 
 class StockTransferItemType(DjangoObjectType):
     db_id = graphene.ID(source='id')
+    variant = graphene.Field("nxtbn.product.admin_types.ProductVariantAdminType")
     class Meta:
         model = StockTransferItem
         fields = "__all__"

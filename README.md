@@ -13,7 +13,7 @@
 ![Contributors](https://img.shields.io/github/contributors/nxtbn-com/nxtbn)  <!-- Number of contributors -->
 ![Python Versions](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)
 ![Dependencies](https://img.shields.io/librariesio/github/nxtbn-com/nxtbn)
-![Maintenance](https://img.shields.io/maintenance/yes/2024)  <!-- 'no' for unmaintained -->
+![Maintenance](https://img.shields.io/maintenance/yes/2025)  <!-- 'no' for unmaintained -->
 ![Version](https://img.shields.io/github/v/tag/nxtbn-com/nxtbn)
 [![CI](https://github.com/nxtbn-com/nxtbn/actions/workflows/codecov.yaml/badge.svg)](https://github.com/nxtbn-com/nxtbn/actions/workflows/codecov.yaml)
 

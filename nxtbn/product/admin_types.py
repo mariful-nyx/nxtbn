@@ -94,7 +94,7 @@ class SupplierType(DjangoObjectType):
         interfaces = (relay.Node,)
         filterset_class = SupplierFilter
 
-class ProductVariantType(DjangoObjectType):
+class ProductVariantAdminType(DjangoObjectType):
     db_id = graphene.Int(source="id")
     class Meta:
         model = ProductVariant

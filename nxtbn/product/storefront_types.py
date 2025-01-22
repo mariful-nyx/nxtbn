@@ -168,6 +168,7 @@ class TaxClassType(DjangoObjectType):
         fields = "__all__"
 
 class ProductVariantType(DjangoObjectType):
+    # db_id = graphene.ID(source='id')
     price = graphene.String()
     price_without_symbol = graphene.String()
     price_raw = graphene.String()

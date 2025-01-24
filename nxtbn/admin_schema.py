@@ -1,5 +1,6 @@
 import graphene
 
+from nxtbn.cart.admin_query import AdminCartQuery
 from nxtbn.core.admin_mutation import CoreMutation
 from nxtbn.core.admin_queries import CoreQuery
 from nxtbn.product.admin_mutations import ProductMutation
@@ -12,7 +13,7 @@ from nxtbn.warehouse.admin_queries import WarehouseQuery
 
 
 
-class Query(ProductQuery, AdminOrderQuery, CoreQuery, WarehouseQuery):
+class Query(ProductQuery, AdminOrderQuery, CoreQuery, WarehouseQuery, AdminCartQuery):
     pass
 
 class Mutation(UserMutation, ProductMutation, CoreMutation):

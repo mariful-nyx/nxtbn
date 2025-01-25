@@ -6,7 +6,6 @@ from nxtbn.core.admin_types import CurrencyExchangeType
 from nxtbn.core.models import CurrencyExchange
 
 class CurrencyExchangeInput(graphene.InputObjectType):
-    id = graphene.ID()
     base_currency = graphene.String(required=True)
     target_currency = graphene.String(required=True)
     exchange_rate = graphene.Decimal(required=True)

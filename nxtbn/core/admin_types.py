@@ -1,6 +1,8 @@
 import graphene
 from graphene import relay
 from graphene_django.types import DjangoObjectType
+
+from nxtbn.core import CurrencyTypes
 from .models import CurrencyExchange
 
 class CurrencyExchangeType(DjangoObjectType):
@@ -14,3 +16,7 @@ class CurrencyExchangeType(DjangoObjectType):
             'target_currency': ['exact', 'icontains'],
             'exchange_rate': ['exact', 'icontains'],
         }
+
+class AdminCurrencyTypesEnum(graphene.ObjectType):
+    value = graphene.String()
+    label = graphene.String()

@@ -1,13 +1,12 @@
-
-
 import graphene
+from graphene_django.filter import DjangoFilterConnectionField
 
 from nxtbn.cart.models import Cart
-from nxtbn.cart.storefront_types import CartItemType, CartType
+from nxtbn.cart.admin_types import CartItemType, CartType
 
 
 class AdminCartQuery(graphene.ObjectType):
-    all_carts = graphene.List(CartType)
+    all_carts = DjangoFilterConnectionField(CartType)
     
     cart_by_user = graphene.Field(CartType, user_id=graphene.ID(required=True))
     

@@ -4,6 +4,7 @@ from graphene_django.types import DjangoObjectType
 from .models import CurrencyExchange
 
 class CurrencyExchangeType(DjangoObjectType):
+    db_id = graphene.ID(source='id')
     class Meta:
         model = CurrencyExchange
         fields = "__all__"

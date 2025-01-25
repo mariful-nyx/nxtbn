@@ -5,15 +5,15 @@ from nxtbn.core.models import CurrencyExchange
 from graphene_django.filter import DjangoFilterConnectionField
 
 
-class CoreQuery(graphene.ObjectType):
-    currency_exchanges = DjangoFilterConnectionField(CurrencyExchangeType)
-    all_currency_exchange = graphene.Field(CurrencyExchangeType, id=graphene.ID(required=True))
+class AdminCoreQuery(graphene.ObjectType):
+    all_currency_exchange = DjangoFilterConnectionField(CurrencyExchangeType)
+    currency_exchanges = graphene.Field(CurrencyExchangeType, id=graphene.ID(required=True))
 
-    def resolve_currency_exchanges(self, info):
+    def resolve_all_currency_exchange(self, info, **kwargs):
         return CurrencyExchange.objects.all()
-
-    def resolve_currency_exchange(self, info, id):
+    
+    def resolve_currency_exchanges(self, info, id):
         try:
-            return CurrencyExchange.objects.get(pk=id)
+            return CurrencyExchange.objects.get(id=id)
         except CurrencyExchange.DoesNotExist:
             return None

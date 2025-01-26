@@ -138,3 +138,17 @@ class UserRole(models.TextChoices):
     - Restrictions:
       - No access to other vendors' data or orders.
     """
+    
+
+    STORE_VIEWER = 'STORE_VIEWER', 'Store Viewer'
+    """
+    Store Viewer:
+    - Description: Has read-only access to the entire store.
+    - Permissions:
+      - View all product listings and categories.
+      - View all orders and customer details.
+      - Access sales analytics and reporting tools.
+    - Restrictions:
+      - Cannot add, edit, or delete any data.
+      - Cannot manage users, roles, or system settings.
+    """

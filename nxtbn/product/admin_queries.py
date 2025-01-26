@@ -6,7 +6,6 @@ from graphene_django.filter import DjangoFilterConnectionField
 from nxtbn.core.admin_permissions import check_user_permissions
 from nxtbn.product.admin_types import CategoryTranslationType, CategoryType, CollectionTranslationType, CollectionType, ProductGraphType, ProductTagTranslationType, ProductTagType, ProductTranslationType, ProductVariantAdminType, SupplierType
 from nxtbn.product.models import Category, CategoryTranslation, Collection, CollectionTranslation, Product, ProductTag, ProductTagTranslation, ProductTranslation, Supplier
-from nxtbn.product.storefront_types import CategoryHierarchicalType
 from nxtbn.users import UserRole
 
 
@@ -28,7 +27,6 @@ class ProductQuery(graphene.ObjectType):
 
     category = graphene.Field(CategoryType, id=graphene.ID(required=True))
     all_categories = DjangoFilterConnectionField(CategoryType)
-    hierarchical_categories = DjangoFilterConnectionField(CategoryHierarchicalType)
     category = graphene.Field(CategoryType, id=graphene.ID(required=True))
 
     # All translations

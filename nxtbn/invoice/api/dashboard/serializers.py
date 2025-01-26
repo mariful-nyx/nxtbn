@@ -16,7 +16,7 @@ class OrderInvoiceSerializer(serializers.ModelSerializer):
     shipping_address = AddressSerializer()
     company_info = serializers.SerializerMethodField()
     items = OrderLineItemSerializer(source='line_items', many=True)
-    total_price = serializers.DecimalField(source='total_in_units', max_digits=12, decimal_places=2)
+    total_price = serializers.SerializerMethodField()
     payment_method = serializers.CharField(source='get_payment_method')
 
     class Meta:
@@ -41,4 +41,7 @@ class OrderInvoiceSerializer(serializers.ModelSerializer):
         site_id = self.context['request'].site_id if hasattr(self.context['request'], 'site_id') else getattr(settings, 'SITE_ID', 1)
         site_settings = SiteSettings.objects.get(site__id=site_id)
         return SiteSettingsSerializer(site_settings).data
+    
+    def get_total_price(self, obj):
+        return obj.humanize_total_price()
 

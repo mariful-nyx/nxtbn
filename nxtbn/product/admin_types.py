@@ -95,6 +95,7 @@ class SupplierType(DjangoObjectType):
 
 class ProductVariantAdminType(DjangoObjectType):
     db_id = graphene.Int(source="id")
+    display_name = graphene.String()
     class Meta:
         model = ProductVariant
         fields = (
@@ -107,12 +108,14 @@ class ProductVariantAdminType(DjangoObjectType):
         interfaces = (relay.Node,)
         filter_fields = ('name', 'sku', 'track_inventory', 'product', 'price')
 
-    def resolve_name(self, info):
+    def resolve_display_name(self, info):
         if self.name:
             return self.name
-        return self.product.name + " - " + str(self.id)
-
-
+        
+        if self.sku:
+            return self.product.name + " - " + self.sku
+        
+        return self.product.name + " - " + self.sku
 
 
 

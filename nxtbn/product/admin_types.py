@@ -5,7 +5,6 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphene import relay
 
 from nxtbn.product.admin_filters import CategoryFilter, CategoryTranslationFilter, CollectionFilter, CollectionTranslationFilter, ProductFilter, ProductTagsFilter, ProductTranslationFilter, TagsTranslationFilter
-from nxtbn.product.storefront_filters import ProductVariantFilter, SupplierFilter
 
 
 
@@ -92,7 +91,7 @@ class SupplierType(DjangoObjectType):
             'name',
         )
         interfaces = (relay.Node,)
-        filterset_class = SupplierFilter
+        filter_fields = ('name',)
 
 class ProductVariantAdminType(DjangoObjectType):
     db_id = graphene.Int(source="id")
@@ -106,7 +105,12 @@ class ProductVariantAdminType(DjangoObjectType):
             'price',
         )
         interfaces = (relay.Node,)
-        filterset_class = ProductVariantFilter
+        filter_fields = ('name', 'sku', 'track_inventory', 'product', 'price')
+
+    def resolve_name(self, info):
+        if self.name:
+            return self.name
+        return self.product.name + " - " + str(self.id)
 
 
 

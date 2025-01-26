@@ -2,7 +2,6 @@ import graphene
 from graphene_django.filter import DjangoFilterConnectionField
 
 from nxtbn.order.admin_types import OrderType
-from nxtbn.order.storefront_types import AddressGraphType
 from nxtbn.order.models import Address, Order
 
 
@@ -10,8 +9,8 @@ class AdminOrderQuery(graphene.ObjectType):
     all_orders = DjangoFilterConnectionField(OrderType)
     order = graphene.Field(OrderType, id=graphene.Int(required=True))
 
-    all_addresses = graphene.List(AddressGraphType)
-    address = graphene.Field(AddressGraphType, id=graphene.Int(required=True))
+    # all_addresses = graphene.List(AddressGraphType)
+    # address = graphene.Field(AddressGraphType, id=graphene.Int(required=True))
 
     def resolve_all_orders(self, info, **kwargs):
         return Order.objects.all()

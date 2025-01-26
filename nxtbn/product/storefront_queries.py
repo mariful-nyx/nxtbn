@@ -22,13 +22,13 @@ from nxtbn.core.currency.backend import currency_Backend
 
 class ProductQuery(graphene.ObjectType):
     product = graphene.Field(ProductGraphType, slug=graphene.String())
-    all_products = DjangoFilterConnectionField(ProductGraphType)
+    products = DjangoFilterConnectionField(ProductGraphType)
 
-    all_categories = DjangoFilterConnectionField(CategoryType)
+    categories = DjangoFilterConnectionField(CategoryType)
     categories_hierarchical = DjangoFilterConnectionField(CategoryHierarchicalType)
 
-    all_collections = DjangoFilterConnectionField(CollectionType)
-    all_tags = DjangoFilterConnectionField(ProductTagType)
+    collections = DjangoFilterConnectionField(CollectionType)
+    tags = DjangoFilterConnectionField(ProductTagType)
 
     def resolve_product(root, info, slug):
         exchange_rate = 1.0
@@ -42,7 +42,7 @@ class ProductQuery(graphene.ObjectType):
         except Product.DoesNotExist:
             return None
 
-    def resolve_all_products(root, info, **kwargs):
+    def resolve_products(root, info, **kwargs):
         exchange_rate = 1.0
         if settings.IS_MULTI_CURRENCY:
             exchange_rate = currency_Backend().get_exchange_rate(info.context.currency)

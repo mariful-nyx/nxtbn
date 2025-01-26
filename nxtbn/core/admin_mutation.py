@@ -57,8 +57,24 @@ class UpdateCurrencyExchange(graphene.Mutation):
         currency_exchange.save()
         return UpdateCurrencyExchange(currency_exchange=currency_exchange)
 
+class DeleteCurrencyExchange(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID(required=True)  # ID of the record to be deleted
+
+    success = graphene.Boolean()  # Indicate whether the operation was successful
+
+    @staticmethod
+    def mutate(root, info, id):
+        try:
+            currency_exchange = CurrencyExchange.objects.get(pk=id)
+        except CurrencyExchange.DoesNotExist:
+            raise Exception("CurrencyExchange not found.")
+
+        currency_exchange.delete()  # Delete the record
+        return DeleteCurrencyExchange(success=True)  # Return success
 
 
 class CoreMutation(graphene.ObjectType):
     update_exchange_rate = UpdateCurrencyExchange.Field()
     create_exchange_rate = CreateCurrencyExchange.Field()
+    delete_exchange_rate = DeleteCurrencyExchange.Field() 

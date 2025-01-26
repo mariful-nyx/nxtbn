@@ -151,7 +151,7 @@ class CurrencyTypes(models.TextChoices):
     TJS = "TJS", _("Tajikistani Somoni")
     TMT = "TMT", _("Turkmenistani Manat")
     TND = "TND", _("Tunisian Dinar")
-    TOP = "TOP", _("Tongan Paʻanga")
+    TOP = "TOP", _("Tongan Pa'anga")
     TRY = "TRY", _("Turkish Lira")
     TTD = "TTD", _("Trinidad and Tobago Dollar")
     TVD = "TVD", _("Tuvaluan Dollar")

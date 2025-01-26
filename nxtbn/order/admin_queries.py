@@ -6,13 +6,13 @@ from nxtbn.order.models import Address, Order
 
 
 class AdminOrderQuery(graphene.ObjectType):
-    all_orders = DjangoFilterConnectionField(OrderType)
+    orders = DjangoFilterConnectionField(OrderType)
     order = graphene.Field(OrderType, id=graphene.Int(required=True))
 
     # all_addresses = graphene.List(AddressGraphType)
     # address = graphene.Field(AddressGraphType, id=graphene.Int(required=True))
 
-    def resolve_all_orders(self, info, **kwargs):
+    def resolve_orders(self, info, **kwargs):
         return Order.objects.all()
     
     def resolve_order(self, info, id):
@@ -23,7 +23,7 @@ class AdminOrderQuery(graphene.ObjectType):
         
         return order
 
-    def resolve_all_addresses(self, info):
+    def resolve_addresses(self, info):
         return Address.objects.all()
 
     def resolve_address(self, info, id):

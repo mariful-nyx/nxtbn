@@ -5,10 +5,10 @@ from nxtbn.order.models import Address
 
 
 class OrderQuery(graphene.ObjectType):
-    all_addresses = graphene.List(AddressGraphType)
+    addresses = graphene.List(AddressGraphType)
     address = graphene.Field(AddressGraphType, id=graphene.Int(required=True))
 
-    def resolve_all_addresses(self, info):
+    def resolve_addresses(self, info):
         user = info.context.user
         if not user.is_authenticated:
             raise Exception("Authentication required")

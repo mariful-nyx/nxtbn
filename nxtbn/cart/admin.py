@@ -1,5 +1,5 @@
 from django.contrib import admin
-from nxtbn.cart.models import  CartItem
+from nxtbn.cart.models import  Cart, CartItem
 
 class CartItemAdmin(admin.ModelAdmin):
     list_display = ('id', 'cart')
@@ -7,3 +7,5 @@ class CartItemAdmin(admin.ModelAdmin):
     search_fields = ('id', 'cart')
 
 admin.site.register(CartItem, CartItemAdmin)
+
+admin.site.register(Cart)

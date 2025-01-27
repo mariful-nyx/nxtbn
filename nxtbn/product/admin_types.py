@@ -57,8 +57,12 @@ class CollectionType(DjangoObjectType):
         filterset_class = CollectionFilter
 
 
+class CategoryChildInfoType(graphene.ObjectType):
+    has_child = graphene.Boolean()
+
 class CategoryType(DjangoObjectType):
     db_id = graphene.Int(source="id")
+    child_info = graphene.Field(CategoryChildInfoType)
     class Meta:
         model = Category
         fields = (
@@ -67,9 +71,17 @@ class CategoryType(DjangoObjectType):
             'description',
             'meta_title',
             'meta_description',
+            'parent',
         )
         interfaces = (relay.Node,)
         filterset_class = CategoryFilter
+
+    def resolve_child_info(self, info):
+        has_child = self.subcategories.exists()
+        return CategoryChildInfoType(has_child=has_child)
+    
+
+
 
 
 class ProductTagType(DjangoObjectType):

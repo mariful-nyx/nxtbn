@@ -60,10 +60,12 @@ class TagsTranslationFilter(filters.FilterSet):
 
 class CategoryFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')
+    parent = filters.ModelChoiceFilter(field_name='parent', queryset=Category.objects.all())
+    is_top_level = filters.BooleanFilter(field_name='parent', lookup_expr='isnull')
 
     class Meta:
         model = Category
-        fields = ('name',)
+        fields = ('name', 'parent', 'is_top_level',)
 
 
 class CollectionFilter(filters.FilterSet):

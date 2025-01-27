@@ -27,8 +27,6 @@ class ProductQuery(graphene.ObjectType):
 
     category = graphene.Field(CategoryType, id=graphene.ID(required=True))
     categories = DjangoFilterConnectionField(CategoryType)
-    category = graphene.Field(CategoryType, id=graphene.ID(required=True))
-
     # All translations
 
     product_translation = graphene.Field(ProductTranslationType, base_product_id=graphene.ID(required=True), lang_code=graphene.String(required=True))
@@ -97,12 +95,16 @@ class ProductQuery(graphene.ObjectType):
         return Product.objects.all()
     
     def resolve_category(root, info, id):
-        check_user_permissions(info, any_staff=True)
+        # check_user_permissions(info, any_staff=True)
 
         try:
             return Category.objects.get(pk=id)
         except Category.DoesNotExist:
             return None
+        
+    def resolve_categories(root, info, **kwargs):
+        # check_user_permissions(info, any_staff=True)
+        return Category.objects.all()
         
     # All translations
 

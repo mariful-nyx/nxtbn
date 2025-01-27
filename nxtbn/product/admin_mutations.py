@@ -1,10 +1,39 @@
 import graphene
 from nxtbn.core.admin_permissions import check_user_permissions
-from nxtbn.product.admin_types import CategoryTranslationType, CollectionTranslationType, ProductTagTranslationType, ProductTranslationType, ProductVariantTranslationType, SupplierTranslationType
-from nxtbn.product.models import CategoryTranslation, CollectionTranslation, ProductTagTranslation, ProductTranslation, ProductVariantTranslation, SupplierTranslation
+from nxtbn.product.admin_types import CategoryTranslationType, CategoryType, CollectionTranslationType, ProductTagTranslationType, ProductTranslationType, ProductVariantTranslationType, SupplierTranslationType
+from nxtbn.product.models import Category, CategoryTranslation, CollectionTranslation, ProductTagTranslation, ProductTranslation, ProductVariantTranslation, SupplierTranslation
 from nxtbn.users import UserRole
 
 
+class NameSecriptionSEOInputType(graphene.InputObjectType):
+    name = graphene.String(required=True)
+    description = graphene.String(required=True)
+    meta_title = graphene.String(required=True)
+    meta_description = graphene.String(required=True)
+
+
+class UpdateCategoryMutation(graphene.Mutation):
+    class Arguments:
+        input = NameSecriptionSEOInputType(required=True)
+        id = graphene.Int(required=True)
+    
+    category = graphene.Field(CategoryType)
+
+    def mutate(self, info, id, input):
+        check_user_permissions(info, allowed_roles=[UserRole.PRODUCT_MANAGER, UserRole.STORE_MANAGER, UserRole.ADMIN])
+        category = Category.objects.get(id=id)
+        category.name = input.name
+        category.description = input.description
+        category.meta_title = input.meta_title
+        category.meta_description = input.meta_description
+        category.save()
+
+        return UpdateCategoryMutation(category=category)
+
+
+# ================================
+# All Transaltoin Mutations
+# ================================
 
 class UpdateProductTranslatoinMutation(graphene.Mutation):
     class Arguments:
@@ -157,6 +186,9 @@ class UpdateProductCollectionTranslationMutation(graphene.Mutation):
 
 
 class ProductMutation(graphene.ObjectType):
+    update_category = UpdateCategoryMutation.Field()
+
+    # All Transaltion Mutations
     update_product_translation = UpdateProductTranslatoinMutation.Field()
     update_category_translation = UpdateCategoryTranslationMutation.Field()
     update_supplier_translation = UpdateSupplierTranslationMutation.Field()

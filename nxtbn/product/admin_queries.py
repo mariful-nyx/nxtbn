@@ -95,7 +95,7 @@ class ProductQuery(graphene.ObjectType):
         return Product.objects.all()
     
     def resolve_category(root, info, id):
-        # check_user_permissions(info, any_staff=True)
+        check_user_permissions(info, any_staff=True)
 
         try:
             return Category.objects.get(pk=id)
@@ -103,7 +103,7 @@ class ProductQuery(graphene.ObjectType):
             return None
         
     def resolve_categories(root, info, **kwargs):
-        # check_user_permissions(info, any_staff=True)
+        check_user_permissions(info, any_staff=True)
         return Category.objects.all()
         
     # All translations

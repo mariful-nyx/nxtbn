@@ -152,3 +152,12 @@ class UserRole(models.TextChoices):
       - Cannot add, edit, or delete any data.
       - Cannot manage users, roles, or system settings.
     """
+
+    TRANSLATOR = 'TRANSLATOR', 'Translator'
+    """
+    Translator:
+    - Description: Responsible for translating content into different languages.
+    - Permissions:
+      - Translate product listings, categories, and other site content.
+      - Manage translations for various languages.
+    """

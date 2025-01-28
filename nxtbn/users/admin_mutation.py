@@ -109,3 +109,5 @@ class AdminTokenRefreshMutation(graphene.Mutation):
 class AdminUserMutation(graphene.ObjectType):
     login = AdminLoginMutation.Field()
     refresh_token = AdminTokenRefreshMutation.Field()
+
+    

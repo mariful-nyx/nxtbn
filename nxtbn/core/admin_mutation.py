@@ -2,8 +2,10 @@ from django.conf import settings
 import graphene
 
 from nxtbn.core import CurrencyTypes
+from nxtbn.core.admin_permissions import check_user_permissions
 from nxtbn.core.admin_types import CurrencyExchangeType
 from nxtbn.core.models import CurrencyExchange
+from nxtbn.users import UserRole
 
 class CurrencyExchangeInput(graphene.InputObjectType):
     base_currency = graphene.String(required=True)
@@ -21,6 +23,7 @@ class CreateCurrencyExchange(graphene.Mutation):
 
     @staticmethod
     def mutate(root, info, input):
+        check_user_permissions(info, allowed_roles=[UserRole.STORE_MANAGER, UserRole.ADMIN])
         # Validate base_currency
         base_currency = input.base_currency
         if base_currency != settings.BASE_CURRENCY:
@@ -48,6 +51,7 @@ class UpdateCurrencyExchange(graphene.Mutation):
 
     @staticmethod
     def mutate(root, info, id, input):
+        check_user_permissions(info, allowed_roles=[UserRole.STORE_MANAGER, UserRole.ADMIN])
         try:
             currency_exchange = CurrencyExchange.objects.get(pk=id)
         except CurrencyExchange.DoesNotExist:
@@ -65,6 +69,7 @@ class DeleteCurrencyExchange(graphene.Mutation):
 
     @staticmethod
     def mutate(root, info, id):
+        check_user_permissions(info, allowed_roles=[UserRole.STORE_MANAGER, UserRole.ADMIN])
         try:
             currency_exchange = CurrencyExchange.objects.get(pk=id)
         except CurrencyExchange.DoesNotExist:

@@ -338,6 +338,7 @@ GRAPHENE = {
         'nxtbn.users.auth_middleware.NXTBNGraphQLAuthenticationMiddleware',
     ],
     'RELAY_CONNECTION_MAX_LIMIT': 100, # pagination limit
+    'RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST': True,
 }
 
 

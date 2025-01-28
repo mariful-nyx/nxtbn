@@ -334,7 +334,7 @@ GRAPHENE = {
     'SCHEMA': 'nxtbn.admin_schema.admin_schema',
     'MIDDLEWARE': [
         'graphene_django.debug.DjangoDebugMiddleware',
-        'nxtbn.users.auth_middleware.GraphQLJWTMiddleware',
+        'nxtbn.users.auth_middleware.NXTBNGraphQLAuthenticationMiddleware',
     ],
     'RELAY_CONNECTION_MAX_LIMIT': 100, # pagination limit
 }

@@ -79,16 +79,16 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
     def test_resolve_all_products(self):
         query = """
         query getAllProducts {
-            allProducts {
-                edges {
-                    node {
-                        id
-                        name
-                        category {
-                            name
-                        }
-                    }
+            products(first: 50) {
+            edges {
+                node {
+                id
+                name
+                category {
+                    name
                 }
+                }
+            }
             }
         }
         """
@@ -98,7 +98,7 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
         response = self.graphql_customer_client.execute(query, context_value=mocked_context)
 
         self.assertGraphQLSuccess(response)
-        products = response["data"]["allProducts"]["edges"]
+        products = response["data"]["products"]["edges"]
 
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0]["node"]["name"], "Test Product")
@@ -107,13 +107,13 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
     def test_resolve_all_categories(self):
         query = """
         query getAllCategories {
-            allCategories {
-                edges {
-                    node {
-                        id
-                        name
-                    }
+            categories(first: 50) {
+            edges {
+                node {
+                id
+                name
                 }
+            }
             }
         }
         """
@@ -122,7 +122,7 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
         response = self.graphql_customer_client.execute(query)
 
         self.assertGraphQLSuccess(response, expected_status=200)
-        categories = response["data"]["allCategories"]["edges"]
+        categories = response["data"]["categories"]["edges"]
 
         self.assertEqual(len(categories), 1)
         self.assertEqual(categories[0]["node"]["name"], "Test Category")
@@ -130,13 +130,13 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
     def test_resolve_all_collections(self):
         query = """
         query getAllCollections {
-            allCollections {
-                edges {
-                    node {
-                        id
-                        name
-                    }
+            collections(first: 50) {
+            edges {
+                node {
+                id
+                name
                 }
+            }
             }
         }
         """
@@ -144,7 +144,7 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
         response = self.graphql_customer_client.execute(query)
 
         self.assertGraphQLSuccess(response, expected_status=200)
-        collections = response["data"]["allCollections"]["edges"]
+        collections = response["data"]["collections"]["edges"]
 
         self.assertEqual(len(collections), 1)
         self.assertEqual(collections[0]["node"]["name"], "Test Collection")
@@ -152,13 +152,13 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
     def test_resolve_all_tags(self):
         query = """
         query getAllTags {
-            allTags {
-                edges {
-                    node {
-                        id
-                        name
-                    }
+            tags(first: 50) {
+            edges {
+                node {
+                id
+                name
                 }
+            }
             }
         }
         """
@@ -166,7 +166,7 @@ class ProductQueryTestCase(BaseGraphQLTestCase):
         response = self.graphql_customer_client.execute(query)
 
         self.assertGraphQLSuccess(response, expected_status=200)
-        tags = response["data"]["allTags"]["edges"]
+        tags = response["data"]["tags"]["edges"]
 
         self.assertEqual(len(tags), 1)
         self.assertEqual(tags[0]["node"]["name"], "Test Tag")

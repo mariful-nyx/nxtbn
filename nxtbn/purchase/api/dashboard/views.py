@@ -1,8 +1,10 @@
 from rest_framework import generics, viewsets, status
+from nxtbn.core.admin_permissions import RoleBasedHTTPMethodPermission
 from nxtbn.purchase.api.dashboard.serializers import InventoryReceivingSerializer, PurchaseOrderCreateSerializer, PurchaseOrderSerializer, PurchaseOrderDetailSerializer, PurchaseOrderUpdateSerializer
 from nxtbn.purchase.models import PurchaseOrder, PurchaseOrderItem
 from django.db import transaction
 from nxtbn.core.paginator import NxtbnPagination
+from nxtbn.users import UserRole
 from nxtbn.warehouse.models import Stock   
 from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
@@ -26,6 +28,18 @@ class PurchaseViewSet(viewsets.ModelViewSet):
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
     pagination_class = NxtbnPagination
+
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"all"},
+        UserRole.ADMIN: {"all"},
+        UserRole.PROCUREMENT_MANAGER: {"all"},
+        UserRole.PRODUCT_MANAGER: {"get"},
+        UserRole.ORDER_PROCESSOR: {"get"},
+        UserRole.STORE_VIEWER: {"get"},
+        UserRole.ACCOUNTANT: {"get"},
+        UserRole.MARKETING_MANAGER: {"get"},
+    }
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -167,6 +181,17 @@ class InventoryReceivingAPI(generics.UpdateAPIView):
     serializer_class = InventoryReceivingSerializer
     lookup_field = 'pk'
     queryset = PurchaseOrder.objects.all()
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"all"},
+        UserRole.ADMIN: {"all"},
+        UserRole.PROCUREMENT_MANAGER: {"all"},
+        UserRole.PRODUCT_MANAGER: {"get"},
+        UserRole.ORDER_PROCESSOR: {"get"},
+        UserRole.STORE_VIEWER: {"get"},
+        UserRole.ACCOUNTANT: {"get"},
+        UserRole.MARKETING_MANAGER: {"get"},
+    }
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

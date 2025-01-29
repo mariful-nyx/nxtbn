@@ -15,7 +15,7 @@ from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
 from nxtbn.users.api.storefront.views import LogoutView
 from nxtbn.users.utils.jwt_utils import JWTManager
 from nxtbn.users.models import User
-from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
+from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedHTTPMethodPermission, RoleBasedPermission
 from nxtbn.order.models import Address
 from nxtbn.users.api.dashboard.serializers import AddressMutationalSerializer
 
@@ -154,10 +154,25 @@ class CustomerRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         return User.objects.filter(role=UserRole.CUSTOMER)
     
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {'GET'},
+        UserRole.ADMIN: {"all"},
+        UserRole.ORDER_PROCESSOR: {"GET"},
+    }
+
+    
 
 class CustomerWithAddressView(generics.RetrieveAPIView):
     serializer_class = CustomerWithAddressSerializer
     lookup_field = 'id'
+
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {'GET'},
+        UserRole.ADMIN: {"all"},
+        UserRole.ORDER_PROCESSOR: {"GET"},
+    }
 
     def get_queryset(self):
         return User.objects.filter(role=UserRole.CUSTOMER)
@@ -267,12 +282,25 @@ class UserViewSet(UserFilterMixin, viewsets.ModelViewSet):
 class AddressCreateAPIView(generics.CreateAPIView):
     serializer_class = AddressMutationalSerializer
     queryset = Address.objects.all()
+
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"GET"},
+        UserRole.ADMIN: {"all"},
+        UserRole.ORDER_PROCESSOR: {"GET"},
+    }
     
 
 class AddressRetriveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AddressMutationalSerializer
     queryset = Address.objects.all()
     lookup_field = 'id'
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
+        UserRole.ADMIN: {"all"},
+        UserRole.ORDER_PROCESSOR: {"GET"},
+    }
 
 
 class MeDetailsAPIView(generics.RetrieveUpdateAPIView):

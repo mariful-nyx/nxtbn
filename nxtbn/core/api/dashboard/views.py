@@ -26,14 +26,23 @@ from rest_framework.parsers import JSONParser
 from rest_framework import serializers
 
 from nxtbn.core import LanguageChoices
+from nxtbn.core.admin_permissions import RoleBasedHTTPMethodPermission
 from nxtbn.core.api.dashboard.serializers import InvoiceSettingsSerializer, SiteSettingsSerializer
 from nxtbn.core.models import InvoiceSettings, SiteSettings
+from nxtbn.users import UserRole
 
 
 
 class SiteSettingsView(generics.RetrieveUpdateAPIView):
     queryset = SiteSettings.objects.all()
     serializer_class = SiteSettingsSerializer
+
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
+        UserRole.ADMIN: {"all"},
+        UserRole.STORE_VIEWER: {"GET"},
+    }
 
     def get_object(self):
         # Get the current site
@@ -50,6 +59,14 @@ class InvoiceSettingsView(generics.RetrieveUpdateAPIView):
     queryset = InvoiceSettings.objects.all()
     serializer_class = InvoiceSettingsSerializer
 
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
+        UserRole.ADMIN: {"all"},
+        UserRole.STORE_VIEWER: {"GET"},
+    }
+
+
     def get_object(self):
         current_site = get_current_site(self.request)
         try:
@@ -60,6 +77,12 @@ class InvoiceSettingsView(generics.RetrieveUpdateAPIView):
 
 
 class LanguageChoicesAPIView(APIView):
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {'GET'},
+        UserRole.ADMIN: {"all"},
+        UserRole.STORE_VIEWER: {"GET"},
+    }
     def get(self, request, *args, **kwargs):
         languages = [
             {"value": lang_value, "label": lang_label}

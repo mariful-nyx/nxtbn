@@ -46,6 +46,32 @@ class RoleBasedPermission(BasePermission):
 
         return False
     
+class RoleBasedHTTPMethodPermission(BasePermission):
+    """
+    Custom permission that grants or denies access based on the role and HTTP method.
+    """
+    def has_permission(self, request, view):
+        user = request.user
+
+        # Ensure user is authenticated
+        if not user.is_authenticated:
+            return False
+
+        if user.role == UserRole.ADMIN:
+            return True
+
+        # Get the allowed HTTP methods for the user's role
+        http_permissions = getattr(view, 'HTTP_PERMISSIONS', {}).get(user.role, set())
+
+        if "all" in http_permissions:
+            return True
+
+        # Convert HTTP methods to lowercase for comparison
+        method = request.method.upper()
+        
+        # Grant permission if the method is allowed for the user's role
+        return method in http_permissions
+
 
 def check_user_permissions(info, any_staff=False, allowed_roles=[]):
     if not info.context.user.is_authenticated:

@@ -1,7 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from nxtbn.tax.api.dashboard.views import (
-    TaxClassTranslationViewSet,
     TaxClassView, 
     TaxClassDetailsView, 
     TaxRateListCreateAPIView, 
@@ -9,7 +8,6 @@ from nxtbn.tax.api.dashboard.views import (
 )
 
 router = DefaultRouter()
-router.register(r'tax-class-translations', TaxClassTranslationViewSet, basename='tax-class-translation')
 
 
 urlpatterns = [

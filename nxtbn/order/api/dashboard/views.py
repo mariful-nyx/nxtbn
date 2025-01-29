@@ -21,7 +21,7 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
-from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
+from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission, RoleBasedHTTPMethodPermission
 from nxtbn.core.utils import to_currency_unit
 from nxtbn.order.proccesor.views import OrderProccessorAPIView
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, ReturnStatus
@@ -119,6 +119,13 @@ class OrderDetailView(generics.RetrieveAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderDetailsSerializer
     lookup_field = 'alias'
+
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
+        UserRole.ADMIN: {"all"},
+        UserRole.STORE_VIEWER: {"GET"},
+    }
 
 
 comparables = ['today', 'this week', 'this month', 'this year',]
@@ -495,12 +502,28 @@ class ReturnRequestFilterMixing:
 class ReturnRequestAPIView(ReturnRequestFilterMixing, generics.ListCreateAPIView):
     queryset = ReturnRequest.objects.all()
     serializer_class = ReturnRequestSerializer
+
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"POST", 'GET'},
+        UserRole.ADMIN: {"all"},
+        UserRole.ORDER_PROCESSOR: {"POST", 'GET'},
+        UserRole.STORE_VIEWER: {"GET"},
+    }
     
     
 class ReturnRequestDetailAPIView(generics.RetrieveUpdateAPIView):
     queryset = ReturnRequest.objects.all()
     serializer_class = ReturnRequestDetailsSerializer
     lookup_field = 'id'
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
+        UserRole.ADMIN: {"all"},
+        UserRole.ORDER_PROCESSOR: {"PATCH", 'GET'},
+        UserRole.STORE_VIEWER: {"GET"},
+    }
 
     def get_serializer_class(self):
         if self.request.method in ['PATCH', 'PUT']:
@@ -509,6 +532,14 @@ class ReturnRequestDetailAPIView(generics.RetrieveUpdateAPIView):
 
 class ReturnLineItemStatusUpdateAPIView(generics.UpdateAPIView):
     serializer_class = ReturnLineItemStatusUpdateSerializer
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
+        UserRole.ADMIN: {"all"},
+        UserRole.ORDER_PROCESSOR: {"PATCH", 'GET'},
+        UserRole.STORE_VIEWER: {"GET"},
+    }
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -538,6 +569,15 @@ class ReturnLineItemStatusUpdateAPIView(generics.UpdateAPIView):
 
 class ReturnRequestBulkUpdateAPIView(generics.UpdateAPIView):
     serializer_class = ReturnRequestBulkUpdateSerializer
+
+    permission_classes = (RoleBasedHTTPMethodPermission,)
+
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {'all'},
+        UserRole.ADMIN: {"all"},
+        UserRole.ORDER_PROCESSOR: {'all'},
+        UserRole.STORE_VIEWER: {"GET"},
+    }
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

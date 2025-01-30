@@ -5,13 +5,11 @@ from rest_framework.permissions  import AllowAny
 from rest_framework.exceptions import APIException
 
 from nxtbn.core.paginator import NxtbnPagination
-from nxtbn.core.admin_permissions import NxtbnAdminPermission
 
 from nxtbn.tax.models import TaxClass, TaxClassTranslation, TaxRate
 from nxtbn.tax.api.dashboard.serializers import (
     TaxClassSerializer, 
     TaxClassDetailSerializer,
-    TaxClassTranslationSerializer, 
     TaxRateSerializer
 )
 
@@ -19,19 +17,18 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
+from nxtbn.users import UserRole
+
 class TaxClassView(generics.ListCreateAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = TaxClass.objects.all()
     serializer_class = TaxClassSerializer
     pagination_class = NxtbnPagination
 
 
 class TaxClassDetailsView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = TaxClass.objects.all()
     serializer_class = TaxClassDetailSerializer
     lookup_field = 'id'
-
 
 class TaxRateListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TaxRateSerializer
@@ -43,23 +40,9 @@ class TaxRateListCreateAPIView(generics.ListCreateAPIView):
     ]
     filterset_fields = ['tax_class', 'country', 'state', 'is_active']
     search_fields = ['country', 'state', 'rate']
-    
+
 
 class TaxRateRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaxRateSerializer
     queryset = TaxRate.objects.all()
     lookup_field = 'id'
-
-
-
-
-# ==================================================================
-# Translation Views
-# ==================================================================
-
-class TaxClassTranslationViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for managing tax class translations.
-    """
-    queryset = TaxClassTranslation.objects.all()
-    serializer_class = TaxClassTranslationSerializer

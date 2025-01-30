@@ -9,6 +9,8 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
+from nxtbn.users import UserRole
+
 
 class PromocodeFilter(filters.FilterSet):
     username = filters.CharFilter(field_name='username', lookup_expr='icontains')
@@ -57,6 +59,7 @@ class PromoCodeUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = PromoCode.objects.all()
     serializer_class = PromoCodeCountedSerializer
     lookup_field = 'id'
+
 
 class AttachPromoCodeEntitiesAPIView(generics.CreateAPIView):
     serializer_class = AttachPromoCodeEntitiesSerializer
@@ -111,4 +114,3 @@ class PromoCodeUsageListAPIView(generics.ListAPIView):
     queryset = PromoCodeUsage.objects.all()
     serializer_class = PromoCodeUsageSerializer
     pagination_class = NxtbnPagination
-

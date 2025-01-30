@@ -35,7 +35,6 @@ from nxtbn.product.api.dashboard.serializers import (
     TaxClassSerializer,
     SupplierSerializer
 )
-from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
 from nxtbn.tax.models import TaxClass
 from nxtbn.users import UserRole
 
@@ -112,7 +111,6 @@ class ProductFilterMixin:
         return Product.objects.all().order_by('-created_at')
 
 class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     serializer_class = ProductSerializer
     pagination_class = NxtbnPagination
 
@@ -122,9 +120,10 @@ class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
         return ProductSerializer
 
 class ProductMinimalListView(ProductFilterMixin, generics.ListAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     serializer_class = ProductMinimalSerializer
     pagination_class = None
+
+
 
     def get(self, request, *args, **kwargs):
         # Get the filtered queryset first
@@ -140,14 +139,6 @@ class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
     serializer_class = ProductWithVariantSerializer
     pagination_class = NxtbnPagination
 
-    permission_classes = (RoleBasedPermission,)
-    ROLE_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"list",},
-        UserRole.ORDER_PROCESSOR: {"list",},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"list",},
-        UserRole.MARKETING_MANAGER: {"list",},
-    }
-    role_action = 'list'
         
     def get_queryset(self):
         return Product.objects.filter(status=PublishableStatus.PUBLISHED)
@@ -155,53 +146,48 @@ class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
     
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Product.objects.all()
     serializer_class = ProductMutationSerializer
     lookup_field = 'id'
 
+
 class ProductWithVariantView(generics.RetrieveAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Product.objects.all()
     serializer_class = ProductWithVariantSerializer
     lookup_field = 'id'
 
 
 class CategoryListView(generics.ListCreateAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Category.objects.filter()
     serializer_class = CategorySerializer
 
 
 class RecursiveCategoryListView(generics.ListCreateAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Category.objects.filter(parent=None) # Get only top-level categories
     serializer_class = RecursiveCategorySerializer
     pagination_class = None
 
 class CategoryByParentView(generics.ListAPIView):
     pagination_class = None
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Category.objects.all()
     serializer_class = BasicCategorySerializer
-    permission_classes = (NxtbnAdminPermission,)
     
     def get_queryset(self):
         return super().get_queryset().filter(parent=self.kwargs.get('id'))
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (NxtbnAdminPermission,)
     lookup_field = 'id'
+
+
 
 class CollectionViewSet(viewsets.ModelViewSet):
     pagination_class = None
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Collection.objects.all()
     serializer_class = CollectionSerializer
     lookup_field = 'id'
+
 
     def get_queryset(self):
         return Collection.objects.all()
@@ -212,6 +198,7 @@ class ColorViewSet(viewsets.ModelViewSet):
     serializer_class = ColorSerializer
     allowed_methods = ['GET', 'POST', 'DELETE']
 
+
     def get_queryset(self):
         return Color.objects.all()
     
@@ -220,6 +207,7 @@ class ProductTypeViewSet(viewsets.ModelViewSet):
     pagination_class = None
     queryset = ProductType.objects.all()
     serializer_class = ProductTypeSerializer
+
 
     def get_queryset(self):
         return ProductType.objects.all()
@@ -233,6 +221,7 @@ class ProductTagViewSet(viewsets.ModelViewSet):
         drf_filters.SearchFilter,
     ]
     search_fields = ['name']
+
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
@@ -256,13 +245,12 @@ class ProductVariantDeleteAPIView(generics.DestroyAPIView):
 class TaxClassView(generics.ListCreateAPIView):
     queryset = TaxClass.objects.all()
     serializer_class = TaxClassSerializer
-    permission_classes = (NxtbnAdminPermission,)
     pagination_class = None
+
 
 
 class BulkProductStatusUpdateAPIView(generics.UpdateAPIView):
     serializer_class = ProductStatusUpdateBulkSerializer
-    permission_classes = (NxtbnAdminPermission,)
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -276,8 +264,8 @@ class BulkProductStatusUpdateAPIView(generics.UpdateAPIView):
     
 
 class BulkProductDeleteAPIView(generics.DestroyAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Product.objects.all()
+
 
     def destroy(self, request, *args, **kwargs):
        
@@ -326,13 +314,26 @@ class ProductVariants(ProductVariantFilterMixin, generics.ListAPIView):
     serializer_class = ProductVariantShortSerializer
     queryset = ProductVariant.objects.all()
     pagination_class = NxtbnPagination
+
+    HTTP_PERMISSIONS = {
+        UserRole.STORE_MANAGER: {"get"},
+        UserRole.ADMIN: {"get"},
+        UserRole.PRODUCT_MANAGER: {"get"},
+        UserRole.ORDER_PROCESSOR: {"get"},
+        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
+        UserRole.MARKETING_MANAGER: {"get"},
+        UserRole.STORE_VIEWER: {"get"},
+        UserRole.ACCOUNTANT: {"get"},
+        UserRole.VENDOR: {"get"},
+    }
+
     
 
 
 class InventoryListView(ProductFilterMixin, generics.ListCreateAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     serializer_class = InventorySerializer
     pagination_class = NxtbnPagination
+
 
 
 class SupplierModelViewSet(viewsets.ModelViewSet):

@@ -34,12 +34,3 @@ class TaxClassDetailSerializer(serializers.ModelSerializer):
         ref_name = 'tax_class_detail_get'
         fields = ('id', 'name', 'tax_rates',)
 
-
-# ==================================================================
-# Translation Serializers
-# ==================================================================
-
-class TaxClassTranslationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TaxClassTranslation
-        fields = '__all__'

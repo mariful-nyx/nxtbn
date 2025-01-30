@@ -6,6 +6,7 @@ from rest_framework.exceptions import APIException
 
 from nxtbn.invoice.api.dashboard.serializers import OrderInvoiceSerializer
 from nxtbn.order.models import Order
+from nxtbn.users import UserRole
 
 
 class OrderInvoiceAPIView(generics.RetrieveAPIView):

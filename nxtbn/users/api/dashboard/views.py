@@ -15,7 +15,6 @@ from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
 from nxtbn.users.api.storefront.views import LogoutView
 from nxtbn.users.utils.jwt_utils import JWTManager
 from nxtbn.users.models import User
-from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission
 from nxtbn.order.models import Address
 from nxtbn.users.api.dashboard.serializers import AddressMutationalSerializer
 
@@ -155,6 +154,8 @@ class CustomerRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         return User.objects.filter(role=UserRole.CUSTOMER)
     
 
+    
+
 class CustomerWithAddressView(generics.RetrieveAPIView):
     serializer_class = CustomerWithAddressSerializer
     lookup_field = 'id'
@@ -168,7 +169,6 @@ class CustomerWithAddressView(generics.RetrieveAPIView):
 class PasswordChangeView(generics.UpdateAPIView):
     serializer_class = PasswordChangeSerializer
     model = User
-    permission_classes = [NxtbnAdminPermission]
 
     def get_object(self, queryset=None):
         return self.request.user
@@ -233,11 +233,7 @@ class UserFilterMixin:
     
 class UserViewSet(UserFilterMixin, viewsets.ModelViewSet):
     serializer_class = UserMututionalSerializer
-    permission_classes = (RoleBasedPermission,)
     pagination_class = NxtbnPagination
-    ROLE_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"list", "deactivate", "retrieve"},
-    }
     
     def perform_destroy(self, instance):
         instance.is_active = False
@@ -267,6 +263,7 @@ class UserViewSet(UserFilterMixin, viewsets.ModelViewSet):
 class AddressCreateAPIView(generics.CreateAPIView):
     serializer_class = AddressMutationalSerializer
     queryset = Address.objects.all()
+
     
 
 class AddressRetriveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):

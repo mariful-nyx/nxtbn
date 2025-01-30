@@ -161,3 +161,13 @@ class UserRole(models.TextChoices):
       - Translate product listings, categories, and other site content.
       - Manage translations for various languages.
     """
+
+    PROCUREMENT_MANAGER = 'PROCUREMENT_MANAGER', 'Procurement Manager'
+    """
+    Procurement Manager:
+    - Description: Manages the procurement process for sourcing products.
+    - Permissions:
+      - Create and manage purchase orders for product procurement.
+      - Track supplier information and manage relationships.
+      - Monitor inventory levels and stock availability.
+    """

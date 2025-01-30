@@ -1,9 +1,12 @@
 import graphene
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import Permission
 
 from django.conf import settings
 
+from nxtbn.users.admin_types import PermissionType
 from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
+from nxtbn.users.models import User
 from nxtbn.users.utils.jwt_utils import JWTManager
 
 class AdminTokenType(graphene.ObjectType):
@@ -105,9 +108,38 @@ class AdminTokenRefreshMutation(graphene.Mutation):
             return AdminTokenRefreshMutation(refresh=response)
         else:
             raise Exception("Invalid or expired refresh token")
+        
+
+
+
+class AttachPermissionMutation(graphene.Mutation):
+    class Arguments:
+        user_id = graphene.Int(required=True)
+        permission_codename = graphene.String(required=True)
+
+    success = graphene.Boolean()
+    message = graphene.String()
+
+    def mutate(self, info, user_id, permission_codename):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return AttachPermissionMutation(success=False, message="User not found")
+
+        try:
+            permission = Permission.objects.get(codename=permission_codename)
+        except Permission.DoesNotExist:
+            return AttachPermissionMutation(success=False, message="Permission not found")
+
+        # Add the permission to the user
+        user.user_permissions.add(permission)
+
+        return AttachPermissionMutation(success=True, message="Permission assigned successfully")
+    
 
 class AdminUserMutation(graphene.ObjectType):
     login = AdminLoginMutation.Field()
     refresh_token = AdminTokenRefreshMutation.Field()
+    attach_permission = AttachPermissionMutation.Field()
 
     

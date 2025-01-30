@@ -28,12 +28,14 @@ from rest_framework import serializers
 from nxtbn.core import LanguageChoices
 from nxtbn.core.api.dashboard.serializers import InvoiceSettingsSerializer, SiteSettingsSerializer
 from nxtbn.core.models import InvoiceSettings, SiteSettings
+from nxtbn.users import UserRole
 
 
 
 class SiteSettingsView(generics.RetrieveUpdateAPIView):
     queryset = SiteSettings.objects.all()
     serializer_class = SiteSettingsSerializer
+
 
     def get_object(self):
         # Get the current site
@@ -49,6 +51,8 @@ class SiteSettingsView(generics.RetrieveUpdateAPIView):
 class InvoiceSettingsView(generics.RetrieveUpdateAPIView):
     queryset = InvoiceSettings.objects.all()
     serializer_class = InvoiceSettingsSerializer
+
+
 
     def get_object(self):
         current_site = get_current_site(self.request)

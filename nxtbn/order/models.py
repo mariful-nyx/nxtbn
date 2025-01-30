@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes
+from nxtbn.core.enum_perms import  PermissionsEnum
 from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.core.models import AbstractAddressModels, AbstractBaseModel, AbstractBaseUUIDModel
 from nxtbn.core.utils import build_currency_amount, to_currency_unit
@@ -249,6 +250,11 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
 
     class Meta:
         ordering = ('-created_at',) # Most recent orders first
+        permissions = [
+            (PermissionsEnum.CAN_APPROVE_ORDER, 'Can approve order'),
+            (PermissionsEnum.CAN_CANCEL_ORDER, 'Can cancel order'),
+            (PermissionsEnum.CAN_SHIP_ORDER, 'Can ship order'),
+        ]
 
     def save(self, *args, **kwargs):
         self.validate_amount()

@@ -6,7 +6,6 @@ from rest_framework import status
 from django.db import transaction
 
 from nxtbn.core import CurrencyTypes
-from nxtbn.core.admin_permissions import RoleBasedPermission
 from nxtbn.core.utils import apply_exchange_rate, build_currency_amount
 from nxtbn.discount import PromoCodeType
 from nxtbn.discount.models import PromoCode

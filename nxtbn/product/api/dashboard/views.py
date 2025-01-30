@@ -35,7 +35,6 @@ from nxtbn.product.api.dashboard.serializers import (
     TaxClassSerializer,
     SupplierSerializer
 )
-from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedHTTPMethodPermission, RoleBasedPermission
 from nxtbn.tax.models import TaxClass
 from nxtbn.users import UserRole
 
@@ -112,22 +111,8 @@ class ProductFilterMixin:
         return Product.objects.all().order_by('-created_at')
 
 class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     serializer_class = ProductSerializer
     pagination_class = NxtbnPagination
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -135,22 +120,9 @@ class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
         return ProductSerializer
 
 class ProductMinimalListView(ProductFilterMixin, generics.ListAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     serializer_class = ProductMinimalSerializer
     pagination_class = None
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"all"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
 
 
     def get(self, request, *args, **kwargs):
@@ -166,20 +138,6 @@ class ProductMinimalListView(ProductFilterMixin, generics.ListAPIView):
 class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
     serializer_class = ProductWithVariantSerializer
     pagination_class = NxtbnPagination
-    
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
 
         
     def get_queryset(self):
@@ -188,149 +146,47 @@ class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
     
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Product.objects.all()
     serializer_class = ProductMutationSerializer
     lookup_field = 'id'
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
 
 
 class ProductWithVariantView(generics.RetrieveAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Product.objects.all()
     serializer_class = ProductWithVariantSerializer
     lookup_field = 'id'
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
-
-
 
 class CategoryListView(generics.ListCreateAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Category.objects.filter()
     serializer_class = CategorySerializer
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
-
-
 
 class RecursiveCategoryListView(generics.ListCreateAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Category.objects.filter(parent=None) # Get only top-level categories
     serializer_class = RecursiveCategorySerializer
     pagination_class = None
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
-
-
 class CategoryByParentView(generics.ListAPIView):
     pagination_class = None
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Category.objects.all()
     serializer_class = BasicCategorySerializer
-    permission_classes = (NxtbnAdminPermission,)
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
-
     
     def get_queryset(self):
         return super().get_queryset().filter(parent=self.kwargs.get('id'))
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (NxtbnAdminPermission,)
     lookup_field = 'id'
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
 
 
 class CollectionViewSet(viewsets.ModelViewSet):
     pagination_class = None
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Collection.objects.all()
     serializer_class = CollectionSerializer
     lookup_field = 'id'
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
 
 
     def get_queryset(self):
@@ -342,19 +198,6 @@ class ColorViewSet(viewsets.ModelViewSet):
     serializer_class = ColorSerializer
     allowed_methods = ['GET', 'POST', 'DELETE']
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
-
 
     def get_queryset(self):
         return Color.objects.all()
@@ -364,19 +207,6 @@ class ProductTypeViewSet(viewsets.ModelViewSet):
     pagination_class = None
     queryset = ProductType.objects.all()
     serializer_class = ProductTypeSerializer
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
 
 
     def get_queryset(self):
@@ -392,19 +222,6 @@ class ProductTagViewSet(viewsets.ModelViewSet):
     ]
     search_fields = ['name']
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
-
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
@@ -414,14 +231,6 @@ class ProductTagViewSet(viewsets.ModelViewSet):
 
 class ProductVariantDeleteAPIView(generics.DestroyAPIView):
     queryset = ProductVariant.objects.all()
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-    }
-
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -438,37 +247,10 @@ class TaxClassView(generics.ListCreateAPIView):
     serializer_class = TaxClassSerializer
     pagination_class = None
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"all"},
-        UserRole.VENDOR: {"get"},
-    }
-
 
 
 class BulkProductStatusUpdateAPIView(generics.UpdateAPIView):
     serializer_class = ProductStatusUpdateBulkSerializer
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
-
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -482,14 +264,7 @@ class BulkProductStatusUpdateAPIView(generics.UpdateAPIView):
     
 
 class BulkProductDeleteAPIView(generics.DestroyAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Product.objects.all()
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-    }
 
 
     def destroy(self, request, *args, **kwargs):
@@ -540,7 +315,6 @@ class ProductVariants(ProductVariantFilterMixin, generics.ListAPIView):
     queryset = ProductVariant.objects.all()
     pagination_class = NxtbnPagination
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
     HTTP_PERMISSIONS = {
         UserRole.STORE_MANAGER: {"get"},
         UserRole.ADMIN: {"get"},
@@ -557,20 +331,8 @@ class ProductVariants(ProductVariantFilterMixin, generics.ListAPIView):
 
 
 class InventoryListView(ProductFilterMixin, generics.ListCreateAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     serializer_class = InventorySerializer
     pagination_class = NxtbnPagination
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.VENDOR: {"get"},
-    }
 
 
 
@@ -578,13 +340,3 @@ class SupplierModelViewSet(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer
     queryset = Supplier.objects.all()
     pagination_class = NxtbnPagination
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"all"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-    }

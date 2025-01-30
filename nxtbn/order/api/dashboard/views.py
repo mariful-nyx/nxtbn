@@ -21,7 +21,6 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
-from nxtbn.core.admin_permissions import NxtbnAdminPermission, RoleBasedPermission, RoleBasedHTTPMethodPermission
 from nxtbn.core.utils import to_currency_unit
 from nxtbn.order.proccesor.views import OrderProccessorAPIView
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, ReturnStatus
@@ -90,7 +89,6 @@ class OrderFilter(filters.FilterSet):
 
 
 class OrderListView(generics.ListAPIView):
-    permission_classes = (RoleBasedPermission,)
     queryset = Order.objects.all()
     serializer_class = OrderListSerializer
     pagination_class = NxtbnPagination
@@ -104,28 +102,13 @@ class OrderListView(generics.ListAPIView):
     search_fields = ['alias', 'id', 'user__username', 'supplier__name']
     ordering_fields = ['created_at']
 
-    ROLE_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"list",},
-        UserRole.ORDER_PROCESSOR: {"list",},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"list",},
-        UserRole.MARKETING_MANAGER: {"list",},
-    }
-
     role_action = 'list'
 
 
 class OrderDetailView(generics.RetrieveAPIView):
-    permission_classes = (NxtbnAdminPermission,)
     queryset = Order.objects.all()
     serializer_class = OrderDetailsSerializer
     lookup_field = 'alias'
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
-        UserRole.ADMIN: {"all"},
-        UserRole.STORE_VIEWER: {"GET"},
-    }
 
 
 comparables = ['today', 'this week', 'this month', 'this year',]
@@ -146,7 +129,6 @@ compare_opposite_title = {
 
 
 class BasicStatsView(APIView):
-    permission_classes = [RoleBasedPermission]
     ROLE_PERMISSIONS = {
         UserRole.STORE_MANAGER: {"basic_stats",},
         UserRole.MARKETING_MANAGER: {"basic_stats",},
@@ -250,12 +232,7 @@ class OrderOverviewStatsView(APIView):
             - end_date (str): The end date for the statistics in 'YYYY-MM-DD' format.
             - range_name (str, optional): The name of the date range.
     """
-    permission_classes = [RoleBasedPermission]
-    ROLE_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"analytics",},
-        UserRole.MARKETING_MANAGER: {"analytics",},
-    }
-    role_action = 'analytics'
+
       
 
     def get(self, request):
@@ -337,12 +314,6 @@ class OrderOverviewStatsView(APIView):
 
 
 class OrderSummaryAPIView(APIView):
-    permission_classes = [RoleBasedPermission]
-    ROLE_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"analytics",},
-        UserRole.MARKETING_MANAGER: {"analytics",},
-    }
-    role_action = 'analytics'
 
     def get(self, request, *args, **kwargs):
         time_period = request.query_params.get('time_period')  # 'year', 'month', 'week', 'day'
@@ -425,7 +396,6 @@ class OrderSummaryAPIView(APIView):
 
         return Response(formatted_data)
 class OrderEastimateView(OrderProccessorAPIView):
-    permission_classes = [RoleBasedPermission]
     ROLE_PERMISSIONS = {
         UserRole.STORE_MANAGER: {"order_estimate",},
         UserRole.ORDER_PROCESSOR: {"order_estimate",},
@@ -437,7 +407,6 @@ class OrderEastimateView(OrderProccessorAPIView):
     create_order = False # Eastimate order
 
 class OrderCreateView(OrderProccessorAPIView):
-    permission_classes = [RoleBasedPermission]
     ROLE_PERMISSIONS = {
         UserRole.STORE_MANAGER: {"order_create",},
         UserRole.ORDER_PROCESSOR: {"order_create",},
@@ -503,7 +472,6 @@ class ReturnRequestAPIView(ReturnRequestFilterMixing, generics.ListCreateAPIView
     queryset = ReturnRequest.objects.all()
     serializer_class = ReturnRequestSerializer
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
     HTTP_PERMISSIONS = {
         UserRole.STORE_MANAGER: {"POST", 'GET'},
         UserRole.ADMIN: {"all"},
@@ -516,7 +484,6 @@ class ReturnRequestDetailAPIView(generics.RetrieveUpdateAPIView):
     queryset = ReturnRequest.objects.all()
     serializer_class = ReturnRequestDetailsSerializer
     lookup_field = 'id'
-    permission_classes = (RoleBasedHTTPMethodPermission,)
 
     HTTP_PERMISSIONS = {
         UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
@@ -532,7 +499,6 @@ class ReturnRequestDetailAPIView(generics.RetrieveUpdateAPIView):
 
 class ReturnLineItemStatusUpdateAPIView(generics.UpdateAPIView):
     serializer_class = ReturnLineItemStatusUpdateSerializer
-    permission_classes = (RoleBasedHTTPMethodPermission,)
 
     HTTP_PERMISSIONS = {
         UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
@@ -569,8 +535,6 @@ class ReturnLineItemStatusUpdateAPIView(generics.UpdateAPIView):
 
 class ReturnRequestBulkUpdateAPIView(generics.UpdateAPIView):
     serializer_class = ReturnRequestBulkUpdateSerializer
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
 
     HTTP_PERMISSIONS = {
         UserRole.STORE_MANAGER: {'all'},

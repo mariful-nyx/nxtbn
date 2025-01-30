@@ -1,7 +1,6 @@
 from rest_framework import generics, viewsets
 from rest_framework.response import Response
 from rest_framework import status
-from nxtbn.core.admin_permissions import RoleBasedHTTPMethodPermission
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.discount.models import PromoCode, PromoCodeCustomer, PromoCodeProduct, PromoCodeUsage
 from nxtbn.discount.api.dashboard.serializers import AttachPromoCodeEntitiesSerializer, PromoCodeCustomerSerializer, PromoCodeProductSerializer, PromoCodeCountedSerializer, PromoCodeUsageSerializer
@@ -55,47 +54,15 @@ class PromoCodeListCreateAPIView(PromocodeFilterMixin, generics.ListCreateAPIVie
     queryset = PromoCode.objects.all()
     serializer_class = PromoCodeCountedSerializer
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"get"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-    }
-
 
 class PromoCodeUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = PromoCode.objects.all()
     serializer_class = PromoCodeCountedSerializer
     lookup_field = 'id'
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"get"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-    }
 
 class AttachPromoCodeEntitiesAPIView(generics.CreateAPIView):
     serializer_class = AttachPromoCodeEntitiesSerializer
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"get"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-    }
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -123,17 +90,6 @@ class PromoCodeProductListAPIView(generics.ListAPIView):
     ]
     filterset_class = PromoCodeProductFilter
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"get"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-    }
-
 
 class PromoCodeCustomerFilter(filters.FilterSet):
     promo_code = filters.CharFilter(field_name='promo_code__code', lookup_expr='exact')
@@ -151,17 +107,6 @@ class PromoCodeCustomertListAPIView(generics.ListAPIView):
     ]
     filterset_class = PromoCodeCustomerFilter
 
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"get"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-    }
-
 
 
 
@@ -169,15 +114,3 @@ class PromoCodeUsageListAPIView(generics.ListAPIView):
     queryset = PromoCodeUsage.objects.all()
     serializer_class = PromoCodeUsageSerializer
     pagination_class = NxtbnPagination
-
-    permission_classes = (RoleBasedHTTPMethodPermission,)
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"all"},
-        UserRole.ADMIN: {"all"},
-        UserRole.PRODUCT_MANAGER: {"get"},
-        UserRole.ORDER_PROCESSOR: {"get"},
-        UserRole.STORE_VIEWER: {"get"},
-        UserRole.ACCOUNTANT: {"get"},
-        UserRole.MARKETING_MANAGER: {"get"},
-    }
-

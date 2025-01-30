@@ -12,19 +12,23 @@ class UserAdminQuery(graphene.ObjectType):
     def resolve_permissions(self, info, user_id):
         # Get the user by the provided user_id
         try:
-            user = User.objects.get(id=user_id)
+            user = User.objects.prefetch_related('user_permissions').get(id=user_id)
         except User.DoesNotExist:
             return []  # If the user doesn't exist, return an empty list
 
         # Retrieve all permissions from the database
         permissions = Permission.objects.all()
 
+        # Create a set of user's permissions for quick lookup
+        user_permissions = set(user.user_permissions.all())
+
         # Create a list of PermissionType objects with the user permission check
-        permission_data = []
-        for permission in permissions:
-            permission_data.append(PermissionType(
+        permission_data = [
+            PermissionType(
                 codename=permission.codename,
                 name=permission.name,
-                has_assigned=user.has_perm(f'{permission.codename}')  # Check if the user has the permission
-            ))
+                has_assigned=permission in user_permissions  # Check if the user has the permission
+            )
+            for permission in permissions
+        ]
         return permission_data

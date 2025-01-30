@@ -17,3 +17,10 @@ class AdminUserType(DjangoObjectType):
             return self.username
         return f"{self.first_name} {self.last_name}"
 
+
+
+
+class PermissionType(graphene.ObjectType):
+    codename = graphene.String()
+    name = graphene.String()
+    has_assigned = graphene.Boolean()

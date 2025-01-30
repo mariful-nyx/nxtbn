@@ -15,6 +15,20 @@ class NxtbnAdminPermission(BasePermission):
         return False
 
 
+class GranularPermission(BasePermission):
+    def get_permission_name(self, model_name, action):
+       
+        return f"{model_name}.{action}"
+
+    def has_permission(self, request, view):
+      
+        model_name = view.queryset.model.__name__.lower()  # Get model name dynamically
+        action = view.action.required_perm
+
+        permission_name = self.get_permission_name(model_name, action)
+
+        # Check if the user has the generated permission
+        return request.user.has_perm(permission_name)
 
 
 def check_user_permissions(info, any_staff=False, allowed_roles=[]):

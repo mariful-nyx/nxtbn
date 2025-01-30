@@ -21,6 +21,7 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
+from nxtbn.core.admin_permissions import GranularPermission
 from nxtbn.core.utils import to_currency_unit
 from nxtbn.order.proccesor.views import OrderProccessorAPIView
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, ReturnStatus
@@ -129,11 +130,6 @@ compare_opposite_title = {
 
 
 class BasicStatsView(APIView):
-    ROLE_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"basic_stats",},
-        UserRole.MARKETING_MANAGER: {"basic_stats",},
-    }
-    role_action = 'basic_stats'
 
     def get(self, request):
         # Get start and end dates from query parameters
@@ -396,26 +392,12 @@ class OrderSummaryAPIView(APIView):
 
         return Response(formatted_data)
 class OrderEastimateView(OrderProccessorAPIView):
-    ROLE_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"order_estimate",},
-        UserRole.ORDER_PROCESSOR: {"order_estimate",},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"order_estimate",},
-        UserRole.MARKETING_MANAGER: {"order_estimate",},
-    }
-    role_action = 'order_estimate'
+    permission_classes = (GranularPermission, )
+    required_perm = 'order.eastimate_order'
 
     create_order = False # Eastimate order
 
 class OrderCreateView(OrderProccessorAPIView):
-    ROLE_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"order_create",},
-        UserRole.ORDER_PROCESSOR: {"order_create",},
-        UserRole.CUSTOMER_SUPPORT_AGENT: {"order_create",},
-        UserRole.MARKETING_MANAGER: {"order_create",},
-    }
-    role_action = 'order_create'
-
-
     create_order = True # Eastimate and create order
 
 class CreateCustomAPIView(generics.CreateAPIView):

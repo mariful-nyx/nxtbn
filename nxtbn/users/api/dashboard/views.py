@@ -234,9 +234,6 @@ class UserFilterMixin:
 class UserViewSet(UserFilterMixin, viewsets.ModelViewSet):
     serializer_class = UserMututionalSerializer
     pagination_class = NxtbnPagination
-    ROLE_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"list", "deactivate", "retrieve"},
-    }
     
     def perform_destroy(self, instance):
         instance.is_active = False

@@ -1,5 +1,4 @@
 import graphene
-from nxtbn.core.admin_permissions import check_user_permissions
 from nxtbn.product.admin_types import CategoryTranslationType, CategoryType, CollectionTranslationType, ProductTagTranslationType, ProductTranslationType, ProductVariantTranslationType, SupplierTranslationType
 from nxtbn.product.models import Category, CategoryTranslation, CollectionTranslation, ProductTagTranslation, ProductTranslation, ProductVariantTranslation, SupplierTranslation
 from nxtbn.users import UserRole
@@ -20,7 +19,6 @@ class UpdateCategoryMutation(graphene.Mutation):
     category = graphene.Field(CategoryType)
 
     def mutate(self, info, id, input):
-        check_user_permissions(info, allowed_roles=[UserRole.STORE_MANAGER, UserRole.ADMIN, UserRole.PRODUCT_MANAGER])
         category = Category.objects.get(id=id)
         category.name = input.name
         category.description = input.description
@@ -48,7 +46,6 @@ class UpdateProductTranslatoinMutation(graphene.Mutation):
     product_translation = graphene.Field(ProductTranslationType)
 
     def mutate(self, info, base_product_id, lang_code, name, summary, description, meta_title, meta_description):
-        check_user_permissions(info, allowed_roles=[UserRole.STORE_MANAGER, UserRole.ADMIN, UserRole.PRODUCT_MANAGER, UserRole.TRANSLATOR])
         try:
             product_translation = ProductTranslation.objects.get(product_id=base_product_id, language_code=lang_code)
         except ProductTranslation.DoesNotExist:
@@ -76,7 +73,6 @@ class UpdateCategoryTranslationMutation(graphene.Mutation):
     category_translation = graphene.Field(CategoryTranslationType)
 
     def mutate(self, info, base_category_id, lang_code, name, description, meta_title, meta_description):
-        check_user_permissions(info, allowed_roles=[UserRole.STORE_MANAGER, UserRole.ADMIN, UserRole.PRODUCT_MANAGER, UserRole.TRANSLATOR])
         try:
             category_translation = CategoryTranslation.objects.get(category_id=base_category_id, language_code=lang_code)
         except CategoryTranslation.DoesNotExist:
@@ -103,7 +99,6 @@ class UpdateSupplierTranslationMutation(graphene.Mutation):
     supplier_translation = graphene.Field(SupplierTranslationType)
 
     def mutate(self, info, base_supplier_id, lang_code, name, description, meta_title, meta_description):
-        check_user_permissions(info, allowed_roles=[UserRole.STORE_MANAGER, UserRole.ADMIN, UserRole.PRODUCT_MANAGER, UserRole.TRANSLATOR])
         try:
             supplier_translation = SupplierTranslation.objects.get(supplier_id=base_supplier_id, language_code=lang_code)
         except SupplierTranslation.DoesNotExist:
@@ -127,7 +122,6 @@ class UpdateProductVariantTranslationMutation(graphene.Mutation):
     product_variant_translation = graphene.Field(ProductVariantTranslationType)
 
     def mutate(self, info, base_product_variant_id, lang_code, name, description, meta_title, meta_description):
-        check_user_permissions(info, allowed_roles=[UserRole.STORE_MANAGER, UserRole.ADMIN, UserRole.PRODUCT_MANAGER, UserRole.TRANSLATOR])
         try:
             product_variant_translation = ProductVariantTranslation.objects.get(product_variant_id=base_product_variant_id, language_code=lang_code)
         except ProductVariantTranslation.DoesNotExist:
@@ -147,7 +141,6 @@ class UpdateProductTagsTranslationMutation(graphene.Mutation):
     product_tag_translation = graphene.Field(ProductTagTranslationType)
 
     def mutate(self, info, base_product_tag_id, lang_code, name, description, meta_title, meta_description):
-        check_user_permissions(info, allowed_roles=[UserRole.STORE_MANAGER, UserRole.ADMIN, UserRole.PRODUCT_MANAGER, UserRole.TRANSLATOR])
         try:
             product_tag_translation = ProductTagTranslation.objects.get(product_tag_id=base_product_tag_id, language_code=lang_code)
         except ProductTagTranslation.DoesNotExist:
@@ -170,7 +163,6 @@ class UpdateProductCollectionTranslationMutation(graphene.Mutation):
     collection_translation = graphene.Field(CollectionTranslationType)
 
     def mutate(self, info, base_collection_id, lang_code, name, description, meta_title, meta_description):
-        check_user_permissions(info, allowed_roles=[UserRole.STORE_MANAGER, UserRole.ADMIN, UserRole.PRODUCT_MANAGER, UserRole.TRANSLATOR])
         try:
             collection_translation = CollectionTranslation.objects.get(collection_id=base_collection_id, language_code=lang_code)
         except CollectionTranslation.DoesNotExist:

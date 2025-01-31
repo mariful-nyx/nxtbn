@@ -450,6 +450,8 @@ class OrderPaymentTermUpdateAPIView(generics.UpdateAPIView):
     required_perm = PermissionsEnum.CAN_UPDATE_ORDER_PYMENT_TERM
 
 class OrderPaymentMethodUpdateAPIView(generics.UpdateAPIView):
+    permission_classes = (GranularPermission, )
+    required_perm = PermissionsEnum.CAN_UPDATE_ORDER_PAYMENT_METHOD
     queryset = Order.objects.all()
     serializer_class = OrderPaymentMethodSerializer
     lookup_field = 'alias'

@@ -26,7 +26,14 @@ class GranularPermission(BasePermission):
         if request.method in SAFE_METHODS and request.user.is_staff: # Every staff can view
             return True
       
-        model_cls = getattr(view, 'queryset', None) or getattr(view, 'model', None)
+        model_cls = None
+        if hasattr(view, 'get_queryset'):
+            model_cls = view.get_queryset().model
+        elif hasattr(view, 'queryset'):
+            model_cls = view.queryset.model
+        elif hasattr(view, 'model'):
+            model_cls = view.model
+
         if model_cls is None:
             return False
 

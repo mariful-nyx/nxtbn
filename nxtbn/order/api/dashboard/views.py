@@ -21,7 +21,7 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
-from nxtbn.core.admin_permissions import GranularPermission, CommonPermissions
+from nxtbn.core.admin_permissions import GranularPermission, CommonPermissions, has_required_perm
 from nxtbn.core.enum_perms import PermissionsEnum
 from nxtbn.core.utils import to_currency_unit
 from nxtbn.order.proccesor.views import OrderProccessorAPIView
@@ -419,11 +419,41 @@ class OrderStatusUpdateAPIView(generics.UpdateAPIView):
     serializer_class = OrderStatusUpdateSerializer
     lookup_field = 'alias'
 
+    def check_permissions(self, request):
+        status = request.data.get('status')
+        user = request.user
+
+        print(status, 'status')
+
+        permission_map = {
+            OrderStatus.CANCELLED: PermissionsEnum.CAN_CANCEL_ORDER,
+            OrderStatus.SHIPPED: PermissionsEnum.CAN_SHIP_ORDER,
+            OrderStatus.DELIVERED: PermissionsEnum.CAN_DELIVER_ORDER,
+            OrderStatus.APPROVED: PermissionsEnum.CAN_APPROVE_ORDER,
+            OrderStatus.PROCESSING: PermissionsEnum.CAN_PROCCSS_ORDER,
+        }
+
+        required_permission = permission_map.get(status)
+        print(required_permission, 'required_permission')
+        if required_permission and not has_required_perm(user, required_permission, Order):
+            self.permission_denied(
+                request,
+                message=_("You do not have permission to perform this action."),
+                code='permission_denied'
+            )
+
 class OrderPaymentTermUpdateAPIView(generics.UpdateAPIView):
+    model = Order
+    permission_classes = (GranularPermission, )
     queryset = Order.objects.all()
     serializer_class = OrderPaymentUpdateSerializer
     lookup_field = 'alias'
+    required_perm = PermissionsEnum.CAN_UPDATE_ORDER_PYMENT_TERM
+
 class OrderPaymentMethodUpdateAPIView(generics.UpdateAPIView):
+    model = Order
+    permission_classes = (GranularPermission, )
+    required_perm = PermissionsEnum.CAN_UPDATE_ORDER_PAYMENT_METHOD
     queryset = Order.objects.all()
     serializer_class = OrderPaymentMethodSerializer
     lookup_field = 'alias'
@@ -461,28 +491,17 @@ class ReturnRequestFilterMixing:
 
 
 class ReturnRequestAPIView(ReturnRequestFilterMixing, generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ReturnRequest
     queryset = ReturnRequest.objects.all()
     serializer_class = ReturnRequestSerializer
-
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"POST", 'GET'},
-        UserRole.ADMIN: {"all"},
-        UserRole.ORDER_PROCESSOR: {"POST", 'GET'},
-        UserRole.STORE_VIEWER: {"GET"},
-    }
-    
     
 class ReturnRequestDetailAPIView(generics.RetrieveUpdateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ReturnRequest
     queryset = ReturnRequest.objects.all()
     serializer_class = ReturnRequestDetailsSerializer
     lookup_field = 'id'
-
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
-        UserRole.ADMIN: {"all"},
-        UserRole.ORDER_PROCESSOR: {"PATCH", 'GET'},
-        UserRole.STORE_VIEWER: {"GET"},
-    }
 
     def get_serializer_class(self):
         if self.request.method in ['PATCH', 'PUT']:
@@ -490,14 +509,11 @@ class ReturnRequestDetailAPIView(generics.RetrieveUpdateAPIView):
         return self.serializer_class
 
 class ReturnLineItemStatusUpdateAPIView(generics.UpdateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ReturnRequest
+
     serializer_class = ReturnLineItemStatusUpdateSerializer
 
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
-        UserRole.ADMIN: {"all"},
-        UserRole.ORDER_PROCESSOR: {"PATCH", 'GET'},
-        UserRole.STORE_VIEWER: {"GET"},
-    }
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -526,14 +542,10 @@ class ReturnLineItemStatusUpdateAPIView(generics.UpdateAPIView):
     
 
 class ReturnRequestBulkUpdateAPIView(generics.UpdateAPIView):
-    serializer_class = ReturnRequestBulkUpdateSerializer
+    permission_classes = (CommonPermissions, )
+    model = ReturnRequest
 
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {'all'},
-        UserRole.ADMIN: {"all"},
-        UserRole.ORDER_PROCESSOR: {'all'},
-        UserRole.STORE_VIEWER: {"GET"},
-    }
+    serializer_class = ReturnRequestBulkUpdateSerializer
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

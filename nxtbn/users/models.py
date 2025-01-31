@@ -10,12 +10,18 @@ from babel.numbers import get_currency_precision, format_currency
 
 
 class User(AbstractUser):
-    role = models.CharField(max_length=255, choices=UserRole.choices, default=UserRole.CUSTOMER)
+    role = models.CharField(max_length=255, default='Store Admin')
+
+    # To learn more about permissions hierarchy, check this files: nxtbn/core/admin_permissions.py
+    is_store_admin = models.BooleanField(default=False)
+    is_store_staff = models.BooleanField(default=False)
+
+
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     phone_number = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        parts = [self.get_full_name(), self.username, self.email, self.get_role_display()]
+        parts = [self.get_full_name(), self.username, self.email]
         return " - ".join(part for part in parts if part)
 
     def full_name(self):

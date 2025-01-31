@@ -1,13 +1,27 @@
 import graphene
 
-from nxtbn.users.admin_types import PermissionType
+from nxtbn.users.admin_types import AdminUserType, PermissionType
 from django.contrib.auth.models import Permission
+from graphene_django.filter import DjangoFilterConnectionField
 
 from nxtbn.users.models import User
 
 
 class UserAdminQuery(graphene.ObjectType):
+    users = DjangoFilterConnectionField(AdminUserType)
+    user = graphene.Field(AdminUserType, id=graphene.Int(required=True))
     permissions = graphene.List(PermissionType, user_id=graphene.Int(required=True))
+
+    def resolve_users(self, info, **kwargs):
+        return User.objects.all()
+    
+    def resolve_user(self, info, id):
+        try:
+            user = User.objects.get(id=id)
+        except User.DoesNotExist:
+            raise Exception("User not found")
+        
+        return user
 
     def resolve_permissions(self, info, user_id):
         # Get the user by the provided user_id

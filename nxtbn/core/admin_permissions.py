@@ -27,10 +27,8 @@ class GranularPermission(BasePermission):
             return True
       
         model_cls = None
-        if hasattr(view, 'get_queryset'):
+        if hasattr(view, 'get_queryset'): # Warning, Never use  hasattr(view, 'queryset') as DRF cache this which may lead to unexpected behavior
             model_cls = view.get_queryset().model
-        elif hasattr(view, 'queryset'):
-            model_cls = view.queryset.model
         elif hasattr(view, 'model'):
             model_cls = view.model
 

@@ -21,7 +21,8 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
-from nxtbn.core.admin_permissions import GranularPermission
+from nxtbn.core.admin_permissions import GranularPermission, CommonPermissions
+from nxtbn.core.enum_perms import PermissionsEnum
 from nxtbn.core.utils import to_currency_unit
 from nxtbn.order.proccesor.views import OrderProccessorAPIView
 from nxtbn.order import OrderAuthorizationStatus, OrderChargeStatus, OrderStatus, ReturnStatus
@@ -90,6 +91,7 @@ class OrderFilter(filters.FilterSet):
 
 
 class OrderListView(generics.ListAPIView):
+    permission_classes = (CommonPermissions, )
     queryset = Order.objects.all()
     serializer_class = OrderListSerializer
     pagination_class = NxtbnPagination
@@ -103,10 +105,9 @@ class OrderListView(generics.ListAPIView):
     search_fields = ['alias', 'id', 'user__username', 'supplier__name']
     ordering_fields = ['created_at']
 
-    role_action = 'list'
-
 
 class OrderDetailView(generics.RetrieveAPIView):
+    permission_classes = (CommonPermissions, )
     queryset = Order.objects.all()
     serializer_class = OrderDetailsSerializer
     lookup_field = 'alias'
@@ -130,7 +131,7 @@ compare_opposite_title = {
 
 
 class BasicStatsView(APIView):
-
+    permission_classes = (CommonPermissions, )
     def get(self, request):
         # Get start and end dates from query parameters
         start_date_str = request.query_params.get('start_date')
@@ -217,6 +218,7 @@ class BasicStatsView(APIView):
 
 
 class OrderOverviewStatsView(APIView):
+    permission_classes = (CommonPermissions, )
     """
     View to provide an overview of order statistics within a specified date range.
     Methods:
@@ -310,7 +312,7 @@ class OrderOverviewStatsView(APIView):
 
 
 class OrderSummaryAPIView(APIView):
-
+    permission_classes = (CommonPermissions, )
     def get(self, request, *args, **kwargs):
         time_period = request.query_params.get('time_period')  # 'year', 'month', 'week', 'day'
         current_date = datetime.now()
@@ -392,12 +394,19 @@ class OrderSummaryAPIView(APIView):
 
         return Response(formatted_data)
 class OrderEastimateView(OrderProccessorAPIView):
-    permission_classes = (GranularPermission, )
-    gql_required_perm = 'order.eastimate_order'
-
     create_order = False # Eastimate order
 
+    def check_permissions(self, request):
+        if not request.user.is_staff:
+            self.permission_denied(
+                request,
+                message=_("You do not have permission to perform this action."),
+                code='permission_denied'
+            )
+
 class OrderCreateView(OrderProccessorAPIView):
+    permission_classes = (GranularPermission, )
+    required_perm = 'can_add_order'
     create_order = True # Eastimate and create order
 
 class CreateCustomAPIView(generics.CreateAPIView):

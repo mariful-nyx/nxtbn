@@ -23,7 +23,7 @@ class GranularPermission(BasePermission):
             return True
       
         model_name = view.queryset.model.__name__.lower()  # Get model name dynamically
-        action = view.action.gql_required_perm
+        action = view.action.required_perm
 
         permission_name = self.get_permission_name(model_name, action)
 
@@ -31,7 +31,7 @@ class GranularPermission(BasePermission):
         return request.user.has_perm(permission_name)
     
 
-class ModelPermissions(BasePermission):
+class CommonPermissions(BasePermission):
 
     def has_permission(self, request, view):
         if not request.user.is_authenticated:

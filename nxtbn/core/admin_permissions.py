@@ -6,6 +6,7 @@ from nxtbn.users import UserRole
 
 import functools
 from graphql import GraphQLError
+
 class GranularPermission(BasePermission):
     def get_permission_name(self, model_name, action):
        
@@ -18,11 +19,15 @@ class GranularPermission(BasePermission):
         if request.user.is_superuser:
             return True
         
-        if request.user.method in SAFE_METHODS and request.user.is_staff: # Every staff can view
+        if request.method in SAFE_METHODS and request.user.is_staff: # Every staff can view
             return True
       
-        model_name = view.queryset.model.__name__.lower()  # Get model name dynamically
-        action = view.action.required_perm
+        model_cls = getattr(view, 'queryset', None) or getattr(view, 'model', None)
+        if model_cls is None:
+            return False
+
+        model_name = model_cls.__name__.lower()
+        action = view.required_perm
 
         permission_name = self.get_permission_name(model_name, action)
 
@@ -30,7 +35,7 @@ class GranularPermission(BasePermission):
         return request.user.has_perm(permission_name)
     
 
-class ModelPermissions(BasePermission):
+class CommonPermissions(BasePermission):
 
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
@@ -39,12 +44,12 @@ class ModelPermissions(BasePermission):
         if request.user.is_superuser:
             return True
         
-        if request.user.method in SAFE_METHODS and request.user.is_staff: # Every staff can view
+        if request.method in SAFE_METHODS and request.user.is_staff: # Every staff can view
             return True
 
 
 
-        model_cls = getattr(view, 'queryset', None)
+        model_cls = getattr(view, 'queryset', None) or getattr(view, 'model', None)
         if model_cls is None:
             return False
 
@@ -70,7 +75,7 @@ class ModelPermissions(BasePermission):
 
 
 
-def required_perm(code: str): # Used in graphql only
+def gql_required_perm(code: str): # Used in graphql only
     def decorator(func):
         @functools.wraps(func)
         def wrapper(self, info, *args, **kwargs):
@@ -95,7 +100,7 @@ def required_perm(code: str): # Used in graphql only
     return decorator
 
 
-def staff_required(func):
+def gql_staff_required(func): # Used in graphql only
     @functools.wraps(func)
     def wrapper(self, info, *args, **kwargs):
         user = info.context.user

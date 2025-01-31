@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import Permission
 
 from django.conf import settings
+from graphql import GraphQLError
 
 from nxtbn.users.admin_types import PermissionType
 from nxtbn.users.api.storefront.serializers import JwtBasicUserSerializer
@@ -141,9 +142,35 @@ class TogglePermissionMutation(graphene.Mutation):
             return TogglePermissionMutation(success=True, message="Permission assigned successfully")
 
 
+
+class ChangeUserPasswordMutation(graphene.Mutation):
+    class Arguments:
+        user_id = graphene.ID(required=True)
+        password = graphene.String(required=True)
+        confirm_password = graphene.String(required=True)
+
+    success = graphene.Boolean()
+    message = graphene.String()
+
+    def mutate(self, info, user_id, password, confirm_password):
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise GraphQLError("User not found")
+
+        if password != confirm_password:
+            raise GraphQLError("Passwords do not match")
+
+        user.set_password(password)
+        user.save()
+        
+        return ChangeUserPasswordMutation(success=True, message="Password changed successfully")
+
 class AdminUserMutation(graphene.ObjectType):
     login = AdminLoginMutation.Field()
     refresh_token = AdminTokenRefreshMutation.Field()
     toggle_permission = TogglePermissionMutation.Field()
+    change_user_password = ChangeUserPasswordMutation.Field()
 
     

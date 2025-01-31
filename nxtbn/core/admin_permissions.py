@@ -6,6 +6,7 @@ from nxtbn.users import UserRole
 
 import functools
 from graphql import GraphQLError
+
 class GranularPermission(BasePermission):
     def get_permission_name(self, model_name, action):
        
@@ -22,7 +23,7 @@ class GranularPermission(BasePermission):
             return True
       
         model_name = view.queryset.model.__name__.lower()  # Get model name dynamically
-        action = view.action.required_perm
+        action = view.action.gql_required_perm
 
         permission_name = self.get_permission_name(model_name, action)
 
@@ -70,7 +71,7 @@ class ModelPermissions(BasePermission):
 
 
 
-def required_perm(code: str): # Used in graphql only
+def gql_required_perm(code: str): # Used in graphql only
     def decorator(func):
         @functools.wraps(func)
         def wrapper(self, info, *args, **kwargs):
@@ -95,7 +96,7 @@ def required_perm(code: str): # Used in graphql only
     return decorator
 
 
-def staff_required(func):
+def gql_staff_required(func): # Used in graphql only
     @functools.wraps(func)
     def wrapper(self, info, *args, **kwargs):
         user = info.context.user

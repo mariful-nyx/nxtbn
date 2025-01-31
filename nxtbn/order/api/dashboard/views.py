@@ -393,7 +393,7 @@ class OrderSummaryAPIView(APIView):
         return Response(formatted_data)
 class OrderEastimateView(OrderProccessorAPIView):
     permission_classes = (GranularPermission, )
-    required_perm = 'order.eastimate_order'
+    gql_required_perm = 'order.eastimate_order'
 
     create_order = False # Eastimate order
 

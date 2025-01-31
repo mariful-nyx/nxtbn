@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
+from nxtbn.core.enum_perms import PermissionsEnum
 from nxtbn.order import OrderStatus
 from nxtbn.users import UserRole
 
@@ -19,6 +20,12 @@ class User(AbstractUser):
 
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     phone_number = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        permissions = [
+            (PermissionsEnum.CAN_READ_CUSTOMER, 'Can read customer'),
+            (PermissionsEnum.CAN_UPDATE_CUSTOMER, 'Can update customer'),
+        ]
 
     def __str__(self):
         parts = [self.get_full_name(), self.username, self.email]

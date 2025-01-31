@@ -2,6 +2,7 @@ from django.db import models
 from django. utils import timezone
 
 from nxtbn.core import CurrencyTypes, MoneyFieldTypes
+from nxtbn.core.enum_perms import PermissionsEnum
 from nxtbn.core.mixin import MonetaryMixin
 from nxtbn.core.models import  AbstractBaseUUIDModel
 from nxtbn.order import OrderStatus
@@ -59,6 +60,11 @@ class Payment(MonetaryMixin, AbstractBaseUUIDModel):
     """
     payment_plugin_id = models.CharField(max_length=100, blank=True, null=True)
     gateway_name = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        permissions = [
+            (PermissionsEnum.CAN_INITIATE_PAYMENT_REFUND, "Can initiate refunds"),
+        ]
 
     def save(self, *args, **kwargs):
         self.validate_amount()

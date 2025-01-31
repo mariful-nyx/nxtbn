@@ -1,6 +1,7 @@
 from rest_framework import generics, viewsets
 from rest_framework.response import Response
 from rest_framework import status
+from nxtbn.core.admin_permissions import CommonPermissions
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.discount.models import PromoCode, PromoCodeCustomer, PromoCodeProduct, PromoCodeUsage
 from nxtbn.discount.api.dashboard.serializers import AttachPromoCodeEntitiesSerializer, PromoCodeCustomerSerializer, PromoCodeProductSerializer, PromoCodeCountedSerializer, PromoCodeUsageSerializer
@@ -50,18 +51,24 @@ class PromocodeFilterMixin:
         return PromoCode.objects.all()
     
 class PromoCodeListCreateAPIView(PromocodeFilterMixin, generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = PromoCode
     pagination_class = NxtbnPagination
     queryset = PromoCode.objects.all()
     serializer_class = PromoCodeCountedSerializer
 
 
 class PromoCodeUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (CommonPermissions, )
+    model = PromoCode
     queryset = PromoCode.objects.all()
     serializer_class = PromoCodeCountedSerializer
     lookup_field = 'id'
 
 
 class AttachPromoCodeEntitiesAPIView(generics.CreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = PromoCode
     serializer_class = AttachPromoCodeEntitiesSerializer
 
     def create(self, request, *args, **kwargs):
@@ -81,6 +88,8 @@ class PromoCodeProductFilter(filters.FilterSet):
         model = PromoCodeProduct
         fields = ['promo_code']
 class PromoCodeProductListAPIView(generics.ListAPIView):
+    permission_classes = (CommonPermissions, )
+    model = PromoCodeProduct
     queryset = PromoCodeProduct.objects.all()
     serializer_class = PromoCodeProductSerializer
     filter_backends = [
@@ -98,6 +107,8 @@ class PromoCodeCustomerFilter(filters.FilterSet):
         model = PromoCodeCustomer
         fields = ['promo_code']
 class PromoCodeCustomertListAPIView(generics.ListAPIView):
+    permission_classes = (CommonPermissions, )
+    model = PromoCodeCustomer
     queryset = PromoCodeCustomer.objects.all()
     serializer_class = PromoCodeCustomerSerializer
     filter_backends = [
@@ -111,6 +122,8 @@ class PromoCodeCustomertListAPIView(generics.ListAPIView):
 
 
 class PromoCodeUsageListAPIView(generics.ListAPIView):
+    permission_classes = (CommonPermissions, )
+    model = PromoCodeUsage
     queryset = PromoCodeUsage.objects.all()
     serializer_class = PromoCodeUsageSerializer
     pagination_class = NxtbnPagination

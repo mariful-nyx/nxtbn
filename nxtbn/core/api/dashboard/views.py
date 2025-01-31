@@ -26,6 +26,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework import serializers
 
 from nxtbn.core import LanguageChoices
+from nxtbn.core.admin_permissions import GranularPermission, IsStoreAdmin, IsStoreStaff
 from nxtbn.core.api.dashboard.serializers import InvoiceSettingsSerializer, SiteSettingsSerializer
 from nxtbn.core.models import InvoiceSettings, SiteSettings
 from nxtbn.users import UserRole
@@ -33,6 +34,7 @@ from nxtbn.users import UserRole
 
 
 class SiteSettingsView(generics.RetrieveUpdateAPIView):
+    permission_classes = (IsStoreAdmin,)
     queryset = SiteSettings.objects.all()
     serializer_class = SiteSettingsSerializer
 
@@ -49,6 +51,7 @@ class SiteSettingsView(generics.RetrieveUpdateAPIView):
         
 
 class InvoiceSettingsView(generics.RetrieveUpdateAPIView):
+    permission_classes = (IsStoreAdmin,)
     queryset = InvoiceSettings.objects.all()
     serializer_class = InvoiceSettingsSerializer
 
@@ -64,6 +67,7 @@ class InvoiceSettingsView(generics.RetrieveUpdateAPIView):
 
 
 class LanguageChoicesAPIView(APIView):
+    permission_classes = (IsStoreStaff,)
     def get(self, request, *args, **kwargs):
         languages = [
             {"value": lang_value, "label": lang_label}

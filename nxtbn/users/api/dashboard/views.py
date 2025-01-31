@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
+from nxtbn.core.admin_permissions import CommonPermissions, GranularPermission, IsStoreStaff
+from nxtbn.core.enum_perms import PermissionsEnum
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.users import UserRole
 from nxtbn.users.models import User
@@ -133,6 +135,9 @@ class CustomerFilterMixin:
     
 
 class CustomerListAPIView(CustomerFilterMixin, generics.ListAPIView):
+    permission_classes = (GranularPermission,)
+    model = User
+    required_perm = PermissionsEnum.CAN_READ_CUSTOMER
     """
     API view to retrieve the list of customers (users with role 'CUSTOMER').
     """
@@ -147,6 +152,9 @@ class CustomerListAPIView(CustomerFilterMixin, generics.ListAPIView):
 
 
 class CustomerRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
+    permission_classes = (GranularPermission,)
+    model = User
+    required_perm = PermissionsEnum.CAN_UPDATE_CUSTOMER
     serializer_class = CustomerUpdateSerializer
     lookup_field = 'id'
 
@@ -157,6 +165,8 @@ class CustomerRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     
 
 class CustomerWithAddressView(generics.RetrieveAPIView):
+    permission_classes = (CommonPermissions,)
+    model = User
     serializer_class = CustomerWithAddressSerializer
     lookup_field = 'id'
 
@@ -167,6 +177,7 @@ class CustomerWithAddressView(generics.RetrieveAPIView):
     
 
 class PasswordChangeView(generics.UpdateAPIView):
+    permission_classes = (IsStoreStaff,)
     serializer_class = PasswordChangeSerializer
     model = User
 
@@ -232,6 +243,8 @@ class UserFilterMixin:
         return User.objects.all()
     
 class UserViewSet(UserFilterMixin, viewsets.ModelViewSet):
+    permission_classes = (CommonPermissions,)
+    model = User
     serializer_class = UserMututionalSerializer
     pagination_class = NxtbnPagination
     
@@ -261,18 +274,23 @@ class UserViewSet(UserFilterMixin, viewsets.ModelViewSet):
 
 
 class AddressCreateAPIView(generics.CreateAPIView):
+    permission_classes = (CommonPermissions,)
+    model = User
     serializer_class = AddressMutationalSerializer
     queryset = Address.objects.all()
 
     
 
 class AddressRetriveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (CommonPermissions,)
+    model = User
     serializer_class = AddressMutationalSerializer
     queryset = Address.objects.all()
     lookup_field = 'id'
 
 
 class MeDetailsAPIView(generics.RetrieveUpdateAPIView):
+    permission_classes = (IsStoreStaff,)
     serializer_class = MeSerializer
 
     def get_object(self):

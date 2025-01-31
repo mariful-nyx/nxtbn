@@ -7,3 +7,4 @@ class PermissionsEnum(models.TextChoices):
     CAN_SHIP_ORDER = "can_ship_order"
     CAN_PROCCSS_ORDER = "can_process_order"
     CAN_DELIVER_ORDER = "can_deliver_order"
+    CAN_UPDATE_ORDER_PYMENT_TERM = "can_update_order_payment_term"

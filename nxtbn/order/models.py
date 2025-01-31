@@ -256,6 +256,7 @@ class Order(MonetaryMixin, AbstractBaseUUIDModel):
             (PermissionsEnum.CAN_SHIP_ORDER, 'Can ship order'),
             (PermissionsEnum.CAN_PROCCSS_ORDER, 'Can process order'),
             (PermissionsEnum.CAN_DELIVER_ORDER, 'Can deliver order'),
+            (PermissionsEnum.CAN_UPDATE_ORDER_PYMENT_TERM, 'Can update order payment term'),
         ]
 
     def save(self, *args, **kwargs):

@@ -443,9 +443,12 @@ class OrderStatusUpdateAPIView(generics.UpdateAPIView):
             )
 
 class OrderPaymentTermUpdateAPIView(generics.UpdateAPIView):
+    permission_classes = (GranularPermission, )
     queryset = Order.objects.all()
     serializer_class = OrderPaymentUpdateSerializer
     lookup_field = 'alias'
+    required_perm = PermissionsEnum.CAN_UPDATE_ORDER_PYMENT_TERM
+
 class OrderPaymentMethodUpdateAPIView(generics.UpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderPaymentMethodSerializer

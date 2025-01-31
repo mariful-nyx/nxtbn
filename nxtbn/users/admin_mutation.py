@@ -112,7 +112,7 @@ class AdminTokenRefreshMutation(graphene.Mutation):
 
 
 
-class AttachPermissionMutation(graphene.Mutation):
+class TogglePermissionMutation(graphene.Mutation):
     class Arguments:
         user_id = graphene.Int(required=True)
         permission_codename = graphene.String(required=True)
@@ -124,22 +124,26 @@ class AttachPermissionMutation(graphene.Mutation):
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            return AttachPermissionMutation(success=False, message="User not found")
+            return TogglePermissionMutation(success=False, message="User not found")
 
         try:
             permission = Permission.objects.get(codename=permission_codename)
         except Permission.DoesNotExist:
-            return AttachPermissionMutation(success=False, message="Permission not found")
+            return TogglePermissionMutation(success=False, message="Permission not found")
 
-        # Add the permission to the user
-        user.user_permissions.add(permission)
+        if user.user_permissions.filter(id=permission.id).exists():
+            # If the permission is already assigned, remove it
+            user.user_permissions.remove(permission)
+            return TogglePermissionMutation(success=True, message="Permission removed successfully")
+        else:
+            # Otherwise, add the permission
+            user.user_permissions.add(permission)
+            return TogglePermissionMutation(success=True, message="Permission assigned successfully")
 
-        return AttachPermissionMutation(success=True, message="Permission assigned successfully")
-    
 
 class AdminUserMutation(graphene.ObjectType):
     login = AdminLoginMutation.Field()
     refresh_token = AdminTokenRefreshMutation.Field()
-    attach_permission = AttachPermissionMutation.Field()
+    toggle_permission = TogglePermissionMutation.Field()
 
     

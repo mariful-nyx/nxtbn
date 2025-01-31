@@ -443,6 +443,7 @@ class OrderStatusUpdateAPIView(generics.UpdateAPIView):
             )
 
 class OrderPaymentTermUpdateAPIView(generics.UpdateAPIView):
+    model = Order
     permission_classes = (GranularPermission, )
     queryset = Order.objects.all()
     serializer_class = OrderPaymentUpdateSerializer
@@ -450,6 +451,7 @@ class OrderPaymentTermUpdateAPIView(generics.UpdateAPIView):
     required_perm = PermissionsEnum.CAN_UPDATE_ORDER_PYMENT_TERM
 
 class OrderPaymentMethodUpdateAPIView(generics.UpdateAPIView):
+    model = Order
     permission_classes = (GranularPermission, )
     required_perm = PermissionsEnum.CAN_UPDATE_ORDER_PAYMENT_METHOD
     queryset = Order.objects.all()
@@ -489,28 +491,17 @@ class ReturnRequestFilterMixing:
 
 
 class ReturnRequestAPIView(ReturnRequestFilterMixing, generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ReturnRequest
     queryset = ReturnRequest.objects.all()
     serializer_class = ReturnRequestSerializer
-
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"POST", 'GET'},
-        UserRole.ADMIN: {"all"},
-        UserRole.ORDER_PROCESSOR: {"POST", 'GET'},
-        UserRole.STORE_VIEWER: {"GET"},
-    }
-    
     
 class ReturnRequestDetailAPIView(generics.RetrieveUpdateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ReturnRequest
     queryset = ReturnRequest.objects.all()
     serializer_class = ReturnRequestDetailsSerializer
     lookup_field = 'id'
-
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
-        UserRole.ADMIN: {"all"},
-        UserRole.ORDER_PROCESSOR: {"PATCH", 'GET'},
-        UserRole.STORE_VIEWER: {"GET"},
-    }
 
     def get_serializer_class(self):
         if self.request.method in ['PATCH', 'PUT']:
@@ -518,14 +509,11 @@ class ReturnRequestDetailAPIView(generics.RetrieveUpdateAPIView):
         return self.serializer_class
 
 class ReturnLineItemStatusUpdateAPIView(generics.UpdateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ReturnRequest
+
     serializer_class = ReturnLineItemStatusUpdateSerializer
 
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {"PUT", 'PATCH', 'GET'},
-        UserRole.ADMIN: {"all"},
-        UserRole.ORDER_PROCESSOR: {"PATCH", 'GET'},
-        UserRole.STORE_VIEWER: {"GET"},
-    }
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -554,14 +542,10 @@ class ReturnLineItemStatusUpdateAPIView(generics.UpdateAPIView):
     
 
 class ReturnRequestBulkUpdateAPIView(generics.UpdateAPIView):
-    serializer_class = ReturnRequestBulkUpdateSerializer
+    permission_classes = (CommonPermissions, )
+    model = ReturnRequest
 
-    HTTP_PERMISSIONS = {
-        UserRole.STORE_MANAGER: {'all'},
-        UserRole.ADMIN: {"all"},
-        UserRole.ORDER_PROCESSOR: {'all'},
-        UserRole.STORE_VIEWER: {"GET"},
-    }
+    serializer_class = ReturnRequestBulkUpdateSerializer
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

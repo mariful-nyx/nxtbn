@@ -21,7 +21,7 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
-from nxtbn.core.admin_permissions import GranularPermission, CommonPermissions, IsStaffUser, has_required_perm
+from nxtbn.core.admin_permissions import GranularPermission, CommonPermissions, has_required_perm
 from nxtbn.core.enum_perms import PermissionsEnum
 from nxtbn.core.utils import to_currency_unit
 from nxtbn.order.proccesor.views import OrderProccessorAPIView

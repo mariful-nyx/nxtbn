@@ -20,7 +20,7 @@ class DashboardLoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'role', 'full_name', 'phone_number']
+        fields = ['id', 'avatar', 'username', 'email', 'first_name', 'last_name', 'role', 'full_name', 'phone_number', 'is_store_admin', 'is_store_staff']
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -113,6 +113,8 @@ class UserMututionalSerializer(serializers.ModelSerializer):
             'is_active',
             'is_staff',
             'is_superuser',
+            'is_store_admin',
+            'is_store_staff',
             'full_name',
             'password',
             'role'

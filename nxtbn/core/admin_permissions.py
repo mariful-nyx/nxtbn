@@ -1,3 +1,30 @@
+"""
+Dashboard User Permission Hierarchy:
+
+- `is_superuser`:  
+    Grants unrestricted access to all dashboard functionalities without any limitations.  
+    Inherits all permissions of `is_store_admin` by default.  
+
+- `is_staff`:  
+    Required for all users to access the dashboard.  
+
+- `is_store_admin`:  
+    Has extensive permissions and authority within the dashboard.  
+    Can perform almost all operations except a few critical ones restricted to the superuser.  
+    Inherits all permissions assigned to other users by default.  
+
+- `is_store_staff`:  
+    Has limited access to the dashboard.  
+    Their permissions can be extended granularly by assigning specific permissions, which are managed by the store admin.  
+
+**Additional Notes:**  
+- All users have read permissions by default, except for certain critical data that require explicit authorization.  
+- The superuser automatically inherits all permissions of a store admin.  
+- A store admin inherits all permissions granted to other users by default.  
+"""
+
+
+
 from rest_framework.permissions import BasePermission
 from rest_framework.permissions import SAFE_METHODS
 
@@ -7,9 +34,25 @@ from nxtbn.users import UserRole
 import functools
 from graphql import GraphQLError
 
-class IsStaffUser(BasePermission):
+
+class IsStoreAdmin(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_staff
+        if not request.user.is_staff:
+            return False
+        return request.user.is_store_admin
+    
+class IsStoreStaff(BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_staff:
+            return False
+        
+        if request.user.is_superuser:
+            return True
+        
+        if request.user.is_store_admin:
+            return True
+
+        return request.user.is_store_staff
 
 class GranularPermission(BasePermission):
     def get_permission_name(self, model_name, action):
@@ -17,10 +60,13 @@ class GranularPermission(BasePermission):
         return f"{model_name}.{action}"
 
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
+        if not request.user.is_staff:
             return False
         
         if request.user.is_superuser:
+            return True
+        
+        if request.user.is_store_admin:
             return True
         
         if request.method in SAFE_METHODS and request.user.is_staff: # Every staff can view
@@ -47,10 +93,13 @@ class GranularPermission(BasePermission):
 class CommonPermissions(BasePermission):
 
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
+        if not request.user.is_staff:
             return False
         
         if request.user.is_superuser:
+            return True
+        
+        if request.user.is_store_admin:
             return True
         
         if request.method in SAFE_METHODS and request.user.is_staff: # Every staff can view
@@ -88,10 +137,13 @@ class CommonPermissions(BasePermission):
 
 
 def has_required_perm(user, code: str, model_cls=None):
-    if not user.is_authenticated:
+    if not user.is_staff:
         return False
 
     if user.is_superuser:
+        return True
+    
+    if user.is_store_admin:
         return True
 
     perm_code  = model_cls._meta.app_label + '.' + code

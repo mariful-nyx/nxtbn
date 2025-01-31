@@ -8,8 +8,30 @@ class AdminUserType(DjangoObjectType):
     db_id = graphene.ID(source='id')
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_active', 'date_joined')
+        fields = (
+            'id',
+            'username',
+            'role',
+            'email',
+            'phone_number',
+            'first_name',
+            'last_name',
+            'is_staff',
+            'is_active',
+            'is_superuser',
+            'is_store_admin',
+            'is_store_staff',
+            'date_joined',
+        )
         interfaces = (graphene.relay.Node, )
+        filter_fields = {
+            'id': ['exact'],
+            'is_staff': ['exact'],
+            'is_active': ['exact'],
+            'is_superuser': ['exact'],
+            'is_store_admin': ['exact'],
+            'is_store_staff': ['exact'],
+        }
 
 
     def resolve_full_name(self, info):

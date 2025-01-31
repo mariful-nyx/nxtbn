@@ -21,7 +21,7 @@ from rest_framework import filters as drf_filters
 import django_filters
 from django_filters import rest_framework as filters
 
-from nxtbn.core.admin_permissions import GranularPermission, CommonPermissions
+from nxtbn.core.admin_permissions import GranularPermission, CommonPermissions, IsStaffUser, has_required_perm
 from nxtbn.core.enum_perms import PermissionsEnum
 from nxtbn.core.utils import to_currency_unit
 from nxtbn.order.proccesor.views import OrderProccessorAPIView
@@ -418,6 +418,29 @@ class OrderStatusUpdateAPIView(generics.UpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderStatusUpdateSerializer
     lookup_field = 'alias'
+
+    def check_permissions(self, request):
+        status = request.data.get('status')
+        user = request.user
+
+        print(status, 'status')
+
+        permission_map = {
+            OrderStatus.CANCELLED: PermissionsEnum.CAN_CANCEL_ORDER,
+            OrderStatus.SHIPPED: PermissionsEnum.CAN_SHIP_ORDER,
+            OrderStatus.DELIVERED: PermissionsEnum.CAN_DELIVER_ORDER,
+            OrderStatus.APPROVED: PermissionsEnum.CAN_APPROVE_ORDER,
+            OrderStatus.PROCESSING: PermissionsEnum.CAN_PROCCSS_ORDER,
+        }
+
+        required_permission = permission_map.get(status)
+        print(required_permission, 'required_permission')
+        if required_permission and not has_required_perm(user, required_permission, Order):
+            self.permission_denied(
+                request,
+                message=_("You do not have permission to perform this action."),
+                code='permission_denied'
+            )
 
 class OrderPaymentTermUpdateAPIView(generics.UpdateAPIView):
     queryset = Order.objects.all()

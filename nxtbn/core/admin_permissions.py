@@ -7,6 +7,10 @@ from nxtbn.users import UserRole
 import functools
 from graphql import GraphQLError
 
+class IsStaffUser(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_staff
+
 class GranularPermission(BasePermission):
     def get_permission_name(self, model_name, action):
        
@@ -73,6 +77,15 @@ class CommonPermissions(BasePermission):
         return request.user.has_perm(required_permission)
 
 
+def has_required_perm(user, code: str, model_cls=None):
+    if not user.is_authenticated:
+        return False
+
+    if user.is_superuser:
+        return True
+
+    perm_code  = model_cls._meta.app_label + '.' + code
+    return user.has_perm(perm_code)
 
 
 def gql_required_perm(code: str): # Used in graphql only
@@ -98,6 +111,7 @@ def gql_required_perm(code: str): # Used in graphql only
         return wrapper
     
     return decorator
+
 
 
 def gql_staff_required(func): # Used in graphql only

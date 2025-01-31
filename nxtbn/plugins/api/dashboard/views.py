@@ -11,6 +11,7 @@ import tempfile
 
 from django.forms import ValidationError
 import requests
+from nxtbn.core.admin_permissions import IsStoreAdmin
 from nxtbn.plugins.utils import PluginHandler
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -39,6 +40,7 @@ from nxtbn.users import UserRole
 
 
 class PluginListView(APIView):
+    permission_classes = (IsStoreAdmin,)
     serializer_class = PluginSerializer
     HTTP_PERMISSIONS = {
         UserRole.STORE_MANAGER: {"get"},

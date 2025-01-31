@@ -14,6 +14,8 @@ import django_filters
 from django_filters import rest_framework as filters
 
 from nxtbn.core import PublishableStatus
+from nxtbn.core.admin_permissions import CommonPermissions, GranularPermission
+from nxtbn.core.enum_perms import PermissionsEnum
 from nxtbn.core.paginator import NxtbnPagination
 from nxtbn.product.models import CategoryTranslation, CollectionTranslation, Color, Product, Category, Collection, ProductTag, ProductTagTranslation, ProductTranslation, ProductType, ProductVariant, Supplier, SupplierTranslation
 from nxtbn.product.api.dashboard.serializers import (
@@ -111,6 +113,8 @@ class ProductFilterMixin:
         return Product.objects.all().order_by('-created_at')
 
 class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Product
     serializer_class = ProductSerializer
     pagination_class = NxtbnPagination
 
@@ -120,6 +124,8 @@ class ProductListView(ProductFilterMixin, generics.ListCreateAPIView):
         return ProductSerializer
 
 class ProductMinimalListView(ProductFilterMixin, generics.ListAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Product
     serializer_class = ProductMinimalSerializer
     pagination_class = None
 
@@ -136,6 +142,8 @@ class ProductMinimalListView(ProductFilterMixin, generics.ListAPIView):
 
     
 class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Product
     serializer_class = ProductWithVariantSerializer
     pagination_class = NxtbnPagination
 
@@ -146,28 +154,38 @@ class ProductListDetailVariantView(ProductFilterMixin, generics.ListAPIView):
     
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Product
     queryset = Product.objects.all()
     serializer_class = ProductMutationSerializer
     lookup_field = 'id'
 
 
 class ProductWithVariantView(generics.RetrieveAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Product
     queryset = Product.objects.all()
     serializer_class = ProductWithVariantSerializer
     lookup_field = 'id'
 
 
 class CategoryListView(generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Category
     queryset = Category.objects.filter()
     serializer_class = CategorySerializer
 
 
 class RecursiveCategoryListView(generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Category
     queryset = Category.objects.filter(parent=None) # Get only top-level categories
     serializer_class = RecursiveCategorySerializer
     pagination_class = None
 
 class CategoryByParentView(generics.ListAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Category
     pagination_class = None
     queryset = Category.objects.all()
     serializer_class = BasicCategorySerializer
@@ -176,6 +194,8 @@ class CategoryByParentView(generics.ListAPIView):
         return super().get_queryset().filter(parent=self.kwargs.get('id'))
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Category
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     lookup_field = 'id'
@@ -183,6 +203,8 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class CollectionViewSet(viewsets.ModelViewSet):
+    permission_classes = (CommonPermissions, )
+    model = Collection
     pagination_class = None
     queryset = Collection.objects.all()
     serializer_class = CollectionSerializer
@@ -193,6 +215,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
         return Collection.objects.all()
     
 class ColorViewSet(viewsets.ModelViewSet):
+    permission_classes = (CommonPermissions, )
+    model = Color
     pagination_class = None
     queryset = Color.objects.all()
     serializer_class = ColorSerializer
@@ -204,6 +228,8 @@ class ColorViewSet(viewsets.ModelViewSet):
     
 
 class ProductTypeViewSet(viewsets.ModelViewSet):
+    permission_classes = (CommonPermissions, )
+    model = ProductType
     pagination_class = None
     queryset = ProductType.objects.all()
     serializer_class = ProductTypeSerializer
@@ -214,6 +240,8 @@ class ProductTypeViewSet(viewsets.ModelViewSet):
     
 
 class ProductTagViewSet(viewsets.ModelViewSet):
+    permission_classes = (CommonPermissions, )
+    model = ProductTag
     pagination_class = None
     queryset = ProductTag.objects.all()
     serializer_class = ProductTagSerializer
@@ -230,6 +258,8 @@ class ProductTagViewSet(viewsets.ModelViewSet):
     
 
 class ProductVariantDeleteAPIView(generics.DestroyAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ProductVariant
     queryset = ProductVariant.objects.all()
 
     def destroy(self, request, *args, **kwargs):
@@ -243,6 +273,8 @@ class ProductVariantDeleteAPIView(generics.DestroyAPIView):
 
 
 class TaxClassView(generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = TaxClass
     queryset = TaxClass.objects.all()
     serializer_class = TaxClassSerializer
     pagination_class = None
@@ -250,6 +282,9 @@ class TaxClassView(generics.ListCreateAPIView):
 
 
 class BulkProductStatusUpdateAPIView(generics.UpdateAPIView):
+    permission_classes = (GranularPermission, )
+    model = Product
+    required_perm = PermissionsEnum.CAN_BULK_PRODUCT_STATUS_UPDATE
     serializer_class = ProductStatusUpdateBulkSerializer
 
     def update(self, request, *args, **kwargs):
@@ -264,6 +299,9 @@ class BulkProductStatusUpdateAPIView(generics.UpdateAPIView):
     
 
 class BulkProductDeleteAPIView(generics.DestroyAPIView):
+    permission_classes = (GranularPermission, )
+    model = Product
+    required_perm = PermissionsEnum.CAN_BULK_PRODUCT_DELETE
     queryset = Product.objects.all()
 
 
@@ -311,6 +349,8 @@ class ProductVariantFilterMixin:
     filterset_class = ProductVariantFilter
 
 class ProductVariants(ProductVariantFilterMixin, generics.ListAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ProductVariant
     serializer_class = ProductVariantShortSerializer
     queryset = ProductVariant.objects.all()
     pagination_class = NxtbnPagination
@@ -331,12 +371,16 @@ class ProductVariants(ProductVariantFilterMixin, generics.ListAPIView):
 
 
 class InventoryListView(ProductFilterMixin, generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ProductVariant
     serializer_class = InventorySerializer
     pagination_class = NxtbnPagination
 
 
 
 class SupplierModelViewSet(viewsets.ModelViewSet):
+    permission_classes = (CommonPermissions, )
+    model = Supplier
     serializer_class = SupplierSerializer
     queryset = Supplier.objects.all()
     pagination_class = NxtbnPagination

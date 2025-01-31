@@ -19,11 +19,15 @@ class GranularPermission(BasePermission):
         if request.user.is_superuser:
             return True
         
-        if request.user.method in SAFE_METHODS and request.user.is_staff: # Every staff can view
+        if request.method in SAFE_METHODS and request.user.is_staff: # Every staff can view
             return True
       
-        model_name = view.queryset.model.__name__.lower()  # Get model name dynamically
-        action = view.action.required_perm
+        model_cls = getattr(view, 'queryset', None) or getattr(view, 'model', None)
+        if model_cls is None:
+            return False
+
+        model_name = model_cls.__name__.lower()
+        action = view.required_perm
 
         permission_name = self.get_permission_name(model_name, action)
 
@@ -40,12 +44,12 @@ class CommonPermissions(BasePermission):
         if request.user.is_superuser:
             return True
         
-        if request.user.method in SAFE_METHODS and request.user.is_staff: # Every staff can view
+        if request.method in SAFE_METHODS and request.user.is_staff: # Every staff can view
             return True
 
 
 
-        model_cls = getattr(view, 'queryset', None)
+        model_cls = getattr(view, 'queryset', None) or getattr(view, 'model', None)
         if model_cls is None:
             return False
 

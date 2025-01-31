@@ -405,8 +405,9 @@ class OrderEastimateView(OrderProccessorAPIView):
             )
 
 class OrderCreateView(OrderProccessorAPIView):
+    model = Order
     permission_classes = (GranularPermission, )
-    required_perm = 'can_add_order'
+    required_perm = 'add_order'
     create_order = True # Eastimate and create order
 
 class CreateCustomAPIView(generics.CreateAPIView):

@@ -405,10 +405,16 @@ class OrderEastimateView(OrderProccessorAPIView):
             )
 
 class OrderCreateView(OrderProccessorAPIView):
-    model = Order
-    permission_classes = (GranularPermission, )
     required_perm = 'add_order'
     create_order = True # Eastimate and create order
+
+    def check_permissions(self, request):        
+        if not has_required_perm(request.user, 'add_order', Order):
+            self.permission_denied(
+                request,
+                message=_("You do not have permission to perform this action."),
+                code='permission_denied'
+            )
 
 class CreateCustomAPIView(generics.CreateAPIView):
     queryset = User.objects.all()

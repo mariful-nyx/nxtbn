@@ -41,6 +41,9 @@
 
 ## 🚀 Quick Start with Docker
 
+> **Important**: The `main` branch contains the development version. For a stable and thoroughly tested version, please refer to the tagged versions or review the release notes.
+
+
 Launch nxtbn quickly using Docker without the need to clone the repository:
 
 ```sh

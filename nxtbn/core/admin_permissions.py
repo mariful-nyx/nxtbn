@@ -39,6 +39,10 @@ class IsStoreAdmin(BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_staff:
             return False
+        
+        if request.user.is_superuser:
+            return True
+
         return request.user.is_store_admin
     
 class IsStoreStaff(BasePermission):

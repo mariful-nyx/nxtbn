@@ -1,4 +1,5 @@
 import graphene
+from nxtbn.core.admin_permissions import gql_required_perm
 from nxtbn.product.admin_types import CategoryTranslationType, CategoryType, CollectionTranslationType, ProductTagTranslationType, ProductTranslationType, ProductVariantTranslationType, SupplierTranslationType
 from nxtbn.product.models import Category, CategoryTranslation, CollectionTranslation, ProductTagTranslation, ProductTranslation, ProductVariantTranslation, SupplierTranslation
 from nxtbn.users import UserRole
@@ -18,6 +19,7 @@ class UpdateCategoryMutation(graphene.Mutation):
     
     category = graphene.Field(CategoryType)
 
+    @gql_required_perm(Category, 'change_category')
     def mutate(self, info, id, input):
         category = Category.objects.get(id=id)
         category.name = input.name
@@ -45,6 +47,7 @@ class UpdateProductTranslatoinMutation(graphene.Mutation):
 
     product_translation = graphene.Field(ProductTranslationType)
 
+    @gql_required_perm(ProductTranslation, 'change_producttranslation')
     def mutate(self, info, base_product_id, lang_code, name, summary, description, meta_title, meta_description):
         try:
             product_translation = ProductTranslation.objects.get(product_id=base_product_id, language_code=lang_code)
@@ -72,6 +75,7 @@ class UpdateCategoryTranslationMutation(graphene.Mutation):
 
     category_translation = graphene.Field(CategoryTranslationType)
 
+    @gql_required_perm(CategoryTranslation, 'change_categorytranslation')
     def mutate(self, info, base_category_id, lang_code, name, description, meta_title, meta_description):
         try:
             category_translation = CategoryTranslation.objects.get(category_id=base_category_id, language_code=lang_code)
@@ -98,6 +102,7 @@ class UpdateSupplierTranslationMutation(graphene.Mutation):
 
     supplier_translation = graphene.Field(SupplierTranslationType)
 
+    @gql_required_perm(SupplierTranslation, 'change_suppliertranslation')
     def mutate(self, info, base_supplier_id, lang_code, name, description, meta_title, meta_description):
         try:
             supplier_translation = SupplierTranslation.objects.get(supplier_id=base_supplier_id, language_code=lang_code)
@@ -121,6 +126,7 @@ class UpdateProductVariantTranslationMutation(graphene.Mutation):
 
     product_variant_translation = graphene.Field(ProductVariantTranslationType)
 
+    @gql_required_perm(ProductVariantTranslation, 'change_productvarianttranslation')
     def mutate(self, info, base_product_variant_id, lang_code, name, description, meta_title, meta_description):
         try:
             product_variant_translation = ProductVariantTranslation.objects.get(product_variant_id=base_product_variant_id, language_code=lang_code)
@@ -140,6 +146,7 @@ class UpdateProductTagsTranslationMutation(graphene.Mutation):
 
     product_tag_translation = graphene.Field(ProductTagTranslationType)
 
+    @gql_required_perm(ProductTagTranslation, 'change_producttagtranslation')
     def mutate(self, info, base_product_tag_id, lang_code, name, description, meta_title, meta_description):
         try:
             product_tag_translation = ProductTagTranslation.objects.get(product_tag_id=base_product_tag_id, language_code=lang_code)
@@ -162,6 +169,7 @@ class UpdateProductCollectionTranslationMutation(graphene.Mutation):
 
     collection_translation = graphene.Field(CollectionTranslationType)
 
+    @gql_required_perm(CollectionTranslation, 'change_collectiontranslation')
     def mutate(self, info, base_collection_id, lang_code, name, description, meta_title, meta_description):
         try:
             collection_translation = CollectionTranslation.objects.get(collection_id=base_collection_id, language_code=lang_code)

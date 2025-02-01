@@ -2,6 +2,7 @@ from django.conf import settings
 import graphene
 
 from nxtbn.core import CurrencyTypes
+from nxtbn.core.admin_permissions import gql_required_perm
 from nxtbn.core.admin_types import CurrencyExchangeType
 from nxtbn.core.models import CurrencyExchange
 from nxtbn.users import UserRole
@@ -20,6 +21,7 @@ class CreateCurrencyExchange(graphene.Mutation):
 
     currency_exchange = graphene.Field(CurrencyExchangeType)
 
+    @gql_required_perm(CurrencyExchange, 'add_currencyexchange')
     @staticmethod
     def mutate(root, info, input):
         # Validate base_currency
@@ -47,6 +49,7 @@ class UpdateCurrencyExchange(graphene.Mutation):
 
     currency_exchange = graphene.Field(CurrencyExchangeType)
 
+    @gql_required_perm(CurrencyExchange, 'change_currencyexchange')
     @staticmethod
     def mutate(root, info, id, input):
         try:
@@ -64,6 +67,7 @@ class DeleteCurrencyExchange(graphene.Mutation):
 
     success = graphene.Boolean()  # Indicate whether the operation was successful
 
+    @gql_required_perm(CurrencyExchange, 'delete_currencyexchange')
     @staticmethod
     def mutate(root, info, id):
         try:

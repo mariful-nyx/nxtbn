@@ -2,6 +2,8 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework import generics, status
+from nxtbn.core.admin_permissions import CommonPermissions, GranularPermission
+from nxtbn.core.enum_perms import PermissionsEnum
 from nxtbn.order.models import Order
 from nxtbn.product.models import ProductVariant
 from nxtbn.warehouse import StockMovementStatus
@@ -26,6 +28,8 @@ from rest_framework.exceptions import APIException
 
 
 class WarehouseViewSet(viewsets.ModelViewSet):
+    permission_classes = (CommonPermissions, )
+    model = Warehouse
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
     pagination_class = None
@@ -59,6 +63,8 @@ class StockFilterMixin:
 
 
 class StockViewSet(StockFilterMixin, viewsets.ModelViewSet):
+    permission_classes = (CommonPermissions, )
+    model = Stock
     queryset = Stock.objects.select_related('warehouse', 'product_variant').all()
     pagination_class = NxtbnPagination
 
@@ -70,6 +76,8 @@ class StockViewSet(StockFilterMixin, viewsets.ModelViewSet):
 
 
 class WarehouseStockByVariantAPIView(APIView):
+    permission_classes = (CommonPermissions, )
+    model = ProductVariant
     def get(self, request, variant_id):
         try:
             # Fetch the product variant
@@ -107,6 +115,8 @@ class WarehouseStockByVariantAPIView(APIView):
 
 
 class UpdateStockWarehouseWise(generics.UpdateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Stock
     serializer_class = StockUpdateSerializer
 
     def update(self, request, *args, **kwargs):
@@ -172,6 +182,8 @@ class StockReservationFilterMixin:
         return StockReservation.objects.all()
     
 class StockReservationListAPIView(StockReservationFilterMixin, generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = StockReservation
     serializer_class = StockReservationSerializer
     queryset = StockReservation.objects.all()
     pagination_class = NxtbnPagination
@@ -179,6 +191,8 @@ class StockReservationListAPIView(StockReservationFilterMixin, generics.ListCrea
 
 
 class MergeStockReservationAPIView(generics.UpdateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = StockReservation
     """
     API to transfer stock reservation from one warehouse to another.
     """
@@ -226,6 +240,8 @@ class MergeStockReservationAPIView(generics.UpdateAPIView):
 
 
 class RetryReservationAPIView(APIView):
+    permission_classes = (CommonPermissions, )
+    model = StockReservation
     def post(self, request, alias):
         order = get_object_or_404(Order, alias=alias)
         reserve_stock(order)
@@ -234,16 +250,22 @@ class RetryReservationAPIView(APIView):
 
 
 class StockTransferListCreateAPIView(generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = StockTransfer
     queryset = StockTransfer.objects.prefetch_related('items').all()
     serializer_class = StockTransferSerializer
 
 
 class StockTransferRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = StockTransfer
     queryset = StockTransfer.objects.all()
     serializer_class = StockTransferSerializer
     lookup_field = 'id'
 
 class StockTransferMarkAsInTransitAPIView(APIView):
+    permission_classes = (CommonPermissions, )
+    model = StockTransfer
     def put(self, request, pk):
         with transaction.atomic():
             transfer = get_object_or_404(StockTransfer, id=pk)
@@ -276,6 +298,9 @@ class StockTransferMarkAsInTransitAPIView(APIView):
 
 
 class StockTransferReceivingAPI(generics.UpdateAPIView):
+    permission_classes = (GranularPermission, )
+    model = StockTransfer
+    required_perm = PermissionsEnum.CAN_RECEIVE_TRANSFERRED_STOCK
     serializer_class = StockTransferReceivingSerializer
     lookup_field = 'pk'
     queryset = StockTransfer.objects.all()
@@ -315,6 +340,9 @@ class StockTransferReceivingAPI(generics.UpdateAPIView):
     
 
 class StockTransferMarkedAsCompletedAPIView(APIView):
+    permission_classes = (GranularPermission, )
+    model = StockTransfer
+    required_perm = PermissionsEnum.CAN_MARK_STOCK_TRANSFER_AS_COMPLETED
     def put(self, request, pk):
         transfer = get_object_or_404(StockTransfer, id=pk)
 

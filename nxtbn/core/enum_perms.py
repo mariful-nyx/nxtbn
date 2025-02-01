@@ -15,5 +15,8 @@ class PermissionsEnum(models.TextChoices):
     CAN_BULK_PRODUCT_STATUS_UPDATE = "can_bulk_product_status_update"
     CAN_BULK_PRODUCT_DELETE = "can_bulk_product_delete"
 
+    CAN_RECEIVE_TRANSFERRED_STOCK = "can_receive_transferred_stock" 
+    CAN_MARK_STOCK_TRANSFER_AS_COMPLETED = "can_mark_stock_transfer_as_completed"
+
     CAN_READ_CUSTOMER = "can_read_customer"
     CAN_UPDATE_CUSTOMER = "can_create_customer"

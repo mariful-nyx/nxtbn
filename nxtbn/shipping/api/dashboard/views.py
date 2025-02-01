@@ -1,5 +1,6 @@
 
 from django.db.models import Q
+from nxtbn.core.admin_permissions import CommonPermissions
 from nxtbn.order import AddressType
 from nxtbn.shipping.api.dashboard.serializers import (
     ShippingMethodSerializer,
@@ -15,6 +16,8 @@ from rest_framework import viewsets
 from nxtbn.users.models import User
 
 class CustomerEligibleShippingMethodstAPI(generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ShippingMethod
     serializer_class = ShippingMethodSerializer
 
     def get_queryset(self):
@@ -38,22 +41,30 @@ class CustomerEligibleShippingMethodstAPI(generics.ListCreateAPIView):
         return queryset
     
 class ShippingMethodstListAPI(generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ShippingMethod
     serializer_class = ShippingMethodSerializer
     queryset = ShippingMethod.objects.all()
 
 
 class ShippingMethodDetails(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ShippingMethod
     serializer_class = ShppingMethodDetailSeralizer
     queryset = ShippingMethod.objects.all()
     lookup_field = 'id'
 
 
 class ShippingRateListCreateView(generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ShippingRate
     serializer_class = ShippingRateSerializer
     queryset = ShippingRate.objects.all()
 
 
 class ShippingRateDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (CommonPermissions, )
+    model = ShippingRate
     serializer_class = ShippingRateSerializer
     queryset = ShippingRate.objects.all()
     lookup_field = 'id'
@@ -63,6 +74,8 @@ class ShippingRateDetailView(generics.RetrieveUpdateDestroyAPIView):
 # ==================================================================
 
 class ShippingMethodTranslationViewSet(viewsets.ModelViewSet):
+    permission_classes = (CommonPermissions, )
+    model = ShippingMethodTranslation
     """
     A viewset for viewing and editing ShippingMethod translations.
     """

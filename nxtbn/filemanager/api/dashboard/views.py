@@ -5,6 +5,7 @@ import django_filters
 from django_filters.rest_framework import DjangoFilterBackend
 
 
+from nxtbn.core.admin_permissions import CommonPermissions
 from nxtbn.filemanager.models import Document, Image
 from nxtbn.filemanager.api.dashboard.serializers import (
     DocumentSerializer,
@@ -21,6 +22,8 @@ class ImageFilter(django_filters.FilterSet):
         fields = ['id', 'name']
 
 class ImageListView(generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Image
     serializer_class = ImageSerializer
     queryset = Image.objects.all().order_by('-created_at')
     pagination_class = NxtbnPagination
@@ -29,6 +32,8 @@ class ImageListView(generics.ListCreateAPIView):
 
 
 class ImageDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Image
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
     pagination_class = NxtbnPagination
@@ -36,12 +41,16 @@ class ImageDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class DocumentListView(generics.ListCreateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Document
     serializer_class = DocumentSerializer
     queryset = Document.objects.all()
     pagination_class = NxtbnPagination
 
 
 class DocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (CommonPermissions, )
+    model = Document
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     pagination_class = NxtbnPagination

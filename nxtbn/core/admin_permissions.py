@@ -150,7 +150,7 @@ def has_required_perm(user, code: str, model_cls=None):
     return user.has_perm(perm_code)
 
 
-def gql_required_perm(code: str): # Used in graphql only
+def gql_required_perm(model, code: str):  # model argument will be the model class
     def decorator(func):
         @functools.wraps(func)
         def wrapper(self, info, *args, **kwargs):
@@ -159,13 +159,22 @@ def gql_required_perm(code: str): # Used in graphql only
 
             if user.is_anonymous:
                 raise GraphQLError("Authentication required")
-
+            
+            if not user.is_staff:
+                raise GraphQLError("Permission denied")
+            
+            if user.is_superuser:
+                return func(self, info, *args, **kwargs)
+            
+            if user.is_store_admin:
+                return func(self, info, *args, **kwargs)
+            
             if operation == "query":
                 return func(self, info, *args, **kwargs)
-
             
-            
-            if not user.has_perm(code):  # Check if user has the required permission
+            # Check if the user has permission for the model
+            perm_code = f"{model._meta.app_label}.{code}"  # Constructing the permission name
+            if not user.has_perm(perm_code):  # Check if the user has the required permission for the model
                 raise GraphQLError("Permission denied")  # Block unauthorized access
 
             return func(self, info, *args, **kwargs)  # Call the actual resolver
@@ -176,17 +185,49 @@ def gql_required_perm(code: str): # Used in graphql only
 
 
 
-def gql_staff_required(func): # Used in graphql only
+def gql_store_admin_required(func): # Used in graphql only
     @functools.wraps(func)
     def wrapper(self, info, *args, **kwargs):
         user = info.context.user
 
         if user.is_anonymous:
             raise GraphQLError("Authentication required")
+        
+        if not user.is_staff:
+            raise GraphQLError("Permission denied")
+        
+        if user.is_superuser:
+            return func(self, info, *args, **kwargs)
 
-        if not user.is_staff:  # Check if the user is a staff member
-            raise GraphQLError("Permission denied")  # Block access if the user is not staff
+        if user.is_store_admin:
+            return func(self, info, *args, **kwargs)
 
         return func(self, info, *args, **kwargs)  # Call the actual resolver
 
+    return wrapper
+
+
+def gql_store_staff_required(func): # Used in graphql only
+    @functools.wraps(func)
+    def wrapper(self, info, *args, **kwargs):
+        user = info.context.user
+
+        if user.is_anonymous:
+            raise GraphQLError("Authentication required")
+        
+        if not user.is_staff:
+            raise GraphQLError("Permission denied")
+        
+        if user.is_superuser:
+            return func(self, info, *args, **kwargs)
+        
+        if user.is_store_admin:
+            return func(self, info, *args, **kwargs)
+
+        if user.is_store_staff:
+            return func(self, info, *args, **kwargs)
+        else:
+            raise GraphQLError("Permission denied")
+
+    
     return wrapper

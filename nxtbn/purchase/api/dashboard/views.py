@@ -1,4 +1,5 @@
 from rest_framework import generics, viewsets, status
+from nxtbn.core.admin_permissions import CommonPermissions
 from nxtbn.purchase.api.dashboard.serializers import InventoryReceivingSerializer, PurchaseOrderCreateSerializer, PurchaseOrderSerializer, PurchaseOrderDetailSerializer, PurchaseOrderUpdateSerializer
 from nxtbn.purchase.models import PurchaseOrder, PurchaseOrderItem
 from django.db import transaction
@@ -24,6 +25,8 @@ from rest_framework.response import Response
 from rest_framework import status, viewsets
 
 class PurchaseViewSet(viewsets.ModelViewSet):
+    permission_classes = (CommonPermissions, )
+    model = PurchaseOrder
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
     pagination_class = NxtbnPagination
@@ -167,6 +170,8 @@ class PurchaseViewSet(viewsets.ModelViewSet):
         
 
 class InventoryReceivingAPI(generics.UpdateAPIView):
+    permission_classes = (CommonPermissions, )
+    model = PurchaseOrder
     serializer_class = InventoryReceivingSerializer
     lookup_field = 'pk'
     queryset = PurchaseOrder.objects.all()

@@ -2,6 +2,7 @@ from django.db import models
 from django.forms import ValidationError
 from django.db.models import Sum
 
+from nxtbn.core.enum_perms import PermissionsEnum
 from nxtbn.core.models import AbstractBaseModel
 from nxtbn.order.models import Order, OrderLineItem
 from nxtbn.product.models import ProductVariant
@@ -89,6 +90,12 @@ class StockTransfer(AbstractBaseModel):
     
     status = models.CharField(max_length=20, choices=StockMovementStatus.choices, default=StockMovementStatus.PENDING)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        permissions = [
+            (PermissionsEnum.CAN_RECEIVE_TRANSFERRED_STOCK, "Can receive transferred stock"),
+            (PermissionsEnum.CAN_MARK_STOCK_TRANSFER_AS_COMPLETED, "Can mark stock transfer as completed"),
+        ]
     
     def __str__(self):
         return f"Transfer {self.id} - {self.from_warehouse} to {self.to_warehouse}"

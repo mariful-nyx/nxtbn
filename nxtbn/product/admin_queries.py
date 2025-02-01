@@ -3,7 +3,7 @@
 import graphene
 
 from graphene_django.filter import DjangoFilterConnectionField
-from nxtbn.core.admin_permissions import gql_staff_required
+from nxtbn.core.admin_permissions import gql_store_admin_required
 from nxtbn.product.admin_types import CategoryTranslationType, CategoryType, CollectionTranslationType, CollectionType, ProductGraphType, ProductTagTranslationType, ProductTagType, ProductTranslationType, ProductVariantAdminType, SupplierType
 from nxtbn.product.models import Category, CategoryTranslation, Collection, CollectionTranslation, Product, ProductTag, ProductTagTranslation, ProductTranslation, Supplier
 from nxtbn.users import UserRole
@@ -42,7 +42,7 @@ class ProductQuery(graphene.ObjectType):
     tags_translations = DjangoFilterConnectionField(ProductTagTranslationType)
 
  
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_product(root, info, id):
 
         try:
@@ -50,12 +50,12 @@ class ProductQuery(graphene.ObjectType):
         except Product.DoesNotExist:
             return None
         
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_products(root, info, **kwargs):
         return Product.objects.all()
     
 
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_collection(root, info, id):
 
         try:
@@ -63,11 +63,11 @@ class ProductQuery(graphene.ObjectType):
         except Collection.DoesNotExist:
             return None
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_collections(root, info, **kwargs):
         return Collection.objects.all()
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_producttag(root, info, id):
 
         try:
@@ -75,12 +75,12 @@ class ProductQuery(graphene.ObjectType):
         except ProductTag.DoesNotExist:
             return None
         
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_producttags(root, info, **kwargs):
         return ProductTag.objects.all()
     
 
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_supplier(root, info, id):
 
         try:
@@ -88,15 +88,15 @@ class ProductQuery(graphene.ObjectType):
         except Supplier.DoesNotExist:
             return None
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_suppliers(root, info, **kwargs):
         return Product.objects.all()
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_product_variants(root, info, **kwargs):
         return Product.objects.all()
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_category(root, info, id):
 
         try:
@@ -104,52 +104,52 @@ class ProductQuery(graphene.ObjectType):
         except Category.DoesNotExist:
             return None
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_categories(root, info, **kwargs):
         return Category.objects.all()
         
     # All translations
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_category_translation(root, info, base_category_id, lang_code):
         try:
             return CategoryTranslation.objects.get(category_id=base_category_id, language_code=lang_code)
         except CategoryTranslation.DoesNotExist:
             return None
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_category_translations(root, info, **kwargs):
         return CategoryTranslation.objects.all()
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_collection_translation(root, info, base_collection_id, lang_code):
         try:
             return CollectionTranslation.objects.get(collection_id=base_collection_id, language_code=lang_code)
         except CollectionTranslation.DoesNotExist:
             return None
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_collection_translations(root, info, **kwargs):
         return CollectionTranslation.objects.all()
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_tags_translation(root, info, base_tag_id, lang_code):
         try:
             return ProductTagTranslation.objects.get(tag_id=base_tag_id, language_code=lang_code)
         except ProductTagTranslation.DoesNotExist:
             return None
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_tags_translations(root, info, **kwargs):
         return ProductTagTranslation.objects.all()
 
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_product_translation(root, info, base_product_id, lang_code):
         try:
             return ProductTranslation.objects.get(product_id=base_product_id, language_code=lang_code)
         except ProductTranslation.DoesNotExist:
             return None
     
-    @gql_staff_required
+    @gql_store_admin_required
     def resolve_product_translations(root, info, **kwargs):
         return ProductTranslation.objects.all()
     

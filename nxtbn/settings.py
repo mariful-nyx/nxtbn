@@ -17,7 +17,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
  03. To develop and solve a problem first, you first read whole settings.py files.
 """
 
-VERSION = '1.0.0'
+VERSION = '2.0.0'
 
 
 from pathlib import Path

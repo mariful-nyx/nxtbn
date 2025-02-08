@@ -10,7 +10,7 @@ class CartItemType(DjangoObjectType):
     db_id = graphene.ID(source='id')
     class Meta:
         model = CartItem
-        fields = ('id', 'cart', 'variant', 'quantity', 'created_at', 'updated_at')
+        fields = ('id', 'cart', 'variant', 'quantity', 'created_at', 'last_modified')
 
 
 class CartType(DjangoObjectType):

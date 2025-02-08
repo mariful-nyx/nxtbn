@@ -151,6 +151,7 @@ class PurchaseOrderUpdateSerializer(serializers.ModelSerializer):
                     item.delete()
 
         # Return the updated purchase order instance
+        instance.save()
         return instance
     
 
